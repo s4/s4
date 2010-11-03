@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+  <bean id="toStringOutputFormatter" class="io.s4.util.ToStringOutputFormatter"/>
+  <bean id="reverseIntegerOutputFormatter" class="io.s4.util.ReverseIntegerOutputFormatter"/>
+
+  <bean id="persister" class="io.s4.persist.DumpingPersister" init-method="init">
+    <property name="selfClean" value="true"/>
+    <property name="regexFormatter">
+      <map>
+	<entry>
+	  <key><value>myapp:(viewCount|clickCount|viewQueryLinkCount|top10Topics):.*</value></key>
+	  <ref bean="toStringOutputFormatter"/>
+	</entry>
+	<entry>
+	  <key><value>myapp:top10Topics</value></key>
+	  <ref bean="toStringOutputFormatter"/>
+	</entry>
+	<entry>
+	  <key><value>myapp:clickViewCount:.*</value></key>
+	  <ref bean="reverseIntegerOutputFormatter"/>
+	</entry>
+	<entry>
+	  <key><value>myapp:clickViewCountWindow:.*</value></key>
+	  <ref bean="toStringOutputFormatter"/>
+	</entry>
+      </map>
+    </property>
+    <property name="dumpFilePrefix" value="/tmp/persister_dump"/>
+    <property name="outputTimeBoundary" value="60"/>
+
+  </bean>
+</beans>

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<assembly>
+  <id />
+  <formats>
+    <format>dir</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <dependencySets>
+    <dependencySet>
+      <unpack>false</unpack>
+      <outputDirectory>lib</outputDirectory>
+      <scope>runtime</scope>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+  </dependencySets> 
+  <fileSets>
+    <fileSet>
+      <directory>src/main/resources</directory>
+      <outputDirectory />
+      <includes>
+	<include>twittertopiccount_conf.xml</include>
+	<include>adapter_conf.xml</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory />
+      <includes>
+	<include>*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory />
+      <outputDirectory />
+      <includes>
+	<include>pom.xml</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>
