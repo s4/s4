@@ -8,8 +8,8 @@
 
   <bean id="twitterFeedListener" class="io.s4.example.twittertopiccount.TwitterFeedListener"
         init-method="init">
-    <property name="userid" value="bruceyahoo"/>
-    <property name="password" value="fortwitfeed01"/>
+    <property name="userid" value="youruserid"/>
+    <property name="password" value="yourpassword"/>
     <property name="urlString" value="http://stream.twitter.com/1/statuses/sample.json"/>
     <property name="streamName" value="RawStatus"/>
   </bean>

@@ -36,7 +36,7 @@
   </bean>
 
   <bean id="dtfPersister" class="io.s4.example.twittertopiccount.DirectToFilePersister">
-    <property name="outputFilename" value="/tmp/top_n_topics"/>
+    <property name="outputFilename" value="/tmp/top_n_hashtags"/>
   </bean>
 
   <bean id="top10TopicPE" class="io.s4.example.twittertopiccount.TopNTopicPE">
