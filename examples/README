@@ -1,9 +1,0 @@
-Building and running examples:
-1. Build twittertopiccount/
-2. Create an image
-##   Select a directory for creating an image, say IMG_DIR
-     mkdir IMG_DIR
-     cd example_tools/scripts
-     ./prep_image.sh
-3. Run application from IMG_DIR/bin. Refer to the Getting Started
-   guide for more information.
