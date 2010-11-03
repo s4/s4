@@ -1,0 +1,5 @@
+ZooKeeper must be installed to your local Maven repository manually. The jar is located
+at lib/zookeeper-3.1.1.jar within this project. To install, run the following command:
+
+mvn install:install-file -DgroupId=org.apache.hadoop -DartifactId=zookeeper -Dversion=3.1.1 -Dpackaging=jar -Dfile=<path to zookeeper-3.1.1.jar>
+

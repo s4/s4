@@ -1,0 +1,23 @@
+<config>
+	    
+	<list name="tasks.list">
+		<item>ep_tasks</item>	
+	</list>
+	<!-- This version must be upped for every change -->
+	<scalar name="ep_tasks.version">1.0.0.0</scalar>
+	<scalar name="s4_tasks.version">1.0.0.0</scalar>
+	<hash name="s4_tasks.config">
+		<item name="num.tasks">2</item>
+		<item name="app.name">s4</item>			
+		<item name="task.type">listener</item>			
+		<item name="mode">unicast</item>
+		<item name="partition">0,1</item>
+		<item name="port">5001,5002</item>
+	</hash>	
+	<hash name="ep_tasks.config">
+		<item name="num.tasks">1</item>
+		<item name="app.name">s4_event_pipe</item>			
+		<item name="task.type">sender</item>			
+		<item name="mode">unicast</item>
+	</hash>	
+</config>

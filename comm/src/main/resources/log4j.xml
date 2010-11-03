@@ -1,0 +1,33 @@
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/"	>
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{dd/MM/yy hh:mm:ss:sss z}] %5p %c{2}: %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
+	</appender>
+
+	<appender name="FILE" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="comm.log" />
+		<param name="MaxFileSize" value="1MB" />
+		<param name="MaxBackupIndex" value="100" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{dd/MM/yy hh:mm:ss:sss z}] %5p %c{2}: %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="zk">
+	  <level value="info"/>
+	  <appender-ref ref="CONSOLE" /> 
+	</logger>
+<!-- 
+	<root>
+		<priority value="debug" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ASYNC" />
+	</root>
+	 -->
+</log4j:configuration>
