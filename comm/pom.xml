@@ -31,7 +31,6 @@
     </dependency>
   </dependencies>
   <build>
-    <directory>target/${artifactId}-${version}.dir</directory>
     <plugins>
       <plugin>
 	<artifactId>maven-compiler-plugin</artifactId>
