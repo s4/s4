@@ -1,0 +1,15 @@
+<config>
+	<list name="process.list">
+		<item>s4_listener_process</item>	
+	</list>
+	<hash name="s4_listener_process.config">
+		<item name="num.process">2</item>
+		<item name="app.name">s4</item>			
+		<item name="task.type">listener</item>			
+		<item name="mode">unicast</item>
+		<item name="partition">0,1</item>
+		<item name="port">5001,5002</item>
+		<item name="process.host">halfalways-lx</item>
+		<item name="ID">PROCESS_1,PROCESS_2</item>
+	</hash>	
+</config>
