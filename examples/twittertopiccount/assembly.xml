@@ -2,38 +2,34 @@
 <assembly>
   <id />
   <formats>
-    <format>dir</format>
+    <format>tar.gz</format>
   </formats>
-  <includeBaseDirectory>false</includeBaseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
   <dependencySets>
     <dependencySet>
       <unpack>false</unpack>
       <outputDirectory>lib</outputDirectory>
       <scope>runtime</scope>
       <useProjectArtifact>false</useProjectArtifact>
+      <excludes>
+        <exclude>log4j:log4j</exclude>
+      </excludes>
     </dependencySet>
   </dependencySets> 
   <fileSets>
     <fileSet>
-      <directory>src/main/resources</directory>
-      <outputDirectory />
-      <includes>
-	<include>twittertopiccount_conf.xml</include>
-	<include>adapter_conf.xml</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>target</directory>
-      <outputDirectory />
+      <directory>${project.basedir}/target</directory>
+      <outputDirectory>lib</outputDirectory>
       <includes>
 	<include>*.jar</include>
       </includes>
     </fileSet>
     <fileSet>
-      <directory />
+      <directory>${project.basedir}/src/main/resources</directory>
       <outputDirectory />
       <includes>
-	<include>pom.xml</include>
+	<include>twittertopiccount_conf.xml</include>
+	<include>adapter_conf.xml</include>
       </includes>
     </fileSet>
   </fileSets>

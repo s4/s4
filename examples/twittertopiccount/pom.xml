@@ -34,7 +34,7 @@
     <dependency>
       <groupId>io.s4</groupId>
       <artifactId>s4_core</artifactId>
-      <version>2.0.0.0</version>
+      <version>0.2.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -50,6 +50,14 @@
   </dependencies>
   <build>
     <finalName>${artifactId}-${version}</finalName>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>*</exclude>
+        </excludes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
 	<artifactId>maven-compiler-plugin</artifactId>
@@ -62,7 +70,6 @@
       <plugin>
 	<artifactId>maven-assembly-plugin</artifactId>
 	<configuration>
-	  <ignoreDirFormatExtensions>false</ignoreDirFormatExtensions>
 	  <descriptors>
 	    <descriptor>assembly.xml</descriptor>
 	  </descriptors>
