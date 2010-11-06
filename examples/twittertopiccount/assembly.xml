@@ -5,6 +5,7 @@
     <format>tar.gz</format>
   </formats>
   <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>${artifactId}</baseDirectory>
   <dependencySets>
     <dependencySet>
       <unpack>false</unpack>
