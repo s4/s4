@@ -20,4 +20,4 @@ Build Instructions
         mvn install:install-file -DgroupId=org.apache.hadoop -DartifactId=zookeeper -Dversion=3.1.1 -Dpackaging=jar -Dfile=lib/zookeeper-3.1.1.jar
 
 2. Build and install using Maven
-        mvn assembly:assembly install
+        mvn install
