@@ -4,7 +4,7 @@
   <groupId>io.s4.comm</groupId>
   <artifactId>comm</artifactId>
   <packaging>jar</packaging>
-  <version>2.0.0.0</version>
+  <version>0.2.0.0</version>
   <name>comm</name>
   <url>http://maven.apache.org</url>
   <dependencies>
@@ -55,14 +55,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-	<artifactId>maven-assembly-plugin</artifactId>
-	<configuration>
-	  <descriptors>
-	    <descriptor>assembly.xml</descriptor>
-	  </descriptors>
-	</configuration>
       </plugin>
     </plugins>
   </build>
