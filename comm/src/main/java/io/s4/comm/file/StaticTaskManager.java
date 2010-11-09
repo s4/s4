@@ -67,7 +67,6 @@ public class StaticTaskManager implements TaskManager {
                                                                              true);
 
         processSet.addAll(processList);
-        System.out.println("Process set is " + processSet);
     }
 
     /**

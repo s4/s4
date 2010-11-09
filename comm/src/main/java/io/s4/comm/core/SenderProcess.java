@@ -58,8 +58,6 @@ public class SenderProcess {
      */
 
     public Object acquireTaskAndCreateSender(Map<String, String> map) {
-        System.out.println("Acquiring task for adapterClusterName "
-                + adapterClusterName + ", s4ClusterName " + s4ClusterName);
         TaskManager manager = CommServiceFactory.getTaskManager(zkaddress,
                                                                 adapterClusterName,
                                                                 ClusterType.ADAPTER,
@@ -74,8 +72,6 @@ public class SenderProcess {
 
     public void createSenderFromConfig(Object senderConfig) {
         if (serializer != null) {
-            System.out.println("Creating generic sender for adapterClusterName "
-                    + adapterClusterName + ", s4ClusterName " + s4ClusterName);
             this.genericSender = new GenericSender(zkaddress,
                                                    adapterClusterName,
                                                    s4ClusterName,

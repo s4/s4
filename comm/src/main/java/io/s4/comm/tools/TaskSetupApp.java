@@ -76,7 +76,6 @@ public class TaskSetupApp {
 
     private static void processCluster(boolean clean, String zkAddress, Cluster cluster, String version) {
         List<Map<String,String>> clusterInfo = ConfigUtils.readConfig(cluster, cluster.getName(), cluster.getType(), false);
-        System.out.println(clusterInfo);
         ZkTaskSetup zkSetup = new ZkTaskSetup(zkAddress, cluster.getName(), cluster.getType());
         if (clean) {
             zkSetup.cleanUp();

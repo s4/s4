@@ -55,7 +55,6 @@ public class GenericSender {
             if (mode.equals("unicast")) {
                 socket = new DatagramSocket();
             }
-            System.out.println("S4 cluster name is " + s4ClusterName);
             listenerMonitor = CommServiceFactory.getProcessMonitor(this.zkAddress,
                                                                    s4ClusterName,
                                                                    callbackHandler);
