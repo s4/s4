@@ -17,8 +17,9 @@ package io.s4.comm.test;
 
 import io.s4.comm.util.CommUtil;
 import io.s4.comm.util.JSONUtil;
-import io.s4.comm.zk.ZkTaskManager;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 import io.s4.comm.zk.ZkTaskSetup;
+import io.s4.comm.zk.ZkTaskManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public class TestTaskSetupApp {
         // setup
         ZooKeeper zk = new ZooKeeper(address, 30000, watcher);
         String root = "/tasksetup_app_test";
-        ZkTaskSetup zkSetup = new ZkTaskSetup(address, root);
+        ZkTaskSetup zkSetup = new ZkTaskSetup(address, root, ClusterType.S4);
         Map<String, String> task1 = new HashMap<String, String>();
         task1.put("name", "task-1");
 
@@ -61,7 +62,7 @@ public class TestTaskSetupApp {
         Stat exists = zk.exists(tasksListRoot, false);
         myassert(exists == null);
         Object[] data = new Object[] { task1, task2 };
-        zkSetup.setUpTasks(2, data);
+        zkSetup.setUpTasks(data);
 
         // verify that tasks are created
         exists = zk.exists(tasksListRoot, false);
@@ -93,7 +94,7 @@ public class TestTaskSetupApp {
         // try running again and make verify new node is not created
         Stat oldStat = zk.exists(tasksListRoot, false);
         System.out.println("oldStat=" + oldStat);
-        zkSetup.setUpTasks(2, data);
+        zkSetup.setUpTasks(data);
         Stat newStat = zk.exists(tasksListRoot, false);
         System.out.println("newstat=" + newStat);
         myassert(oldStat.getMtime() == newStat.getMtime());
@@ -103,14 +104,14 @@ public class TestTaskSetupApp {
         oldStat = zk.exists(tasksListRoot, false);
         System.out.println("oldStat=" + oldStat.getVersion());
         ((Map<String, String>) data[data.length - 1]).put("name", "changedname");
-        zkSetup.setUpTasks(2, data);
+        zkSetup.setUpTasks(data);
         newStat = zk.exists(tasksListRoot, false);
         System.out.println("newstat=" + newStat.getVersion());
         System.out.println();
         myassert(oldStat.getMtime() != newStat.getMtime());
 
         // ensure version change is working
-        zkSetup.setUpTasks("1.0.0.0", 2, data);
+        zkSetup.setUpTasks("1.0.0.0", data);
     }
 
     private void myassert(boolean b) {

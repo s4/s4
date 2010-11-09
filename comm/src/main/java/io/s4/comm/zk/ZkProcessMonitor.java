@@ -19,6 +19,7 @@ import io.s4.comm.core.CommEventCallback;
 import io.s4.comm.core.DefaultWatcher;
 import io.s4.comm.core.ProcessMonitor;
 import io.s4.comm.util.JSONUtil;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,23 +33,23 @@ import org.apache.zookeeper.data.Stat;
 public class ZkProcessMonitor extends DefaultWatcher implements Runnable,
         ProcessMonitor {
     static Logger logger = Logger.getLogger(ZkProcessMonitor.class);
-    private String appName;
     private List<Object> destinationList;
     private Map<Integer, Object> destinationMap;
     private String processZNode;
     private Object lock = new Object();
     private volatile boolean updateMode = false;
-    private String tasksNode;
+    private String taskZNode;
     private int taskCount;
 
-    public ZkProcessMonitor(String address, String root) {
-        this(address, root, null);
+    public ZkProcessMonitor(String address, String clusterName, ClusterType clusterType) {
+        this(address, clusterName, clusterType, null);
     }
 
-    public ZkProcessMonitor(String address, String root,
+    public ZkProcessMonitor(String address, String ClusterName, ClusterType clusterType,
             CommEventCallback callbackHandler) {
         super(address, callbackHandler);
-        this.tasksNode = root + "/tasks";
+        String root = "/" + ClusterName + "/" + clusterType.toString();
+        this.taskZNode = root + "/task";
         this.processZNode = root + "/process";
         destinationMap = new HashMap<Integer, Object>();
         destinationList = new ArrayList<Object>();
@@ -67,7 +68,7 @@ public class ZkProcessMonitor extends DefaultWatcher implements Runnable,
                 Map<Integer, Object> tempDestinationMap = new HashMap<Integer, Object>();
                 List<Object> tempDestinationList = new ArrayList<Object>();
                 updateMode = true;
-                List<String> tasks = zk.getChildren(tasksNode, false);
+                List<String> tasks = zk.getChildren(taskZNode, false);
                 this.taskCount = tasks.size();
                 List<String> children = zk.getChildren(processZNode, false);
                 for (String name : children) {

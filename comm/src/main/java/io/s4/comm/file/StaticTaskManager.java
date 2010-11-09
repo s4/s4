@@ -18,9 +18,9 @@ package io.s4.comm.file;
 import io.s4.comm.core.CommEventCallback;
 import io.s4.comm.core.CommLayerState;
 import io.s4.comm.core.TaskManager;
-import io.s4.comm.util.Config;
-import io.s4.comm.util.ConfigParser;
+import io.s4.comm.util.ConfigUtils;
 import io.s4.comm.util.SystemUtils;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,7 +37,8 @@ import org.apache.log4j.Logger;
 public class StaticTaskManager implements TaskManager {
     static Logger logger = Logger.getLogger(StaticTaskManager.class);
     Set<Map<String, String>> processSet = new HashSet<Map<String, String>>();
-    private final String root;
+    private final String clusterName;
+    private final ClusterType clusterType;
 
     /**
      * Constructor of TaskManager
@@ -45,11 +46,12 @@ public class StaticTaskManager implements TaskManager {
      * @param address
      * @param name
      */
-    public StaticTaskManager(String address, String root,
-            CommEventCallback callbackHandler) {
-        this.root = root;
+    public StaticTaskManager(String address, String clusterName,
+            ClusterType clusterType, CommEventCallback callbackHandler) {
+        this.clusterName = clusterName;
+        this.clusterType = clusterType;
         // read the configuration file
-        readStaticConfig(root);
+        readStaticConfig();
         if (callbackHandler != null) {
             Map<String, Object> eventData = new HashMap<String, Object>();
             eventData.put("state", CommLayerState.INITIALIZED);
@@ -57,43 +59,15 @@ public class StaticTaskManager implements TaskManager {
         }
     }
 
-    private void readStaticConfig(String root) {
+    private void readStaticConfig() {
         // It should be available in classpath
-        String configfile = root + ".xml";
-        Config config = ConfigParser.parse(configfile);
-        List<String> processList = config.getList("process.list");
-        for (String process : processList) {
-            Map<String, String> paramsMap = config.getMap(process + ".config");
-            loadProcess(paramsMap);
-        }
-    }
+        List<Map<String, String>> processList = ConfigUtils.readConfig("clusters.xml",
+                                                                             clusterName,
+                                                                             clusterType,
+                                                                             true);
 
-    @SuppressWarnings("unchecked")
-    private void loadProcess(Map<String, String> paramsMap) {
-        logger.info(paramsMap);
-        int numProcess = Integer.parseInt(paramsMap.get("num.process"));
-        Object[] data = new Object[numProcess];
-        for (int i = 0; i < numProcess; i++) {
-            data[i] = new HashMap<String, String>();
-        }
-        for (String key : paramsMap.keySet()) {
-            String val = paramsMap.get(key);
-            String[] split = val.split(",");
-            for (int i = 0; i < numProcess; i++) {
-                if (split.length == 1) {
-                    ((Map<String, String>) data[i]).put(key, split[0]);
-                } else if (split.length == numProcess) {
-                    ((Map<String, String>) data[i]).put(key, split[i]);
-                } else {
-                    // TODO:support sequential
-                    throw new RuntimeException("Invalid entry in configuration: Must match either 1 or num.process: "
-                            + val);
-                }
-            }
-        }
-        for (int i = 0; i < numProcess; i++) {
-            processSet.add((Map<String, String>) data[i]);
-        }
+        processSet.addAll(processList);
+        System.out.println("Process set is " + processSet);
     }
 
     /**
@@ -124,8 +98,7 @@ public class StaticTaskManager implements TaskManager {
     public Object acquireTask(Map<String, String> customTaskData) {
         while (true) {
             try {
-                for (Object obj : processSet) {
-                    Map<String, String> processConfig = (Map<String, String>) obj;
+                for (Map<String, String> processConfig : processSet) {
                     boolean processAvailable = canTakeupProcess(processConfig);
                     logger.info("processAvailable:" + processAvailable);
                     if (processAvailable) {
@@ -178,8 +151,7 @@ public class StaticTaskManager implements TaskManager {
 
     private String createLockFileName(Map<String, String> processConfig) {
         String lockDir = System.getProperty("lock_dir");
-        String lockFileName = root.replaceAll("/", "_")
-                + processConfig.get("ID");
+        String lockFileName = clusterName + processConfig.get("ID");
         if (lockDir != null && lockDir.trim().length() > 0) {
             File file = new File(lockDir);
             if (!file.exists()) {

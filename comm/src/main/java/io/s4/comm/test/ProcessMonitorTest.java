@@ -15,11 +15,10 @@
  */
 package io.s4.comm.test;
 
-import io.s4.comm.core.TaskManager;
 import io.s4.comm.file.StaticProcessMonitor;
-import io.s4.comm.file.StaticTaskManager;
-import io.s4.comm.zk.ZkTaskManager;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 import io.s4.comm.zk.ZkTaskSetup;
+import io.s4.comm.zk.ZkTaskManager;
 
 import java.io.File;
 import java.util.HashMap;
@@ -36,7 +35,8 @@ public class ProcessMonitorTest {
         String address = null;
         address = "localhost:2181";
         StaticProcessMonitor monitor = new StaticProcessMonitor(address,
-                                                                "taskmanagerTest");
+                                                                "taskmanagerTest",
+                                                                ClusterType.S4);
         monitor.monitor();
         System.out.println(monitor.getDestinationList());
         System.out.println(monitor.getDestinationMap());
@@ -48,14 +48,17 @@ public class ProcessMonitorTest {
         String address = args[0];
         address = "localhost:2181";
         String processName = args[1];
-        ZkTaskSetup zkTaskSetup = new ZkTaskSetup(address, "/taskmanagerTest");
+        ZkTaskSetup zkTaskSetup = new ZkTaskSetup(address,
+                                                        "/taskmanagerTest",
+                                                        ClusterType.S4);
         zkTaskSetup.cleanUp();
-        zkTaskSetup.setUpTasks("1.0.0.", 2, new String[] { "task0", "task1" });
+        zkTaskSetup.setUpTasks("1.0.0.", new String[] { "task0", "task1" });
         Object obj;
         System.out.println(processName + " Going to Wait for a task");
         HashMap<String, String> map = new HashMap<String, String>();
         ZkTaskManager taskManager = new ZkTaskManager(address,
-                                                      "/taskmanagerTest");
+                                                      "/taskmanagerTest",
+                                                      ClusterType.S4);
         obj = taskManager.acquireTask(map);
         System.out.println(processName + "taking up task: " + obj);
         File f = new File("c:/" + obj + ".file");

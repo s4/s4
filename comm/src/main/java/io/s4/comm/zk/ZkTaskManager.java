@@ -19,6 +19,7 @@ import io.s4.comm.core.CommEventCallback;
 import io.s4.comm.core.DefaultWatcher;
 import io.s4.comm.core.TaskManager;
 import io.s4.comm.util.JSONUtil;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +36,8 @@ public class ZkTaskManager extends DefaultWatcher implements TaskManager {
     String tasksListRoot;
     String processListRoot;
 
-    public ZkTaskManager(String address, String root) {
-        this(address, root, null);
+    public ZkTaskManager(String address, String ClusterName, ClusterType clusterType) {
+        this(address, ClusterName, clusterType, null);
     }
 
     /**
@@ -45,11 +46,11 @@ public class ZkTaskManager extends DefaultWatcher implements TaskManager {
      * @param address
      * @param name
      */
-    public ZkTaskManager(String address, String root,
+    public ZkTaskManager(String address, String ClusterName, ClusterType clusterType,
             CommEventCallback callbackHandler) {
         super(address, callbackHandler);
-        this.root = root;
-        this.tasksListRoot = root + "/tasks";
+        this.root = "/" + ClusterName + "/" + clusterType.toString();
+        this.tasksListRoot = root + "/task";
         this.processListRoot = root + "/process";
     }
 

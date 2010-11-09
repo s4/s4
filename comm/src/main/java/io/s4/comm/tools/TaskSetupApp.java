@@ -15,14 +15,13 @@
  */
 package io.s4.comm.tools;
 
-import io.s4.comm.util.Config;
+import io.s4.comm.util.ConfigUtils;
 import io.s4.comm.util.ConfigParser;
-import io.s4.comm.zk.ZkTaskManager;
+import io.s4.comm.util.ConfigParser.Cluster;
+import io.s4.comm.util.ConfigParser.Config;
 import io.s4.comm.zk.ZkTaskSetup;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +55,7 @@ public class TaskSetupApp {
         }
         if (!setup && !clean) {
             System.err.println("Invalid usage.");
-            printusage("Must specify atleast one of of clean, setup.");
+            printusage("Must specify at least one of of clean, setup.");
         }
         doMain(zkAddress, clean, setup, setupXml);
     }
@@ -68,65 +67,21 @@ public class TaskSetupApp {
     }
 
     private static void doMain(String zkAddress, boolean clean, boolean setup, String setupXml) {
-        Config config = ConfigParser.parse(setupXml);
-        List<String> tasksList = config.getList("tasks.list");
-        for (String task : tasksList) {
-            String version = config.getString(task + ".version");
-            Map<String, String> paramsMap = config.getMap(task + ".config");
-            processTask(clean, zkAddress, paramsMap, version);
+        ConfigParser parser = new ConfigParser();
+        Config config = parser.parse(setupXml);
+        for (Cluster cluster : config.getClusters()) {
+            processCluster(clean, zkAddress, cluster, config.getVersion());
         }
     }
 
-    private static void processTask(boolean clean, String zkAddress, Map<String, String> paramsMap, String version) {
-        System.out.println(paramsMap);
-        String appName = paramsMap.get("app.name");
-        int numTasks = Integer.parseInt(paramsMap.get("num.tasks"));
-        String taskType = paramsMap.get("task.type");
-        String root = "/" + appName + "/" + taskType;
-        System.out.println("root:" + root);
-        ZkTaskSetup zkSetup = new ZkTaskSetup(zkAddress, root);
+    private static void processCluster(boolean clean, String zkAddress, Cluster cluster, String version) {
+        List<Map<String,String>> clusterInfo = ConfigUtils.readConfig(cluster, cluster.getName(), cluster.getType(), false);
+        System.out.println(clusterInfo);
+        ZkTaskSetup zkSetup = new ZkTaskSetup(zkAddress, cluster.getName(), cluster.getType());
         if (clean) {
             zkSetup.cleanUp();
         }
-        Object[] data = new Object[numTasks];
-
-        for (int i = 0; i < numTasks; i++) {
-            data[i] = new HashMap<String, String>();
-        }
-
-        for (String key : paramsMap.keySet()) {
-            String val = paramsMap.get(key);
-            String[] split = val.split(",");
-            for (int i = 0; i < numTasks; i++) {
-                if (split.length == 1) {
-                    ((Map<String, String>) data[i]).put(key, split[0]);
-                } else if (split.length == numTasks) {
-                    ((Map<String, String>) data[i]).put(key, split[i]);
-                } else {
-                    // TODO:support sequential
-                    throw new RuntimeException("Invalid entry in configuration: Must match either 1 or num.tasks: "
-                            + val);
-                }
-            }
-        }
-        zkSetup.setUpTasks(version, numTasks, data);
-        /*
-         * if (taskType.equals("listener")) { Object[] data = new
-         * Object[numTasks]; int startPort =
-         * Integer.parseInt(paramsMap.get("port.start")); boolean
-         * enablePartition = Boolean.valueOf(paramsMap.get("enable.partition"));
-         * for (int i = 0; i < numTasks; i++) { Map<String, String> map = new
-         * HashMap<String, String>(); if (mode.equals("multicast")) {
-         * map.put("address", paramsMap.get("address")); map.put("port", "" +
-         * (startPort + i)); } else if (mode.equals("unicast")) {
-         * map.put("port", "" + (startPort + i)); } map.put("mode", mode);
-         * if(enablePartition){ map.put("partition", "" + i); } data[i] = map; }
-         * manager.setUpTasks(numTasks, data); }else if
-         * (taskType.equals("sender")) { Object[] data = new Object[numTasks];
-         * for (int i = 0; i < numTasks; i++) { Map<String, String> map = new
-         * HashMap<String, String>(); map.put("mode", mode); data[i] = map; }
-         * manager.setUpTasks(numTasks, data); }else{ throw new
-         * RuntimeException("UNKNOWN TASK TYPE"); }
-         */
+        
+        zkSetup.setUpTasks(version, clusterInfo.toArray());
     }
 }

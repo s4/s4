@@ -15,26 +15,26 @@
  */
 package io.s4.comm.core;
 
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
+
 import java.util.Map;
 
 public class SenderProcess {
     protected final String zkaddress;
-    protected final String senderAppName;
-    protected final String listenerAppName;
-    protected String senderRoot;
+    protected final String adapterClusterName;
+    protected final String s4ClusterName;
     protected Serializer serializer;
     protected CommEventCallback callbackHandler;
 
-    public SenderProcess(String zkaddress, String appName) {
-        this(zkaddress, appName, appName);
+    public SenderProcess(String zkaddress, String clusterName) {
+        this(zkaddress, clusterName, clusterName);
     }
 
-    public SenderProcess(String zkaddress, String senderAppName,
-            String listenerAppName) {
+    public SenderProcess(String zkaddress, String adapterClusterName,
+            String s4ClusterName) {
         this.zkaddress = zkaddress;
-        this.senderAppName = senderAppName;
-        this.listenerAppName = listenerAppName;
-        this.senderRoot = "/" + senderAppName + "/sender";
+        this.adapterClusterName = adapterClusterName;
+        this.s4ClusterName = s4ClusterName;
     }
 
     public void setSerializer(Serializer serializer) {
@@ -58,8 +58,11 @@ public class SenderProcess {
      */
 
     public Object acquireTaskAndCreateSender(Map<String, String> map) {
+        System.out.println("Acquiring task for adapterClusterName "
+                + adapterClusterName + ", s4ClusterName " + s4ClusterName);
         TaskManager manager = CommServiceFactory.getTaskManager(zkaddress,
-                                                                senderRoot,
+                                                                adapterClusterName,
+                                                                ClusterType.ADAPTER,
                                                                 callbackHandler);
         if (callbackHandler != null) {
             // manager.setCallbackHandler(callbackHandler);
@@ -71,15 +74,17 @@ public class SenderProcess {
 
     public void createSenderFromConfig(Object senderConfig) {
         if (serializer != null) {
+            System.out.println("Creating generic sender for adapterClusterName "
+                    + adapterClusterName + ", s4ClusterName " + s4ClusterName);
             this.genericSender = new GenericSender(zkaddress,
-                                                   senderAppName,
-                                                   listenerAppName,
+                                                   adapterClusterName,
+                                                   s4ClusterName,
                                                    senderConfig,
                                                    serializer);
         } else {
             this.genericSender = new GenericSender(zkaddress,
-                                                   senderAppName,
-                                                   listenerAppName,
+                                                   adapterClusterName,
+                                                   s4ClusterName,
                                                    senderConfig);
         }
         if (callbackHandler != null) {
