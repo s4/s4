@@ -4,7 +4,7 @@
   <groupId>io.s4.examples.twittertopiccount</groupId>
   <artifactId>twittertopiccount</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.0.1</version>
+  <version>0.0.0.2</version>
   <name>twittertopiccount</name>
   <url>http://maven.apache.org</url>
   <dependencies>
@@ -34,7 +34,7 @@
     <dependency>
       <groupId>io.s4</groupId>
       <artifactId>s4_core</artifactId>
-      <version>0.2.0.0</version>
+      <version>0.2.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
