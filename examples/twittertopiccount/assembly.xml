@@ -17,6 +17,13 @@
       </excludes>
     </dependencySet>
   </dependencySets> 
+  <files>
+    <file>
+      <source>${project.basedir}/NOTICE.txt</source>
+      <outputDirectory></outputDirectory>
+      <destName>NOTICE.txt</destName>
+    </file>
+  </files>
   <fileSets>
     <fileSet>
       <directory>${project.basedir}/target</directory>
