@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+  <bean id="eventCatcher" class="io.s4.example.speech01.SentenceReceiverPE">
+    <property name="keys">
+      <list>
+        <value>SentenceJoined *</value>
+      </list>
+    </property>
+  </bean>
+
+  <bean id="rerouteSentencePE" class="io.s4.processor.ReroutePE">
+    <property name="id" value="rerouteSentencePE"/>
+    <property name="dispatcher" ref="dispatcher"/>
+    <property name="keys">
+      <list>
+        <value>RawSentence *</value>
+      </list>
+    </property>
+    <property name="outputStreamName" value="Sentence"/>
+  </bean>
+
+  <bean id="rerouteSpeechPE" class="io.s4.processor.ReroutePE">
+    <property name="id" value="rerouteSpeechPE"/>
+    <property name="dispatcher" ref="dispatcher"/>
+    <property name="keys">
+      <list>
+        <value>RawSpeech *</value>
+      </list>
+    </property>
+    <property name="outputStreamName" value="Speech"/>
+  </bean>
+
+  <bean id="sentenceJoinPE" class="io.s4.processor.JoinPE">
+    <property name="id" value="sentenceJoinPE"/>
+    <property name="keys">
+      <list>
+        <value>Sentence speechId</value>
+        <value>Speech id</value>
+      </list>
+    </property>
+    <property name="includeFields">
+      <list>
+        <value>Sentence *</value>
+        <value>Speech location</value>
+      </list>
+    </property>
+    <property name="outputStreamName" value="SentenceJoined"/>
+    <property name="outputClassName" value="io.s4.example.speech01.Sentence"/>
+    <property name="dispatcher" ref="dispatcher"/>
+    <property name="ttl" value="600"/> <!-- join related events that arrive no more than 10 minutes apart -->
+  </bean>
+
+  <bean id="sentenceSpeechIdPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+    <property name="streamNames">
+      <list>
+        <value>Sentence</value>
+        <value>SentenceJoined</value>
+      </list>
+    </property>
+    <property name="hashKey">
+      <list>
+        <value>speechId</value>
+      </list>
+    </property>
+    <property name="hasher" ref="hasher"/>
+    <property name="debug" value="false"/>
+  </bean>
+
+  <bean id="speechIdPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+    <property name="streamNames">
+      <list>
+        <value>Speech</value>
+      </list>
+    </property>
+    <property name="hashKey">
+      <list>
+        <value>id</value>
+      </list>
+    </property>
+    <property name="hasher" ref="hasher"/>
+    <property name="debug" value="false"/>
+  </bean>
+
+  <bean id="dispatcher" class="io.s4.dispatcher.Dispatcher" init-method="init">
+    <property name="partitioners">
+      <list>
+        <ref bean="sentenceSpeechIdPartitioner"/>
+        <ref bean="speechIdPartitioner"/>
+      </list>
+    </property>
+    <property name="eventEmitter" ref="commLayerEmitter"/>
+    <property name="loggerName" value="s4"/>
+  </bean>
+
+</beans>
