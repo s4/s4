@@ -101,7 +101,7 @@ public class TopNTopicPE extends AbstractPE {
                 jsonTopN.put(jsonEntry);
             }
             message.put("topN", jsonTopN);
-            persister.set(persistKey, message.toString(), persistTime);
+            persister.set(persistKey, message.toString()+"\n", persistTime);
         } catch (Exception e) {
             Logger.getLogger("s4").error(e);
         }
