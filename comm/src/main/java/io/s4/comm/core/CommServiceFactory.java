@@ -17,10 +17,9 @@ package io.s4.comm.core;
 
 import io.s4.comm.file.StaticProcessMonitor;
 import io.s4.comm.file.StaticTaskManager;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 import io.s4.comm.zk.ZkProcessMonitor;
 import io.s4.comm.zk.ZkTaskManager;
-
-import java.io.File;
 
 import org.apache.log4j.Logger;
 
@@ -33,32 +32,40 @@ import org.apache.log4j.Logger;
 public class CommServiceFactory {
     private static Logger logger = Logger.getLogger(CommServiceFactory.class);
 
-    public static TaskManager getTaskManager(String zkaddress, String root, CommEventCallback callbackHandler) {
+    public static TaskManager getTaskManager(String zkaddress,
+            String clusterName, ClusterType clusterType,
+            CommEventCallback callbackHandler) {
         String mode = System.getProperty("commlayer.mode");
-        TaskManager taskManager;
+        TaskManager taskManager = null;
         if (mode != null && mode.equalsIgnoreCase("static")) {
             logger.info("Comm layer mode is set to static");
-            root = root.substring(1);
             taskManager = new StaticTaskManager(zkaddress,
-                                                root,
+                                                clusterName,
+                                                clusterType,
                                                 callbackHandler);
         } else {
-            taskManager = new ZkTaskManager(zkaddress, root, callbackHandler);
+            taskManager = new ZkTaskManager(zkaddress,
+                                            clusterName,
+                                            clusterType,
+                                            callbackHandler);
         }
 
         return taskManager;
     }
 
-    public static ProcessMonitor getProcessMonitor(String zkaddress, String processNode, CommEventCallback callbackHandler) {
-        ProcessMonitor processMonitor;
+    public static ProcessMonitor getProcessMonitor(String zkaddress,
+            String clusterName, CommEventCallback callbackHandler) {
+        ProcessMonitor processMonitor = null;
         String mode = System.getProperty("commlayer.mode");
         if (mode != null && mode.equalsIgnoreCase("static")) {
             logger.info("Comm layer mode is set to static");
-            processNode = processNode.substring(1);
-            processMonitor = new StaticProcessMonitor(zkaddress, processNode);
+            processMonitor = new StaticProcessMonitor(zkaddress,
+                                                      clusterName,
+                                                      ClusterType.S4);
         } else {
             processMonitor = new ZkProcessMonitor(zkaddress,
-                                                  processNode,
+                                                  clusterName,
+                                                  ClusterType.S4,
                                                   callbackHandler);
         }
         return processMonitor;

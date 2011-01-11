@@ -19,6 +19,7 @@ import io.s4.comm.core.CommEventCallback;
 import io.s4.comm.core.DefaultWatcher;
 import io.s4.comm.util.CommUtil;
 import io.s4.comm.util.JSONUtil;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 
 import java.io.File;
 import java.util.HashMap;
@@ -35,8 +36,8 @@ public class ZkTaskSetup extends DefaultWatcher {
     String tasksListRoot;
     String processListRoot;
 
-    public ZkTaskSetup(String address, String root) {
-        this(address, root, null);
+    public ZkTaskSetup(String address, String clusterName, ClusterType clusterType) {
+        this(address, clusterName, clusterType, null);
     }
 
     /**
@@ -45,16 +46,17 @@ public class ZkTaskSetup extends DefaultWatcher {
      * @param address
      * @param name
      */
-    public ZkTaskSetup(String address, String root,
+    public ZkTaskSetup(String address, String clusterName, ClusterType clusterType,
             CommEventCallback callbackHandler) {
         super(address, callbackHandler);
-        this.root = root;
-        this.tasksListRoot = root + "/tasks";
+        
+        this.root = "/" + clusterName + "/" + clusterType.toString();
+        this.tasksListRoot = root + "/task";
         this.processListRoot = root + "/process";
     }
 
-    public void setUpTasks(int numTasks, Object[] data) {
-        setUpTasks("-1", numTasks, data);
+    public void setUpTasks(Object[] data) {
+        setUpTasks("-1", data);
     }
 
     /**
@@ -63,7 +65,7 @@ public class ZkTaskSetup extends DefaultWatcher {
      * @param numTasks
      * @param data
      */
-    public void setUpTasks(String version, int numTasks, Object[] data) {
+    public void setUpTasks(String version, Object[] data) {
         try {
             logger.info("Trying to set up configuration with new version:"
                     + version);
@@ -131,7 +133,7 @@ public class ZkTaskSetup extends DefaultWatcher {
 
             }
 
-            for (int i = 0; i < numTasks; i++) {
+            for (int i = 0; i < data.length; i++) {
                 String nodeName = tasksListRoot + "/" + "task" + "-" + i;
                 Stat sTask = zk.exists(nodeName, false);
                 if (sTask == null) {

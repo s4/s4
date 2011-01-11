@@ -42,9 +42,8 @@ public class GenericSender {
     }
 
     @SuppressWarnings("unchecked")
-    public GenericSender(String zkAddress, String senderAppName,
-            String listenerAppName, Object senderConfigData,
-            Serializer serializer) {
+    public GenericSender(String zkAddress, String adapterClusterName,
+            String s4ClusterName, Object senderConfigData, Serializer serializer) {
         this.zkAddress = zkAddress;
         this.serializer = serializer;
         try {
@@ -56,9 +55,8 @@ public class GenericSender {
             if (mode.equals("unicast")) {
                 socket = new DatagramSocket();
             }
-            String root = "/" + listenerAppName + "/listener";
             listenerMonitor = CommServiceFactory.getProcessMonitor(this.zkAddress,
-                                                                   root,
+                                                                   s4ClusterName,
                                                                    callbackHandler);
             if (callbackHandler != null) {
                 // listenerMonitor.setCallbackHandler(callbackHandler);

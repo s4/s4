@@ -15,6 +15,8 @@
  */
 package io.s4.comm.core;
 
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,16 +25,15 @@ import org.apache.log4j.Logger;
 public class ListenerProcess {
     static Logger logger = Logger.getLogger(ListenerProcess.class);
     private final String zkaddress;
-    private final String appName;
+    private final String clusterName;
     private String listenerRoot;
     private GenericListener genericListener;
     private Deserializer deserializer;
     private CommEventCallback callbackHandler;
 
-    public ListenerProcess(String zkaddress, String appName) {
+    public ListenerProcess(String zkaddress, String clusterName) {
         this.zkaddress = zkaddress;
-        this.appName = appName;
-        this.listenerRoot = "/" + appName + "/listener";
+        this.clusterName = clusterName;
     }
 
     /**
@@ -42,7 +43,8 @@ public class ListenerProcess {
      */
     public Object acquireTaskAndCreateListener(Map<String, String> map) {
         TaskManager manager = CommServiceFactory.getTaskManager(zkaddress,
-                                                                listenerRoot,
+                                                                clusterName,
+                                                                ClusterType.S4,
                                                                 callbackHandler);
         logger.info("Waiting for task");
         Object listenerConfig = manager.acquireTask(map);
@@ -54,12 +56,12 @@ public class ListenerProcess {
         logger.info("Starting listener with config: " + listenerConfig);
         if (deserializer != null) {
             genericListener = new GenericListener(zkaddress,
-                                                  appName,
+                                                  clusterName,
                                                   listenerConfig,
                                                   deserializer);
         } else {
             genericListener = new GenericListener(zkaddress,
-                                                  appName,
+                                                  clusterName,
                                                   listenerConfig);
         }
         genericListener.start();

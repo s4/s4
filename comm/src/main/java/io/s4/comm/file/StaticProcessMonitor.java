@@ -15,10 +15,9 @@
  */
 package io.s4.comm.file;
 
-import io.s4.comm.core.CommEventCallback;
 import io.s4.comm.core.ProcessMonitor;
-import io.s4.comm.util.Config;
-import io.s4.comm.util.ConfigParser;
+import io.s4.comm.util.ConfigUtils;
+import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,16 +28,16 @@ import org.apache.log4j.Logger;
 
 public class StaticProcessMonitor implements ProcessMonitor {
     static Logger logger = Logger.getLogger(StaticProcessMonitor.class);
-    private List<Object> destinationList;
-    private Map<Integer, Object> destinationMap;
+    private List<Object> destinationList = new ArrayList<Object>();
+    private Map<Integer, Object> destinationMap = new HashMap<Integer, Object>();
     private int taskCount;
-    private final String root;
+    private final String clusterName;
+    private final ClusterType clusterType;
 
-    public StaticProcessMonitor(String address, String root) {
-        this.root = root;
-        destinationMap = new HashMap<Integer, Object>();
-        destinationList = new ArrayList<Object>();
-
+    public StaticProcessMonitor(String address, String clusterName,
+            ClusterType clusterType) {
+        this.clusterName = clusterName;
+        this.clusterType = clusterType;
     }
 
     public void monitor() {
@@ -46,51 +45,18 @@ public class StaticProcessMonitor implements ProcessMonitor {
     }
 
     private void readConfig() {
-        String configfile = root + ".xml";
-        Config config = ConfigParser.parse(configfile);
-        List<String> processList = config.getList("process.list");
-        // REDUNDANT PROCESS LIST, current design supports only one PROCESS per
-        // xml
-        for (String process : processList) {
-            Map<String, String> paramsMap = config.getMap(process + ".config");
-            loadProcess(paramsMap);
-        }
-
-    }
-
-    private void loadProcess(Map<String, String> paramsMap) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Loading process params:" + paramsMap);
-        }
-        int numProcess = Integer.parseInt(paramsMap.get("num.process"));
-        Object[] data = new Object[numProcess];
-        for (int i = 0; i < numProcess; i++) {
-            data[i] = new HashMap<String, String>();
-        }
-        for (String key : paramsMap.keySet()) {
-            String val = paramsMap.get(key);
-            String[] split = val.split(",");
-            for (int i = 0; i < numProcess; i++) {
-                if (split.length == 1) {
-                    ((Map<String, String>) data[i]).put(key, split[0]);
-                } else if (split.length == numProcess) {
-                    ((Map<String, String>) data[i]).put(key, split[i]);
-                } else {
-                    // TODO:support sequential
-                    throw new RuntimeException("Invalid entry in configuration: Must match either 1 or num.process: "
-                            + val);
-                }
-            }
-        }
-        for (int i = 0; i < numProcess; i++) {
-            Map<String, String> map = (Map<String, String>) data[i];
-            String key = (String) map.get("partition");
+        List<Map<String, String>> processList = ConfigUtils.readConfig("clusters.xml",
+                                                                             clusterName,
+                                                                             clusterType,
+                                                                             true);
+        for (Map<String, String> processMap : processList) {
+            destinationList.add(processMap);
+            String key = (String) processMap.get("partition");
             if (key != null) {
-                destinationMap.put(Integer.parseInt(key), map);
+                destinationMap.put(Integer.parseInt(key), processMap);
             }
-            destinationList.add(map);
         }
-        this.taskCount = numProcess;
+        taskCount = destinationList.size();
         logger.info("Destination List: " + destinationList);
         logger.info("Destination Map: " + destinationMap);
         logger.info("TaskCount: " + taskCount);
