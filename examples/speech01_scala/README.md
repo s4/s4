@@ -3,7 +3,7 @@ Speech01 in Scala
 
 Introduction
 ------------
-This is a rewrite of the speech01 application in the Scala programming language
+This is a rewrite of the speech01 application in the [Scala](http://www.scala-lang.org/) programming language
 
 Requirements
 ------------
