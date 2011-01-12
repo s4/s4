@@ -3,7 +3,7 @@ Speech01 in Scala
 
 Introduction
 ------------
-This is a rewrite of the (hello world-ish) [speech01](http://docs.s4.io/manual/getting_events_into_s4.html) application in the [Scala](http://www.scala-lang.org/) programming language
+This is a rewrite of the (hello world-ish) [speech01](http://docs.s4.io/manual/getting_events_into_s4.html) application in the [Scala](http://www.scala-lang.org/) programming language. 
 
 Requirements
 ------------
