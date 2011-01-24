@@ -1,4 +1,4 @@
-Twitter Hash Tag Count Example
+Twitter Hash Tag Count Example (Scala)
 ===============
 
 Introduction
