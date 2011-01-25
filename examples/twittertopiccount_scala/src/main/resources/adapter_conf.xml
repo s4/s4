@@ -15,8 +15,8 @@
 
   <bean id="twitterStreamClient" class="io.s4.example.twittertopiccount.util.TwitterStreamClient"
         init-method="init">
-    <property name="user" value="s4_test_user"/>
-    <property name="pass" value="s4_test_pass"/>
+    <property name="user" value="<USER ID GOES HERE>"/>
+    <property name="pass" value="<PASSWORD GOES HERE>"/>
     <property name="url" value="http://stream.twitter.com/1/statuses/sample.json"/>
     <property name="queue" ref="tweetQueue"/>
   </bean>
