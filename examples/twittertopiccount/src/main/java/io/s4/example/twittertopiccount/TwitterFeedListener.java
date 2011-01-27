@@ -31,9 +31,9 @@ import org.apache.commons.httpclient.util.EncodingUtil;
 
 import io.s4.collector.EventWrapper;
 import io.s4.listener.EventHandler;
-import io.s4.listener.EventListener;
+import io.s4.listener.EventProducer;
 
-public class TwitterFeedListener implements EventListener, Runnable {
+public class TwitterFeedListener implements EventProducer, Runnable {
     private String userid;
     private String password;
     private String urlString;

@@ -15,12 +15,12 @@
  */
 package io.s4.example.twittertopiccount;
 
-import io.s4.dispatcher.Dispatcher;
+import io.s4.dispatcher.EventDispatcher;
 import io.s4.processor.AbstractPE;
 
 public class TopicCountAndReportPE extends AbstractPE {
     private String id;
-    private Dispatcher dispatcher;
+    private EventDispatcher dispatcher;
     private String outputStreamName;
     private int threshold;
     private int count;
@@ -29,11 +29,11 @@ public class TopicCountAndReportPE extends AbstractPE {
         this.id = id;
     }
 
-    public Dispatcher getDispatcher() {
+    public EventDispatcher getDispatcher() {
         return dispatcher;
     }
 
-    public void setDispatcher(Dispatcher dispatcher) {
+    public void setDispatcher(EventDispatcher dispatcher) {
         this.dispatcher = dispatcher;
     }
 

@@ -76,6 +76,28 @@ public class TopNTopicPE extends AbstractPE {
         topicMap.put(topicSeen.getTopic(), topicSeen.getCount());
     }
 
+    public List<TopNEntry> getTopTopics() {
+        if (entryCount < 1) 
+            return Collections.<TopNEntry>emptyList();
+
+        List<TopNEntry> sortedList = new ArrayList<TopNEntry>();
+
+        for (String key : topicMap.keySet()) {
+            sortedList.add(new TopNEntry(key, topicMap.get(key)));
+        }
+
+        Collections.sort(sortedList);
+
+        // truncate: Yuck!!
+        // unfortunately, Kryo cannot deserialize RandomAccessSubList
+        // if we use ArrayList.subList(...)
+        while (sortedList.size() > entryCount)
+            sortedList.remove(sortedList.size() - 1);
+
+        System.out.println("Top N: " + sortedList);
+        return sortedList;
+    }
+
     @Override
     public void output() {
         List<TopNEntry> sortedList = new ArrayList<TopNEntry>();
@@ -118,8 +140,10 @@ public class TopNTopicPE extends AbstractPE {
             this.count = count;
         }
 
-        String topic;
-        int count;
+        public TopNEntry() {}
+
+        String topic = null;
+        int count = 0;
 
         public String getTopic() {
             return topic;

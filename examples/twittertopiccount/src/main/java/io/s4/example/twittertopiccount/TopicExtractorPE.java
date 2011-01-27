@@ -16,18 +16,19 @@
 package io.s4.example.twittertopiccount;
 
 import io.s4.dispatcher.Dispatcher;
+import io.s4.dispatcher.EventDispatcher;
 import io.s4.processor.AbstractPE;
 
 public class TopicExtractorPE extends AbstractPE {
     private String id;
-    private Dispatcher dispatcher;
+    private EventDispatcher dispatcher;
     private String outputStreamName;
 
-    public Dispatcher getDispatcher() {
+    public EventDispatcher getDispatcher() {
         return dispatcher;
     }
 
-    public void setDispatcher(Dispatcher dispatcher) {
+    public void setDispatcher(EventDispatcher dispatcher) {
         this.dispatcher = dispatcher;
     }
 

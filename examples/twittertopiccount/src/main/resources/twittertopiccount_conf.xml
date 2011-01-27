@@ -30,7 +30,7 @@
     </property>
     <property name="threshold" value="4"/>
     <property name="outputFrequencyByTimeBoundary" value="5"/>
-    <property name="dispatcher" ref="twitDispatcher"/>
+    <property name="dispatcher" ref="forkdispatcher"/>
     <property name="outputStreamName" value="AggregatedTopicSeen"/>
     <property name="ttl" value="36000"/>
   </bean>
@@ -94,4 +94,28 @@
     <property name="eventEmitter" ref="commLayerEmitter"/>
     <property name="loggerName" value="s4"/>
   </bean>
+
+  <!-- dispatcher to S4 and client adapter -->
+  <bean id="forkdispatcher" class="io.s4.dispatcher.MultiDispatcher">
+    <property name="dispatchers">
+      <list>
+
+        <!-- send everything through the S4 dispatcher -->
+        <ref bean="twitDispatcher"/>
+
+
+        <!-- send some streams to client adapters -->
+        <bean id="selectiveDispatchToAdapter" class="io.s4.dispatcher.StreamSelectingDispatcher">
+          <property name="dispatcher" ref="dispatcherToClientAdapters"/>
+          <property name="streams">
+            <list>
+              <value>AggregatedTopicSeen</value>
+            </list>
+          </property>
+        </bean>
+
+      </list>
+    </property>
+  </bean>
+
 </beans>
