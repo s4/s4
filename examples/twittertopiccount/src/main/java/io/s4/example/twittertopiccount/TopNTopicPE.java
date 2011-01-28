@@ -15,6 +15,9 @@
  */
 package io.s4.example.twittertopiccount;
 
+import io.s4.persist.Persister;
+import io.s4.processor.AbstractPE;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,8 +28,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import io.s4.persist.Persister;
-import io.s4.processor.AbstractPE;
+import com.google.gson.Gson;
 
 public class TopNTopicPE extends AbstractPE {
     private String id;
@@ -76,11 +78,11 @@ public class TopNTopicPE extends AbstractPE {
         topicMap.put(topicSeen.getTopic(), topicSeen.getCount());
     }
 
-    public List<TopNEntry> getTopTopics() {
+    public ArrayList<TopNEntry> getTopTopics() {
         if (entryCount < 1) 
-            return Collections.<TopNEntry>emptyList();
+            return null;
 
-        List<TopNEntry> sortedList = new ArrayList<TopNEntry>();
+        ArrayList<TopNEntry> sortedList = new ArrayList<TopNEntry>();
 
         for (String key : topicMap.keySet()) {
             sortedList.add(new TopNEntry(key, topicMap.get(key)));
@@ -94,7 +96,6 @@ public class TopNTopicPE extends AbstractPE {
         while (sortedList.size() > entryCount)
             sortedList.remove(sortedList.size() - 1);
 
-        System.out.println("Top N: " + sortedList);
         return sortedList;
     }
 
@@ -134,7 +135,7 @@ public class TopNTopicPE extends AbstractPE {
         return this.id;
     }
 
-    static class TopNEntry implements Comparable<TopNEntry> {
+    public static class TopNEntry implements Comparable<TopNEntry> {
         public TopNEntry(String topic, int count) {
             this.topic = topic;
             this.count = count;
@@ -170,5 +171,8 @@ public class TopNTopicPE extends AbstractPE {
             return 0;
         }
 
+        public String toString() {
+            return "topic:" + topic + " count:" + count;
+        }
     }
 }
