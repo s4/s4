@@ -8,7 +8,7 @@ $c = new IO::S4::Client("localhost", 2334);
 $c->init();
 print Dumper($c);
 
-$c->connect();
+$c->connect({'readMode' => 'private'});
 
 while (<STDIN>) {
   chomp;

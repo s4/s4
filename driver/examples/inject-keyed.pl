@@ -1,8 +1,9 @@
 use IO::S4::Client;
 use Data::Dumper;
 
-$sn = $ARGV[0];
-$cn = $ARGV[1];
+$sn = shift @ARGV;
+$cn = shift @ARGV;
+$kn = [@ARGV]; # remaining args are keys
 
 $c = new IO::S4::Client("localhost", 2334);
 $c->init();
@@ -12,7 +13,7 @@ $c->connect();
 
 while (<STDIN>) {
   chomp;
-  $c->send($sn, $cn, $_);
+  $c->sendKeyed($sn, $cn, $kn, $_);
   select(undef, undef, undef, 0.1);
   print STDERR '.';
 }
