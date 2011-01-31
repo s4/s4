@@ -20,5 +20,7 @@ import java.io.IOException;
 public interface IOChannel {
     byte[] recv() throws IOException;
 
+    byte[] recv(int timeout) throws IOException;
+
     void send(byte[] v) throws IOException;
 }

@@ -19,7 +19,13 @@ import io.s4.client.util.ByteArrayIOChannel;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -42,6 +48,13 @@ public class Driver {
     protected Socket sock = null;
     protected ByteArrayIOChannel io = null;
 
+    protected ReadMode readMode = ReadMode.Private;
+    protected List<String> readInclude = new ArrayList<String>();
+    protected List<String> readExclude = new ArrayList<String>();
+    protected WriteMode writeMode = WriteMode.Enabled;
+
+    protected int recvTimeoutMs = 0;
+
     /**
      * Configure driver with Adapter location.
      * 
@@ -58,6 +71,124 @@ public class Driver {
     public Driver(String hostname, int port) {
         this.hostname = hostname;
         this.port = port;
+    }
+
+    /**
+     * Set the read mode, if not already connected.
+     * 
+     * @param m
+     *            read mode
+     * @return Driver with read mode set to {@code m}
+     */
+    public Driver setReadMode(ReadMode m) {
+        if (state != State.Connected)
+            this.readMode = m;
+        return this;
+    }
+
+    /**
+     * Add to set of stream names included for reading, if not already
+     * connected.
+     * 
+     * @param s
+     *            list of stream names
+     * @return Updated driver
+     */
+    public Driver readInclude(List<String> s) {
+        if (state != State.Connected)
+            this.readInclude.addAll(s);
+        return this;
+    }
+
+    /**
+     * Add to set of stream names included for reading, if not already
+     * connected.
+     * 
+     * @param s
+     *            list of stream names
+     * @return Updated driver
+     */
+    public Driver readInclude(String[] s) {
+        return readInclude(Arrays.asList(s));
+    }
+
+    /**
+     * Add to set of stream names included for reading, if not already
+     * connected.
+     * 
+     * @param s
+     *            stream name
+     * @return Updated driver
+     */
+    public Driver readInclude(String s) {
+        if (state != State.Connected)
+            this.readInclude.add(s);
+        return this;
+    }
+
+    /**
+     * Add to set of stream names excluded from reading, if not already
+     * connected.
+     * 
+     * @param s
+     *            list of stream names
+     * @return Updated driver
+     */
+    public Driver readExclude(List<String> s) {
+        if (state != State.Connected)
+            this.readExclude.addAll(s);
+        return this;
+    }
+
+    /**
+     * Add to set of stream names excluded from reading, if not already
+     * connected.
+     * 
+     * @param s
+     *            list of stream names
+     * @return Updated driver
+     */
+    public Driver readExclude(String[] s) {
+        return readExclude(Arrays.asList(s));
+    }
+
+    /**
+     * Add to set of stream names excluded from reading, if not already
+     * connected.
+     * 
+     * @param s
+     *            stream name
+     * @return Updated driver
+     */
+    public Driver readExclude(String s) {
+        if (state != State.Connected)
+            this.readExclude.add(s);
+        return this;
+    }
+
+    /**
+     * Set the write mode, if not already connected.
+     * 
+     * @param m
+     *            write mode
+     * @return Driver with write mode set to {@code m}
+     */
+    public Driver setWriteMode(WriteMode m) {
+        if (state != State.Connected)
+            this.writeMode = m;
+        return this;
+    }
+
+    /**
+     * Set the timeout for receiving data.
+     * 
+     * @param ms
+     *            timeout in milliseconds
+     * @return updated driver
+     */
+    public Driver setRecvTimeout(int ms) {
+        this.recvTimeoutMs = ms;
+        return this;
     }
 
     /**
@@ -157,16 +288,11 @@ public class Driver {
      * 
      * @see #init()
      * 
-     * @param readMode
-     *            Read policy for this client.
-     * @param writeMode
-     *            Write policy for this client.
      * @return true if and only if a connection was successfully established.
      * @throws IOException
      *             if the underlying TCP/IP socket throws an exception.
      */
-    public boolean connect(ReadMode readMode, WriteMode writeMode)
-            throws IOException {
+    public boolean connect() throws IOException {
         if (!state.isInitialized()) {
             // must first be initialized
             System.err.println("Not initialized.");
@@ -185,6 +311,16 @@ public class Driver {
             json.put("uuid", uuid);
             json.put("readMode", readMode.toString());
             json.put("writeMode", writeMode.toString());
+
+            if (readInclude != null) {
+                // stream inclusion
+                json.put("readInclude", new JSONArray(readInclude));
+            }
+
+            if (readExclude != null) {
+                // stream exclusion
+                json.put("readExclude", new JSONArray(readExclude));
+            }
 
             message = json.toString();
 
@@ -311,31 +447,107 @@ public class Driver {
      *             if the underlying TCP/IP socket throws an exception.
      */
     public Message recv() throws IOException {
+        return recv(this.recvTimeoutMs);
+    }
 
+    /**
+     * Receive a message from the adapter. This function blocks till a message
+     * becomes available to read, or till a specified number of milliseconds
+     * have elapsed. The set of messages sent to this client from S4 depends on
+     * the read mode of the client.
+     * 
+     * @see ReadMode
+     * 
+     * @param timeout
+     *            timeout in milliseconds
+     * @return message received from S4 cluster.
+     * @throws IOException
+     *             if the underlying TCP/IP socket throws an exception.
+     * @throws SocketTimeoutException
+     *             if the read timed out.
+     */
+    public Message recv(int timeout) throws IOException {
         if (!state.isConnected()) {
             System.err.println("recv failed. not connected.");
             return null;
         }
 
-        byte[] b = io.recv();
-
-        if (b == null || b.length == 0) {
-            System.err.println("empty message from adapter. disconnecting");
-            this.disconnect();
-            return null;
-        }
-
-        String s = new String(b);
-
         try {
+            byte[] b = io.recv(timeout);
+
+            if (b == null || b.length == 0) {
+                System.err.println("empty message from adapter. disconnecting");
+                this.disconnect();
+                return null;
+            }
+
+            String s = new String(b);
+
             JSONObject json = new JSONObject(s);
 
             return Message.fromJson(json);
+
+        } catch (SocketTimeoutException e) {
+            System.err.println("recv timed out");
+            return null;
 
         } catch (JSONException e) {
             System.err.println("exception while parsing received JSON: " + e);
             return null;
         }
+    }
+
+    /**
+     * Receive the set of message that from the adapter within a specified time
+     * interval.
+     * 
+     * @param t
+     *            interval in milliseconds
+     * @return messages received from S4 cluster.
+     * @throws IOException
+     *             if the underlying TCP/IP socket throws an exception.
+     */
+    public List<Message> recvAll(int t) throws IOException {
+        if (!state.isConnected()) {
+            System.err.println("recv failed. not connected.");
+            return Collections.<Message> emptyList();
+        }
+
+        List<Message> messages = new ArrayList<Message>();
+
+        long tStart = System.currentTimeMillis();
+        long tEnd = tStart + t;
+
+        long tNow = tStart;
+
+        while (tNow < tEnd) {
+            try {
+                byte[] b = io.recv((int) (tEnd - tNow));
+
+                if (b == null || b.length == 0) {
+                    System.err.println("empty message from adapter. disconnecting");
+                    this.disconnect();
+                    break;
+                }
+
+                String s = new String(b);
+
+                JSONObject json = new JSONObject(s);
+
+                messages.add(Message.fromJson(json));
+
+            } catch (SocketTimeoutException e) {
+                break;
+
+            } catch (JSONException e) {
+                System.err.println("exception while parsing received JSON: "
+                        + e);
+            }
+
+            tNow = System.currentTimeMillis();
+        }
+
+        return messages;
     }
 
     /**
@@ -385,112 +597,40 @@ public class Driver {
         }
     };
 
-    /**
-     * Messages that can be send/received by client. They typically correspond
-     * to events that are sent/received.
-     */
-    public static class Message {
-        public final String stream;
-        public final String clazz;
-        public final String[] keyNames;
-        public final String object;
-
-        /**
-         * Key-less event message.
-         * 
-         * @param stream
-         *            Name of stream associated with corresponding event.
-         * @param clazz
-         *            Class of event object.
-         * @param object
-         *            String representation of the event. This is the string
-         *            that Gson will convert into/from the event object.
-         */
-        public Message(String stream, String clazz, String object) {
-            this.stream = stream;
-            this.clazz = clazz;
-            this.keyNames = null;
-            this.object = object;
-        }
-
-        /**
-         * Keyed event message.
-         * 
-         * @param stream
-         *            Name of stream associated with corresponding event.
-         * @param keyNames
-         *            array of key names. Typically, the getter corresponding to
-         *            each string in this array will be invoked on the event
-         *            object, and the values concatenated, to produce the
-         *            routing key.
-         * @param clazz
-         *            Class of event object.
-         * @param object
-         *            String representation of the event. This is the string
-         *            that Gson will convert into/from the event object.
-         */
-        public Message(String stream, String[] keyNames, String clazz,
-                String object) {
-            this.stream = stream;
-            this.clazz = clazz;
-            this.keyNames = keyNames;
-            this.object = object;
-        }
-
-        /**
-         * Create from JSON.
-         * 
-         * @param json
-         *            JSON representation of message
-         * @return Message object.
-         * @throws JSONException
-         *             if the JSON is invalid.
-         */
-        public static Message fromJson(JSONObject json) throws JSONException {
-            String stream = json.getString("stream");
-            String clazz = json.getString("class");
-            String object = json.getString("object");
-
-            return new Message(stream, clazz, object);
-        }
-
-        /**
-         * Convert message into JSON.
-         * 
-         * @param json
-         *            JSON will be written into this object.
-         * @throws JSONException
-         *             if writing fails.
-         */
-        public void toJson(JSONObject json) throws JSONException {
-            json.put("stream", this.stream);
-            json.put("class", this.clazz);
-            if (this.keyNames != null) {
-                json.put("keyNames", this.keyNames);
-            }
-
-            json.put("object", this.object);
-        }
-
-        public String toString() {
-            return "{stream:" + stream + ", clazz:" + clazz + ", keyNames:"
-                    + keyNames + ", object:" + object + "}";
-        }
-    }
-
     private static final byte[] emptyBytes = {};
 
+    /**
+     * Reads and prints all events over an interval of 5 seconds from a set of
+     * streams specified on the command line.
+     * 
+     * @param argv
+     *            list of streams
+     * @throws IOException
+     *             if an error occurs while reading from adapter.
+     */
     public static void main(String[] argv) throws IOException {
         Driver d = new Driver("localhost", 2334);
+
+        System.out.println("State: " + d.getState());
+
         d.init();
 
         System.out.println("State: " + d.getState());
 
-        d.connect(ReadMode.All, WriteMode.Disabled);
+        d.setReadMode(ReadMode.Select)
+         .readInclude(argv)
+         .setWriteMode(WriteMode.Enabled);
+
+        d.connect();
 
         System.out.println("State: " + d.getState());
 
-        Message m = d.recv();
-        System.out.println("got: " + m);
+        List<Message> mm = d.recvAll(5001);
+        System.out.println("got messages (" + mm.size() + "): " + mm);
+
+        System.out.println("Disconnecting...");
+        d.disconnect();
+
+        System.out.println("State: " + d.getState());
     }
 }

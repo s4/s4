@@ -16,5 +16,5 @@
 package io.s4.client;
 
 public enum ReadMode {
-    None, Private, All;
+    None, Private, Select, All;
 }

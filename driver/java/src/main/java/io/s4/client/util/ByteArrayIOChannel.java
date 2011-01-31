@@ -21,20 +21,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class ByteArrayIOChannel implements IOChannel {
     private InputStream in;
     private OutputStream out;
+    private Socket socket;
 
     public ByteArrayIOChannel(Socket socket) throws IOException {
         in = socket.getInputStream();
         out = socket.getOutputStream();
+        this.socket = socket;
     }
 
-    private void readBytes(byte[] s, int n) throws IOException {
+    private int readBytes(byte[] s, int n, int timeout) throws IOException {
         int r = 0; // bytes read so far
 
+        long tStart = System.currentTimeMillis();
+        long tEnd = tStart + timeout;
+        long tRem = timeout;
+        long tNow = tStart;
+
         do {
+            socket.setSoTimeout((int) tRem);
+
             // keep reading bytes till the required "n" are read
             int p = in.read(s, r, (n - r));
 
@@ -45,14 +55,28 @@ public class ByteArrayIOChannel implements IOChannel {
 
             r += p;
 
-        } while (r < n);
+            tNow = System.currentTimeMillis();
+
+            tRem = tEnd - tNow;
+
+        } while (r < n && (timeout == 0 || tRem > 0));
+
+        return (int) (tNow - tStart);
     }
 
     public byte[] recv() throws IOException {
+        return recv(0);
+    }
+
+    public byte[] recv(int timeout) throws IOException {
         // first read size of byte array.
         // unsigned int, big endian: 0A0B0C0D -> {0A, 0B, 0C, 0D}
         byte[] s = { 0, 0, 0, 0 };
-        readBytes(s, 4);
+        int tUsed = readBytes(s, 4, timeout);
+
+        if (timeout > 0 && (timeout - tUsed <= 1)) {
+            throw new SocketTimeoutException("recv timed out");
+        }
 
         int size = (int) ( // NOTE: type cast not necessary for int
         (0xff & s[0]) << 24 | (0xff & s[1]) << 16 | (0xff & s[2]) << 8 | (0xff & s[3]) << 0);
@@ -63,7 +87,8 @@ public class ByteArrayIOChannel implements IOChannel {
         byte[] v = new byte[size];
 
         // read the message
-        readBytes(v, size);
+        int tRem = (timeout > 0 ? timeout - tUsed : 0);
+        readBytes(v, size, tRem);
 
         return v;
     }
