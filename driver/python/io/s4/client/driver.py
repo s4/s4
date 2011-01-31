@@ -47,11 +47,11 @@ class Driver:
 
         self._bio.send_byte_array(sock, bytearray(0));
 
-        response = self._bio.recv_byte_array(sock)
+        [response, t] = self._bio.recv_byte_array(sock)
 
         sock.close()
 
-        r = json.loads(response.decode())
+        r = json.loads(response.decode('utf-8'))
 
         if not self._iscompatible(r['protocol']):
             return False;
@@ -71,7 +71,7 @@ class Driver:
 
         conn = spec;
         conn['uuid'] = self.uuid;
-        cstr = json.dumps(conn).encode();
+        cstr = json.dumps(conn).encode('utf-8');
  
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(True)
@@ -79,8 +79,8 @@ class Driver:
  
         self._bio.send_byte_array(sock, cstr);
  
-        response  = self._bio.recv_byte_array(sock);
-        r = json.loads(response.decode());
+        [response, t]  = self._bio.recv_byte_array(sock);
+        r = json.loads(response.decode('utf-8'));
  
         if r['status'] == 'ok':
             if self._debug:
@@ -96,24 +96,48 @@ class Driver:
 
     def sendKeyed(self, stream, clazz, keys, object):
         if self.state != 'connected':
-            return False;
+            return 0;
         self._send(stream, clazz, keys, object);
 
     def send(self, stream, clazz, object):
         if self.state != 'connected':
-            return False;
+            return 0;
         self._send(stream, clazz, None, object);
 
-    def recv(self):
+    def recv(self, timeout=0):
         if self.state != 'connected':
-            return False;
-        b = self._bio.recv_byte_array(self.sock);
+            return None;
+        [b, t] = self._bio.recv_byte_array(self.sock, timeout);
         if b == None or len(b) == 0:
             return None;
 
-        m = json.loads(b.decode());
+        m = json.loads(b.decode('utf-8'));
 
         return m;
+
+    def recvAll(self, interval):
+        if self.state != 'connected':
+            return False;
+
+        messages = [];
+
+        try:
+            tr = interval
+            while (tr > 0):
+                [b, t] = self._bio.recv_byte_array(self.sock, tr);
+                if b == None or len(b) == 0:
+                    break
+
+                m = json.loads(b.decode('utf-8'));
+                messages.append(m);
+
+                tr = tr - t
+
+        except socket.timeout:
+            # Nothing to do here
+            1
+
+        return messages;
 
     def disconnect(self):
         if self.state != 'connected':
@@ -137,7 +161,7 @@ class Driver:
             message['keys'] = map(str, keys); # convert all keys to strings
 
         m = json.dumps(message);
-        self._bio.send_byte_array(self.sock, m.encode());
+        self._bio.send_byte_array(self.sock, m.encode('utf-8'));
 
     def _iscompatible(self, p):
       return (p['name'] == self.protocolName

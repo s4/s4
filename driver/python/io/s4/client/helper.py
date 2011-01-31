@@ -16,6 +16,7 @@
 
 from struct import (pack, pack_into, unpack_from)
 import sys
+import time
 from ctypes import create_string_buffer
 
 # Helper Classes
@@ -24,29 +25,45 @@ from ctypes import create_string_buffer
 class _ByteIO:
     _debug = False;
 
-    def recv_bytes(self, sock, n):
+    def recv_bytes(self, sock, n, timeout=0):
       b = bytearray()
       r = 0
-      
+
+      tNow = time.time()
+      tEnd = tNow + timeout
+      tStart = tNow
+
       while (r < n):
+        if (timeout > 0):
+          sock.settimeout(tEnd - tNow)
+
         p = sock.recv(n-r) # partial recv
         b.extend(p)
         r += len(p)
+        tNow = time.time()
 
-      return b
+      return [b, (tNow-tStart)]
 
 # Better: r += sock.recv_into(buffer(b, r), (n-r));
 # But doesn't work on MacOS X :(
 
-    def recv_byte_array(self, sock):
-      s = self.recv_bytes(sock, 4)
+    def recv_byte_array(self, sock, timeout=0):
+      [s, t0] = self.recv_bytes(sock, 4, timeout)
       sz = unpack_from('>I', buffer(s))[0]
-      m = self.recv_bytes(sock, sz)
+
+      tr = 0;
+      if (timeout > 0):
+          if (t0 < timeout):
+              tr = timeout - t0;
+          else:
+              tr = 0.001;
+
+      [m, t1] = self.recv_bytes(sock, sz, tr)
 
       if self._debug:
           print >> sys.stderr, ">>[" + str(sz) + "]" + str(m)
 
-      return m
+      return [m, t0+t1]
 
     def send_byte_array(self, sock, b):
       sz = pack('>I', len(b));
