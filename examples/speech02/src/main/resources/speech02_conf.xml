@@ -11,7 +11,7 @@
 
   <bean id="rerouteSentencePE" class="io.s4.processor.ReroutePE">
     <property name="id" value="rerouteSentencePE"/>
-    <property name="dispatcher" ref="dispatcher"/>
+    <property name="dispatcher" ref="forkdispatcher"/>
     <property name="keys">
       <list>
         <value>RawSentence *</value>
@@ -22,7 +22,7 @@
 
   <bean id="rerouteSpeechPE" class="io.s4.processor.ReroutePE">
     <property name="id" value="rerouteSpeechPE"/>
-    <property name="dispatcher" ref="dispatcher"/>
+    <property name="dispatcher" ref="forkdispatcher"/>
     <property name="keys">
       <list>
         <value>RawSpeech *</value>
@@ -47,7 +47,7 @@
     </property>
     <property name="outputStreamName" value="SentenceJoined"/>
     <property name="outputClassName" value="io.s4.example.speech01.Sentence"/>
-    <property name="dispatcher" ref="dispatcher"/>
+    <property name="dispatcher" ref="forkdispatcher"/>
     <property name="ttl" value="600"/> <!-- join related events that arrive no more than 10 minutes apart -->
   </bean>
 
@@ -91,6 +91,30 @@
     </property>
     <property name="eventEmitter" ref="commLayerEmitter"/>
     <property name="loggerName" value="s4"/>
+  </bean>
+
+  <!-- dispatcher to S4 and client adapter -->
+  <bean id="forkdispatcher" class="io.s4.dispatcher.MultiDispatcher">
+    <property name="dispatchers">
+      <list>
+
+        <!-- send everything through the S4 dispatcher -->
+        <ref bean="dispatcher"/>
+
+
+        <!-- send some streams to client adapters -->
+        <bean id="selectiveDispatchToAdapter" class="io.s4.dispatcher.StreamSelectingDispatcher">
+          <property name="dispatcher" ref="dispatcherToClientAdapters"/>
+          <property name="streams">
+            <list>
+              <value>SentenceJoined</value>
+              <value>Sentence</value>
+            </list>
+          </property>
+        </bean>
+
+      </list>
+    </property>
   </bean>
 
 </beans>
