@@ -26,6 +26,15 @@ use constant PROTO_NAME => "generic-json";
 use constant PROTO_MAJOR => 1;
 use constant PROTO_MINOR => 0;
 
+my $debug = 0;
+
+sub debug {
+  my $d = shift;
+  $debug = $d if defined $d;
+
+  return $debug;
+}
+
 # Constructor
 # Args: (hostname, port)
 # E.g. new IO::S4::Client(somehost, 2334)
@@ -74,6 +83,7 @@ my $readBytes = sub {
         if ($r < $len and defined $sel) {
             $sel->can_read();
         }
+
     } while ($r < $len);
 
     return $r;
@@ -90,7 +100,7 @@ my $readByteArray = sub {
 
     return undef if $readBytes->($sock, $sel, \$s, $len) < $len;
 
-    print "[$len]$s\n";
+    print STDERR ">>[$len]$s\n" if $debug;
 
     return $s;
 };
@@ -104,7 +114,7 @@ my $sendByteArray = sub {
 # followed by data array
     $message .= $data;
 
-    print "send: [" . length($data) . "]$data\n";
+    print STDERR "<<[" . length($data) . "]$data\n" if $debug;
 
 # send and flush
     $sock->write($message);
@@ -133,8 +143,6 @@ sub init {
     my $sel = new IO::Select($sock);
     my $response = $readByteArray->($sock, $sel);
 
-    print "RESPONSE: $response\n";
-
     my $info = decode_json($response);
 
     $sock->close();
@@ -143,8 +151,6 @@ sub init {
     my $protoName = $info->{"protocol"}->{"name"};
     my $protoMajor = $info->{"protocol"}->{"versionMajor"};
     my $protoMinor = $info->{"protocol"}->{"versionMinor"};
-
-    print "$protoName $protoMajor.$protoMinor: $uuid\n";
 
     return undef unless $versionCompatible->($info->{"protocol"});
 
@@ -250,8 +256,39 @@ sub send {
     my $j = encode_json($m);
 
     $sendByteArray->($sock, $j);
-#    my $len = pack('N', (length $j));
-#    print $sock $len.$j or return undef;
+
+    return length $j;
+}
+
+# Send a keyed message to the S4 cluster.
+# The message must be a JSON string representing the object
+# to be injected into the cluster.representing the object
+# to be injected into the cluster. The JSON string is converted
+# into a Java object within S4 using the Gson library.
+#
+# Arguments:
+#     stream:  Nname of the stream on which the event
+#              must be dispatched within the S4 cluster.
+#     class:   Class of the message object.
+#     keys:    List of (string) key names which will be
+#              used to route the event
+#     message: Message encoded in JSON.
+#
+# Returns the number of bytes that were sent. Undef if send failed.
+sub sendKeyed {
+    my ($h, $stream, $class, $keys, $message) = @_;
+    my $sock = $h->{'sock'};
+
+    if (not defined $sock) {
+        warn "Trying to send via disconnected client";
+        return undef;
+    }
+
+    my $m = {'stream' => $stream, 'class' => $class, 'keys' => $keys, 'object' => $message};
+
+    my $j = encode_json($m);
+
+    $sendByteArray->($sock, $j);
 
     return length $j;
 }
