@@ -1,0 +1,2 @@
+{"target":["16000000"],"query":["$outputClassName"],"rinfo":{"id":0,"stream":"@client"}}
+{"target":["*"],"query":["$outputClassName"],"rinfo":{"id":1,"stream":"@client"}}
