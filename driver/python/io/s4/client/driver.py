@@ -16,9 +16,15 @@
 
 import socket
 import sys
-import json
 from struct import pack
 from struct import unpack
+
+# json was added to python-2.6
+# before that, needed simplejson
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from helper import _ByteIO
 
