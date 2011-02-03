@@ -14,7 +14,9 @@
 # License. See accompanying LICENSE file. 
 #
 
-from struct import (pack, pack_into, unpack_from)
+from struct import pack
+from struct import pack_into
+from struct import unpack_from
 import sys
 import time
 from ctypes import create_string_buffer

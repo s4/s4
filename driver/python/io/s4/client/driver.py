@@ -17,7 +17,8 @@
 import socket
 import sys
 import json
-from struct import (pack, unpack)
+from struct import pack
+from struct import unpack
 
 from helper import _ByteIO
 
