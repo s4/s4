@@ -7,7 +7,7 @@ import org.json.JSONObject;
  * Messages that can be send/received by client. They typically correspond
  * to events that are sent/received.
  */
-class Message {
+public class Message {
     public final String stream;
     public final String clazz;
     public final String[] keyNames;

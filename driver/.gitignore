@@ -1,0 +1,20 @@
+# Eclipse meta-information
+java/.project
+java/.classpath
+java/.settings
+
+examples/inject_java/.project
+examples/inject_java/.classpath
+examples/inject_java/.settings
+
+# Build directory
+java/target/
+examples/inject_java/target/
+
+# python compiled files
+#python/io/*.pyc
+#python/io/s4/*.pyc
+#python/io/s4/client/*.pyc
+
+# SVN
+.svn
