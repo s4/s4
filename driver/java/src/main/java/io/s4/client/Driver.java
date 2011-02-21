@@ -53,6 +53,8 @@ public class Driver {
     protected List<String> readExclude = new ArrayList<String>();
     protected WriteMode writeMode = WriteMode.Enabled;
 
+    protected boolean debug = false;
+
     protected int recvTimeoutMs = 0;
 
     /**
@@ -180,6 +182,17 @@ public class Driver {
     }
 
     /**
+     * 
+     * @param debug
+     *            debug flag
+     * @return Driver with debug flag set to {@code debug}
+     */
+    public Driver setDebug(boolean debug) {
+        this.debug = debug;
+        return this;
+    }
+
+    /**
      * Set the timeout for receiving data.
      * 
      * @param ms
@@ -228,7 +241,9 @@ public class Driver {
             byte[] b = io.recv();
 
             if (b == null || b.length == 0) {
-                System.err.println("Empty response during initialization.");
+                if (debug) {
+                    System.err.println("Empty response during initialization.");
+                }
                 return false;
             }
 
@@ -239,8 +254,11 @@ public class Driver {
             JSONObject proto = json.getJSONObject("protocol");
 
             if (!isCompatible(proto)) {
-                System.err.println("Driver not compatible with adapter protocol: "
-                        + proto);
+                if (debug) {
+                    System.err
+                            .println("Driver not compatible with adapter protocol: "
+                                    + proto);
+                }
                 return false;
             }
 
@@ -249,8 +267,11 @@ public class Driver {
             return true;
 
         } catch (JSONException e) {
-            System.err.println("malformed JSON in initialization response. "
-                    + e);
+            if (debug) {
+                System.err
+                        .println("malformed JSON in initialization response. "
+                                + e);
+            }
             e.printStackTrace();
             return false;
 
@@ -295,7 +316,9 @@ public class Driver {
     public boolean connect() throws IOException {
         if (!state.isInitialized()) {
             // must first be initialized
-            System.err.println("Not initialized.");
+            if (debug) {
+                System.err.println("Not initialized.");
+            }
             return false;
         } else if (state.isConnected()) {
             // nothing to do if already connected.
@@ -325,7 +348,9 @@ public class Driver {
             message = json.toString();
 
         } catch (JSONException e) {
-            System.err.println("error constructing connect message: " + e);
+            if (debug) {
+                System.err.println("error constructing connect message: " + e);
+            }
             return false;
         }
 
@@ -340,7 +365,10 @@ public class Driver {
             byte[] b = io.recv();
 
             if (b == null || b.length == 0) {
-                System.err.println("empty response from adapter during connect.");
+                if (debug) {
+                    System.err
+                            .println("empty response from adapter during connect.");
+                }
                 return false;
             }
 
@@ -356,20 +384,27 @@ public class Driver {
                 return true;
             } else if (s.equalsIgnoreCase("failed")) {
                 // server has failed the connect attempt
-                System.err.println("connect failed by adapter. reason: "
-                        + json.optString("reason", "unknown"));
+                if (debug) {
+                    System.err.println("connect failed by adapter. reason: "
+                            + json.optString("reason", "unknown"));
+                }
                 return false;
             } else {
                 // unknown response.
-                System.err.println("connect failed by adapter. unrecongnized response: "
-                        + response);
+                if (debug) {
+                    System.err
+                            .println("connect failed by adapter. unrecongnized response: "
+                                    + response);
+                }
                 return false;
             }
 
         } catch (Exception e) {
             // clean up after error...
-            System.err.println("error during connect: " + e);
-            e.printStackTrace();
+            if (debug) {
+                System.err.println("error during connect: " + e);
+                e.printStackTrace();
+            }
 
             if (this.sock.isConnected()) {
                 this.sock.close();
@@ -411,7 +446,9 @@ public class Driver {
     public boolean send(Message m) throws IOException {
 
         if (!state.isConnected()) {
-            System.err.println("send failed. not connected.");
+            if (debug) {
+                System.err.println("send failed. not connected.");
+            }
             return false;
         }
 
@@ -429,8 +466,11 @@ public class Driver {
             return true;
 
         } catch (JSONException e) {
-            System.err.println("exception while constructing message to send: "
-                    + e);
+            if (debug) {
+                System.err
+                        .println("exception while constructing message to send: "
+                                + e);
+            }
             return false;
         }
     }
@@ -468,7 +508,9 @@ public class Driver {
      */
     public Message recv(int timeout) throws IOException {
         if (!state.isConnected()) {
-            System.err.println("recv failed. not connected.");
+            if (debug) {
+                System.err.println("recv failed. not connected.");
+            }
             return null;
         }
 
@@ -476,7 +518,10 @@ public class Driver {
             byte[] b = io.recv(timeout);
 
             if (b == null || b.length == 0) {
-                System.err.println("empty message from adapter. disconnecting");
+                if (debug) {
+                    System.err
+                            .println("empty message from adapter. disconnecting");
+                }
                 this.disconnect();
                 return null;
             }
@@ -488,11 +533,16 @@ public class Driver {
             return Message.fromJson(json);
 
         } catch (SocketTimeoutException e) {
-            System.err.println("recv timed out");
+            if (debug) {
+                System.err.println("recv timed out");
+            }
             return null;
 
         } catch (JSONException e) {
-            System.err.println("exception while parsing received JSON: " + e);
+            if (debug) {
+                System.err.println("exception while parsing received JSON: "
+                        + e);
+            }
             return null;
         }
     }
@@ -509,7 +559,9 @@ public class Driver {
      */
     public List<Message> recvAll(int t) throws IOException {
         if (!state.isConnected()) {
-            System.err.println("recv failed. not connected.");
+            if (debug) {
+                System.err.println("recv failed. not connected.");
+            }
             return Collections.<Message> emptyList();
         }
 
@@ -525,7 +577,10 @@ public class Driver {
                 byte[] b = io.recv((int) (tEnd - tNow));
 
                 if (b == null || b.length == 0) {
-                    System.err.println("empty message from adapter. disconnecting");
+                    if (debug) {
+                        System.err
+                                .println("empty message from adapter. disconnecting");
+                    }
                     this.disconnect();
                     break;
                 }
@@ -540,8 +595,11 @@ public class Driver {
                 break;
 
             } catch (JSONException e) {
-                System.err.println("exception while parsing received JSON: "
-                        + e);
+                if (debug) {
+                    System.err
+                            .println("exception while parsing received JSON: "
+                                    + e);
+                }
             }
 
             tNow = System.currentTimeMillis();
@@ -617,9 +675,8 @@ public class Driver {
 
         System.out.println("State: " + d.getState());
 
-        d.setReadMode(ReadMode.Select)
-         .readInclude(argv)
-         .setWriteMode(WriteMode.Enabled);
+        d.setReadMode(ReadMode.Select).readInclude(argv)
+                .setWriteMode(WriteMode.Enabled);
 
         d.connect();
 

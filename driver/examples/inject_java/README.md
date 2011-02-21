@@ -11,8 +11,6 @@ Requirements
 * Linux
 * Java 1.6
 * Maven
-* S4 Communication Layer
-* S4 Core
 
 Build Instructions
 ------------------
