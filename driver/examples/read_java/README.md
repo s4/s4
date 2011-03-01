@@ -1,4 +1,4 @@
-Request/Response Example
+Read Example
 ===============
 
 Introduction
