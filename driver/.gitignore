@@ -7,14 +7,24 @@ examples/inject_java/.project
 examples/inject_java/.classpath
 examples/inject_java/.settings
 
+examples/read_java/.project
+examples/read_java/.classpath
+examples/read_java/.settings
+
+examples/request_java/.project
+examples/request_java/.classpath
+examples/request_java/.settings
+
 # Build directory
 java/target/
 examples/inject_java/target/
+examples/read_java/target/
+examples/request_java/target/
 
 # python compiled files
-#python/io/*.pyc
-#python/io/s4/*.pyc
-#python/io/s4/client/*.pyc
+python/io/*.pyc
+python/io/s4/*.pyc
+python/io/s4/client/*.pyc
 
 # SVN
 .svn
