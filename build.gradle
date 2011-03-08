@@ -1,0 +1,101 @@
+apply plugin: 'eclipse'
+apply plugin:'application'
+
+mainClassName = "io.s4.MainApp"
+
+allprojects {
+
+  repositories {
+    mavenCentral()
+    mavenLocal()
+    mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
+
+  /* Add lib dir as a repo. Some jar files that are not available 
+     in a public repo are distributed in the lib dir. */
+    flatDir name: 'libDir', dirs: "lib"
+  }
+}
+
+/* All project libraries must be defined here. */
+libraries = [
+  json:               'org.json:json:20090211',
+  lift_json:          'net.liftweb:lift-json_2.8.1:2.2',
+  gson:               'com.google.code.gson:gson:1.6',
+  zk:                 'org.apache.zookeeper:zookeeper:3.3.1',
+  log4j:              'log4j:log4j:1.2.15',
+  junit:              'junit:junit:3.8.1',
+  flexjson:           'net.sf.flexjson:flexjson:2.1',
+  bcel:               'org.apache.bcel:bcel:5.2',
+  jakarta_regexp:     'jakarta-regexp:jakarta-regexp:1.4',
+  kryo:               'com.esotericsoftware:kryo:1.01',
+  reflectasm:         'com.esotericsoftware:reflectasm:0.8',
+  minlog:             'com.esotericsoftware:minlog:1.2',
+  asm:                'asm:asm:3.2',
+  commons_cli:        'commons-cli:commons-cli:1.2',
+  commons_logging:    'commons-logging:commons-logging:1.1.1',
+  commons_jexl:       'commons-jexl:commons-jexl:1.1',
+  commons_codec:      'commons-codec:commons-codec:1.4',
+  commons_httpclient: 'commons-httpclient:commons-httpclient:3.1',
+  avro:               'org.apache.hadoop:avro:1.0.0',
+  spring:             'org.springframework:spring:2.5.6',
+  jackson_core_asl:   'org.codehaus.jackson:jackson-core-asl:1.0.1',
+  jackson_mapper_asl: 'org.codehaus.jackson:jackson-mapper-asl:1.0.1',
+  junit:              'junit:junit:4.4',
+  scala_compiler:     'org.scala-lang:scala-compiler:2.8.1',
+  scala_library:      'org.scala-lang:scala-library:2.8.1'
+]
+
+subprojects { 
+  apply plugin: 'eclipse'
+  apply plugin: 'java'
+  apply plugin: 'maven'
+
+  defaultTasks 'build'
+
+  group = 'io.s4'
+  version_number = '0.3.0.0'
+
+  gradle.taskGraph.whenReady {taskGraph ->
+    if (taskGraph.hasTask(':release')) {
+      version = version_number
+    } else {
+      version = version_number + '-SNAPSHOT'
+    }
+  }
+
+  /* Common dependencies applied to all subprojects. */
+  dependencies { 
+    compile( libraries.log4j )
+    compile( libraries.commons_logging )
+    compile( libraries.zk )
+    compile( libraries.spring )
+    testCompile( libraries.junit )
+  }
+
+  manifest.mainAttributes(
+    provider: 'gradle',
+    'Implementation-Url': 'http://s4.io',
+    'Implementation-Version': version,
+    'Implementation-Vendor': 'The S4 Project',
+    'Implementation-Vendor-Id': 'io.s4'
+  )
+ 
+  /* TODO: the distribution task creates a package for developers with the suffix SNAPSHOT. The release task will create the final immutable version. */ 
+  task distribution << {
+    println "We build the zip with version=$version"
+  }
+  task release(dependsOn: 'distribution') << {
+    println 'We release now'
+  }
+
+}
+
+dependsOnChildren()
+
+/* 
+    Generates the gradlew scripts.
+    http://www.gradle.org/1.0-milestone-1/docs/userguide/gradle_wrapper.html
+*/
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.0-milestone-1'
+}
