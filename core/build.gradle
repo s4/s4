@@ -1,0 +1,17 @@
+dependencies {
+    compile( libraries.gson )
+    compile( libraries.flexjson )
+    compile( libraries.bcel )
+    compile( libraries.jakarta_regexp )
+    compile( libraries.kryo )
+    compile( libraries.reflectasm )
+    compile( libraries.minlog )
+    compile( libraries.asm )
+    compile( libraries.commons_cli )
+    compile( libraries.commons_jexl )
+    compile( libraries.avro )
+    compile( libraries.jackson_core_asl )
+    compile( libraries.jackson_mapper_asl )
+    compile project(':s4-comm')
+}
+
