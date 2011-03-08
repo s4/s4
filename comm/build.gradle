@@ -1,0 +1,4 @@
+dependencies {
+    compile( libraries.json )
+    compile( libraries.zk )
+}

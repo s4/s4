@@ -6,6 +6,14 @@
 # Build directory
 /target/
 !/target/site/apidocs/
+/build/
+!/build/docs/javadoc/
 
 # SVN
 .svn
+
+# Graddle files
+.graddle
+
+# Backup files
+*~
