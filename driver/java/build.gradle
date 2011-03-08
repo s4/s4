@@ -1,0 +1,10 @@
+dependencies {
+    compile( libraries.json )
+    compile( libraries.gson )
+    compile project(':s4-core')
+}
+
+//dependsOn(':s4-core')
+archivesBaseName = 's4-driver'
+
+
