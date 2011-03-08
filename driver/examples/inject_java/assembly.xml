@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<assembly>
+  <id/>
+  <formats>
+    <format>dir</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <dependencySets>
+    <dependencySet>
+      <unpack>false</unpack>
+      <outputDirectory>lib</outputDirectory>
+      <scope>runtime</scope>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+  </dependencySets> 
+  <files>
+  </files>
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}/target</directory>
+      <outputDirectory>lib</outputDirectory>
+      <includes>
+	<include>*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/scripts</directory>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+	<include>inject.sh</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>
