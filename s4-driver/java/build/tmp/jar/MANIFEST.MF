@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-provider: gradle
-Implementation-Url: http://s4.io
-Implementation-Version: unspecified
-Implementation-Vendor: The S4 Project
-Implementation-Vendor-Id: io.s4
-

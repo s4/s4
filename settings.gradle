@@ -1,6 +1,7 @@
 include 's4-comm'
 include 's4-core'
 include 's4-driver:java'
+include 's4-driver:examples:read_java'
 
 include 's4-examples:twittertopiccount'
 // include 's4-examples:twittertopiccount_scala'

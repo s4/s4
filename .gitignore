@@ -4,9 +4,13 @@
 /.settings
 
 # Build directory
-/target/
+/target
+*/target
 !/target/site/apidocs/
-/build/
+/build
+*/build
+*/*/build
+*/*/*/build
 !/build/docs/javadoc/
 
 # SVN
