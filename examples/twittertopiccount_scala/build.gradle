@@ -1,0 +1,19 @@
+apply plugin: 'scala'
+
+dependencies {
+    compile( libraries.json )
+    compile( libraries.commons_codec )
+    compile( libraries.commons_httpclient )
+    compile( libraries.lift_json )
+    compile project(':s4-core')
+
+    /* Libraries needed to run the scala tools. */
+    scalaTools libraries.scala_compiler
+    scalaTools libraries.scala_library
+
+    /* Libraries needed for scala api. */
+    compile libraries.scala_library
+}
+
+archivesBaseName = 'twittertopiccount_scala'
+

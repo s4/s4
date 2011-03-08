@@ -1,0 +1,9 @@
+dependencies {
+    compile( libraries.json )
+    compile( libraries.commons_codec )
+    compile( libraries.commons_httpclient )
+    compile project(':s4-core')
+}
+
+archivesBaseName = 'twittertopiccount'
+
