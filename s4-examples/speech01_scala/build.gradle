@@ -1,0 +1,15 @@
+apply plugin: 'scala'
+
+dependencies {
+    compile project(':s4-core')
+
+    /* Libraries needed to run the scala tools. */
+    scalaTools libraries.scala_compiler
+    scalaTools libraries.scala_library
+
+    /* Libraries needed for scala api. */
+    compile libraries.scala_library
+}
+
+archivesBaseName = 'speech01_scala'
+

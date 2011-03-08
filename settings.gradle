@@ -5,6 +5,7 @@ include 's4-driver:java'
 include 's4-examples:twittertopiccount'
 // include 's4-examples:twittertopiccount_scala'
 include 's4-examples:speech01'
+include 's4-examples:speech01_scala'
 include 's4-examples:speech02'
 
 
