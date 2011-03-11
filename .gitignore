@@ -1,17 +1,11 @@
 # Eclipse meta-information
-/.project
-/.classpath
-/.settings
+.project
+.classpath
+.settings
 
 # Build directory
-/target
-*/target
-!/target/site/apidocs/
-/build
-*/build
-*/*/build
-*/*/*/build
-!/build/docs/javadoc/
+target/
+build/
 
 # SVN
 .svn
@@ -21,3 +15,6 @@
 
 # Backup files
 *~
+
+# Misc hidden files
+.DS_Store 
