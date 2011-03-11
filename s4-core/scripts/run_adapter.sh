@@ -35,8 +35,8 @@ if [ "$1" == "-h" ]; then
 fi
 
 BASE_DIR=`dirname $($READLINK -f $0)`
-CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4_core`
-APPS_HOME=`$READLINK -f ${BASE_DIR}/../s4_apps`
+CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4-core`
+APPS_HOME=`$READLINK -f ${BASE_DIR}/../s4-apps`
 CP_SEP=":"
 REDBUTTON_MODE="false"
 
@@ -65,7 +65,7 @@ shift $(($OPTIND-1))
 
 CONF_TYPE=$1
 if [ "x$CONF_TYPE" == "x" ] ; then
-    CONF_TYPE="redbutton"
+    CONF_TYPE="default"
 fi
 
 CONF_FILE=${CORE_HOME}"/conf/"${CONF_TYPE}"/adapter_conf.xml"

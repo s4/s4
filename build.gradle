@@ -140,6 +140,7 @@ task distCopyFiles << {
     mkdir("$buildDir/dist/s4-core/lock")
     mkdir("$buildDir/dist/s4-core/logs")
     mkdir("$buildDir/dist/s4-apps")    
+    mkdir("$buildDir/dist/s4-exts")    
 }
 
 distribution.dependsOn distJars, distCopyFiles

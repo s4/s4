@@ -37,9 +37,9 @@ if [ "$1" == "-h" ]; then
   exit 1
 fi
 BASE_DIR=`dirname $($READLINK -f $0)`
-CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4_core`
-APPS_HOME=`$READLINK -f ${BASE_DIR}/../s4_apps`
-EXTS_HOME=`$READLINK -f ${BASE_DIR}/../s4_exts`
+CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4-core`
+APPS_HOME=`$READLINK -f ${BASE_DIR}/../s4-apps`
+EXTS_HOME=`$READLINK -f ${BASE_DIR}/../s4-exts`
 S4_CLOCK="wall"
 #SEED_TIME="1234567890"
 while getopts ":c:a:d:i:z:l:g:e:r:s:j:" opt;
@@ -69,7 +69,7 @@ shift $(($OPTIND-1))
 
 CONF_TYPE=$1
 if [ "x$CONF_TYPE" == "x" ] ; then
-    CONF_TYPE="redbutton"
+    CONF_TYPE="default"
 fi
 
 CONF_FILE=${CORE_HOME}"/conf/"${CONF_TYPE}"/s4_core_conf.xml"
