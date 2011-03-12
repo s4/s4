@@ -85,15 +85,17 @@ dependsOnChildren()
 
 /* TODO: the distribution task creates a package for developers with the suffix SNAPSHOT. The release task will create the final immutable version. */ 
 
-
+/*
 task distribution << {
     println "We build the zip with version=$version"
 }
 
-task release(dependsOn: 'distribution') << {
+task release(dependsOn: 'assemble') << {
     println 'We release now'
 }
+*/
 
+/*
 task distJars(dependsOn: assemble) << { 
     
     //File explodedDist = mkdir(buildDir, 'explodedDist')
@@ -107,11 +109,6 @@ task distJars(dependsOn: assemble) << {
         }
     }
 }
-
-//task distCopyFiles(type: Copy) {
-//    from "$projectDir/NOTICE.txt"
-//    into { "$buildDir/dist" }
-//}
 
 task distCopyFiles << {
     copy {
@@ -130,29 +127,23 @@ task distCopyFiles << {
         from "$projectDir/s4-core/src/main/resources/clusters.xml"     
         into "$buildDir/dist/s4-core/conf/default"
     }
-    copy {
-        from "$projectDir/s4-core/scripts"
-        into "$buildDir/dist/bin" 
-        fileMode = 0755 // bug: doesn't seem to work in Gradle 1.0. 
-        include '**/*.sh'
-    }
-    
+    */
+    //copy {
+    //   from "$projectDir/s4-core/scripts"
+    //    into "$buildDir/dist/bin" 
+    //    fileMode = 0755 // bug: doesn't seem to work in Gradle 1.0. 
+    //    include '**/*.sh'
+    //}
+    /*
     mkdir("$buildDir/dist/s4-core/lock")
     mkdir("$buildDir/dist/s4-core/logs")
     mkdir("$buildDir/dist/s4-apps")    
     mkdir("$buildDir/dist/s4-exts")    
+    
 }
 
 distribution.dependsOn distJars, distCopyFiles
-
-
-/* Example hot to tar. */
-task tar(type: Tar) {
-    from 'src/dist'
-    into('libs') {
-        from configurations.runtime
-    }
-}
+*/
 
 /* Generates the gradlew scripts.
 http://www.gradle.org/1.0-milestone-1/docs/userguide/gradle_wrapper.html */ 
