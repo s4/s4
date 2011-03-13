@@ -1,7 +1,7 @@
 //apply plugin: 'eclipse'
-apply plugin:'application'
+//apply plugin:'application'
 
-mainClassName = "io.s4.MainApp"
+//mainClassName = "io.s4.MainApp"
 
 allprojects {
 
@@ -95,55 +95,7 @@ task release(dependsOn: 'assemble') << {
 }
 */
 
-/*
-task distJars(dependsOn: assemble) << { 
-    
-    //File explodedDist = mkdir(buildDir, 'explodedDist')
-    File explodedDist = mkdir("$buildDir/dist/lib") 
-    subprojects.each { project ->
-        project.tasks.withType(Jar).each { archiveTask -> 
-            copy { 
-                from archiveTask.archivePath 
-                into explodedDist 
-            }
-        }
-    }
-}
 
-task distCopyFiles << {
-    copy {
-        from "$projectDir/NOTICE.txt"
-        into "$buildDir/dist"
-    }
-    copy {
-        from "$projectDir/s4-core/src/main/resources/s4_core_conf.xml"
-        from "$projectDir/s4-core/src/main/resources/wall_clock.xml"
-        from "$projectDir/s4-core/src/main/resources/event_clock.xml"
-        from "$projectDir/s4-core/src/main/resources/s4_core.properties_header"
-        from "$projectDir/s4-core/src/main/resources/clusters.xml"     
-        from "$projectDir/s4-core/src/main/resources/adapter_conf.xml"     
-        from "$projectDir/s4-core/src/main/resources/log4j.xml"     
-        from "$projectDir/s4-core/src/main/resources/client_stub_conf.xml"     
-        from "$projectDir/s4-core/src/main/resources/clusters.xml"     
-        into "$buildDir/dist/s4-core/conf/default"
-    }
-    */
-    //copy {
-    //   from "$projectDir/s4-core/scripts"
-    //    into "$buildDir/dist/bin" 
-    //    fileMode = 0755 // bug: doesn't seem to work in Gradle 1.0. 
-    //    include '**/*.sh'
-    //}
-    /*
-    mkdir("$buildDir/dist/s4-core/lock")
-    mkdir("$buildDir/dist/s4-core/logs")
-    mkdir("$buildDir/dist/s4-apps")    
-    mkdir("$buildDir/dist/s4-exts")    
-    
-}
-
-distribution.dependsOn distJars, distCopyFiles
-*/
 
 /* Generates the gradlew scripts.
 http://www.gradle.org/1.0-milestone-1/docs/userguide/gradle_wrapper.html */ 

@@ -15,36 +15,27 @@ dependencies {
     compile project(':s4-comm')
 }
 
+
+apply plugin:'application'
+mainClassName = "io.s4.MainApp"
+
 task tar(type: Tar) {
-    from 'src/main/resources/NOTICE.txt'
+
+    /* Include all the resources. */
+    from sourceSets.main.resources 
     
-    into('lib') {
+    /* Include all dependent jars. */
+    projectName = project.name
+    into ("$projectName/lib") {
             from configurations.runtime
+            
+            // The property jar.archivePath should point to the archive for this project
+            // but is missing version info. Why? 
+            // println jar.archivePath 
+            // This is a workaround:
+            from(libsDir) {
+                include '**/*.jar'
+            }
+            
         }
-
-    into("conf/default") {
-        
-        from "src/main/resources/s4_core_conf.xml"
-        from "src/main/resources/wall_clock.xml"
-        from "src/main/resources/event_clock.xml"
-        from "src/main/resources/s4_core.properties_header"
-        from "src/main/resources/clusters.xml"     
-        from "src/main/resources/adapter_conf.xml"     
-        from "src/main/resources/log4j.xml"     
-        from "src/main/resources/client_stub_conf.xml"     
-        from "src/main/resources/clusters.xml"
-    }     
-    
-    into("bin") {
-        from "scripts"
-        fileMode = 0755 // bug: doesn't seem to work in Gradle 1.0. 
-        include '**/*.sh'
-    }
-    
-    // TODO: figure out how to make dirs.
-    //into("lock") {from ""}
-    //into("logs") {}
-    //into("s4-apps") {}   
-    //into("s4-exts") {}
-
 }
