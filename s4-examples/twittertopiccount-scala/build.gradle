@@ -15,5 +15,3 @@ dependencies {
     compile libraries.scala_library
 }
 
-archivesBaseName = 'twittertopiccount_scala'
-

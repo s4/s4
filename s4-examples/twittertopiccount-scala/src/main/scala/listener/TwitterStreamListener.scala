@@ -27,14 +27,14 @@ import java.util.concurrent.LinkedBlockingQueue
 
 import io.s4.collector.EventWrapper
 import io.s4.listener.EventHandler
-import io.s4.listener.EventListener
+import io.s4.listener.EventProducer
 
 import net.liftweb.json._
 import net.liftweb.json.Extraction._
 
 import io.s4.example.twittertopiccount.event._
 
-class TwitterStreamListener extends EventListener {
+class TwitterStreamListener extends EventProducer {
 
   @BeanProperty var queue: LinkedBlockingQueue[String] = _ 
   @BeanProperty var threads = 10

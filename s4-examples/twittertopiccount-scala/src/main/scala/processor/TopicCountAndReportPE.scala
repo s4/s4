@@ -18,14 +18,14 @@ package io.s4.example.twittertopiccount.processor
 import org.apache.log4j.Logger
 import scala.reflect.BeanProperty
 
-import io.s4.dispatcher.Dispatcher
+import io.s4.dispatcher.EventDispatcher
 import io.s4.processor.AbstractPE
 
 import io.s4.example.twittertopiccount.event._
 
 class TopicCountAndReportPE extends AbstractPE {
   @BeanProperty var id: String = _ 
-  @BeanProperty var dispatcher: Dispatcher = _ 
+  @BeanProperty var dispatcher: EventDispatcher = _ 
   @BeanProperty var outputStreamName: String = _ 
   @BeanProperty var threshold: Int = _
   @BeanProperty var count: Int = _
