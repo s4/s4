@@ -1,9 +1,5 @@
 dependencies {
-//    compile( libraries.json )
-//    compile( libraries.gson )
-    compile project(':s4-driver:java')
+    compile project(':s4-driver')
 }
-
-archivesBaseName = 's4-driver-examples-read_java'
 
 

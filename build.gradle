@@ -84,11 +84,11 @@ dependsOnChildren()
 distRootFolder = "$archivesBaseName-${-> version}"
 
 configurations { 
-    s4CoreLibs 
+    binLibs 
 } 
 
 dependencies { 
-    s4CoreLibs project(path: ':s4-core')
+    binLibs project(path: ':s4-core'), project(path: ':s4-driver')
 }
 
 binDistImage = copySpec {
@@ -98,8 +98,16 @@ binDistImage = copySpec {
     /* Include all dependent jars. */
     projectName = project(':s4-core').name
     into ("$projectName/lib") {
-        //from project(':s4-core').configurations.runtime
-        from configurations.s4CoreLibs
+        from configurations.binLibs
+    }
+}
+
+allDistImage = copySpec {
+    with binDistImage
+    subprojects.findAll {project -> 
+        into('src') {
+            from project.sourceSets.main.allJava
+        }
     }
 }
 
@@ -112,6 +120,14 @@ task binTgz( type: Tar) {
         }
 }
 
+task allTgz( type: Tar) {
+    description = "Build complete bundle in GZIP format"
+    classifier = 'all'
+    compression = Compression.GZIP
+        into(distRootFolder) {
+            with allDistImage
+        }
+}
 
 /* Generates the gradlew scripts.
 http://www.gradle.org/1.0-milestone-1/docs/userguide/gradle_wrapper.html */ 

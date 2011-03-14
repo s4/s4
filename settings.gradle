@@ -1,12 +1,18 @@
 include 's4-comm'
 include 's4-core'
-include 's4-driver:java'
-include 's4-driver:examples:read_java'
-
-include 's4-examples:twittertopiccount'
+include 's4-driver'
+include 's4-example-java-driver'
+include 's4-example-twittertopiccount'
 // include 's4-examples:twittertopiccount_scala'
-include 's4-examples:speech01'
-include 's4-examples:speech01_scala'
-include 's4-examples:speech02'
+include 's4-example-speech01'
+include 's4-example-speech01-scala'
+include 's4-example-speech02'
 
-
+/* Set dirs for projects whose name doesn't follow the dir structure. */
+/* TODO: Write code to map proj name to dir. */
+project(':s4-driver').projectDir = new File(settingsDir, 's4-driver/java')
+project(':s4-example-java-driver').projectDir = new File(settingsDir, 's4-driver/examples/read_java')
+project(':s4-example-twittertopiccount').projectDir = new File(settingsDir, 's4-examples/twittertopiccount')
+project(':s4-example-speech01').projectDir = new File(settingsDir, 's4-examples/speech01')
+project(':s4-example-speech02').projectDir = new File(settingsDir, 's4-examples/speech02')
+project(':s4-example-speech01-scala').projectDir = new File(settingsDir, 's4-examples/speech01-scala')
