@@ -15,27 +15,3 @@ dependencies {
     compile project(':s4-comm')
 }
 
-
-apply plugin:'application'
-mainClassName = "io.s4.MainApp"
-
-task tar(type: Tar) {
-
-    /* Include all the resources. */
-    from sourceSets.main.resources 
-    
-    /* Include all dependent jars. */
-    projectName = project.name
-    into ("$projectName/lib") {
-            from configurations.runtime
-            
-            // The property jar.archivePath should point to the archive for this project
-            // but is missing version info. Why? 
-            // println jar.archivePath 
-            // This is a workaround:
-            from(libsDir) {
-                include '**/*.jar'
-            }
-            
-        }
-}

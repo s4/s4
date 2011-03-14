@@ -1,3 +1,5 @@
+apply plugin: 'java'
+
 //apply plugin: 'eclipse'
 //apply plugin:'application'
 
@@ -5,6 +7,11 @@
 
 allprojects {
 
+    version = new Version(major: 0, minor: 3, releaseType: 'SNAPSHOT')
+    //version = new Version(major: 0, minor: 2, releaseType: 'beta', bugfix: 2)
+
+    archivesBaseName = 's4'
+    
     repositories {
         mavenCentral()
         mavenLocal()
@@ -53,15 +60,6 @@ subprojects {
     //defaultTasks 'build'
 
     group = 'io.s4'
-    version_number = '0.3.0.0'
-
-    gradle.taskGraph.whenReady {taskGraph ->
-        if (taskGraph.hasTask(':release')) {
-            version = version_number
-            } else {
-                version = version_number + '-SNAPSHOT'
-            }
-    }
 
     /* Common dependencies applied to all subprojects. */
     dependencies { 
@@ -83,22 +81,61 @@ subprojects {
                              
 dependsOnChildren()
 
-/* TODO: the distribution task creates a package for developers with the suffix SNAPSHOT. The release task will create the final immutable version. */ 
+distRootFolder = "$archivesBaseName-${-> version}"
 
-/*
-task distribution << {
-    println "We build the zip with version=$version"
+configurations { 
+    s4CoreLibs 
+} 
+
+dependencies { 
+    s4CoreLibs project(path: ':s4-core')
 }
 
-task release(dependsOn: 'assemble') << {
-    println 'We release now'
-}
-*/
+binDistImage = copySpec {
+    /* Include all the resources. */
+    from project(':s4-core').sourceSets.main.resources 
 
+    /* Include all dependent jars. */
+    projectName = project(':s4-core').name
+    into ("$projectName/lib") {
+        //from project(':s4-core').configurations.runtime
+        from configurations.s4CoreLibs
+    }
+}
+
+task binTgz( type: Tar) {
+    description = "Build binary bundle in GZIP format"
+    classifier = 'bin'
+    compression = Compression.GZIP
+        into(distRootFolder) {
+            with binDistImage
+        }
+}
 
 
 /* Generates the gradlew scripts.
 http://www.gradle.org/1.0-milestone-1/docs/userguide/gradle_wrapper.html */ 
 task wrapper(type: Wrapper) { 
     gradleVersion = '1.0-milestone-1' 
+}
+
+
+task listJars << {
+    println "Project version: $project.version"
+    configurations.archives.allArtifactFiles.files.each {
+        println "Artifact: $it.name"
+    }
+}
+
+listJars.dependsOn 'assemble'
+
+class Version {
+    int major
+    int minor
+    int bugfix
+    String releaseType
+ 
+    String toString() {
+        "$major.$minor-$releaseType${bugfix ?: ''}"
+    }
 }
