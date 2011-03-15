@@ -1,6 +1,4 @@
 apply plugin: 'java'
-
-//apply plugin: 'eclipse'
 //apply plugin:'application'
 
 //mainClassName = "io.s4.MainApp"
@@ -53,7 +51,7 @@ scala_library:      'org.scala-lang:scala-library:2.8.1'
 ]
 
 subprojects { 
-    //apply plugin: 'eclipse'
+    apply plugin: 'eclipse'
     apply plugin: 'java'
     //apply plugin: 'maven'
 
