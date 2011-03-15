@@ -83,6 +83,20 @@ dependsOnChildren()
 
 distRootFolder = "$archivesBaseName-${-> version}"
 
+platformProjects = [project(':s4-core'), project(':s4-comm'), project(':s4-driver')]
+
+/* Generate Javadoc. */
+task s4Javadoc(type: Javadoc) {
+    source platformProjects.collect { project ->
+        project.sourceSets.main.allJava
+    }
+    destinationDir = new File(buildDir, 'javadoc')
+    // Might need a classpath
+    classpath = files(platformProjects.collect { project ->
+        project.sourceSets.main.compileClasspath
+    })
+}
+
 configurations { 
     binLibs 
 } 
@@ -109,6 +123,9 @@ allDistImage = copySpec {
             from project.sourceSets.main.allJava
         }
     }
+    into('doc') {
+        from "$buildDir/javadoc"
+    }
 }
 
 task binTgz( type: Tar) {
@@ -120,7 +137,7 @@ task binTgz( type: Tar) {
         }
 }
 
-task allTgz( type: Tar) {
+task allTgz( type: Tar, dependsOn: s4Javadoc) {
     description = "Build complete bundle in GZIP format"
     classifier = 'all'
     compression = Compression.GZIP
@@ -134,16 +151,6 @@ http://www.gradle.org/1.0-milestone-1/docs/userguide/gradle_wrapper.html */
 task wrapper(type: Wrapper) { 
     gradleVersion = '1.0-milestone-1' 
 }
-
-
-task listJars << {
-    println "Project version: $project.version"
-    configurations.archives.allArtifactFiles.files.each {
-        println "Artifact: $it.name"
-    }
-}
-
-listJars.dependsOn 'assemble'
 
 class Version {
     int major
