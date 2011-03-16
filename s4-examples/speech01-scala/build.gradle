@@ -11,5 +11,3 @@ dependencies {
     compile libraries.scala_library
 }
 
-archivesBaseName = 'speech01_scala'
-

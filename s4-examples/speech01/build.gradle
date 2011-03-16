@@ -3,5 +3,3 @@ dependencies {
     compile project(':s4-core')
 }
 
-archivesBaseName = 'speech01'
-

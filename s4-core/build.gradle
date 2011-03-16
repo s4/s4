@@ -14,4 +14,3 @@ dependencies {
     compile( libraries.jackson_mapper_asl )
     compile project(':s4-comm')
 }
-

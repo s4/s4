@@ -1,7 +1,10 @@
-apply plugin: 'java'
-//apply plugin:'application'
+allprojects {
+	apply plugin: "java"
+	sourceCompatibility = 1.6
+	targetCompatibility = 1.6
+}
 
-//mainClassName = "io.s4.MainApp"
+platformProjects = [project(':s4-core'), project(':s4-comm'), project(':s4-driver')]
 
 allprojects {
 
@@ -50,10 +53,10 @@ scala_compiler:     'org.scala-lang:scala-compiler:2.8.1',
 scala_library:      'org.scala-lang:scala-library:2.8.1'
 ]
 
+
 subprojects { 
     apply plugin: 'eclipse'
-    apply plugin: 'java'
-    //apply plugin: 'maven'
+	apply plugin: 'maven'
 
     //defaultTasks 'build'
 
@@ -75,13 +78,18 @@ subprojects {
         'Implementation-Vendor': 'The S4 Project',
         'Implementation-Vendor-Id': 'io.s4'
         )
+
+		/* For some reason I need to set this property explictly to get the maven install to work
+		by using the default artifacts in the archives configuration. Don't install examples in the 
+		maven repo. */ 
+		if (!(project.name ==~ /^s4-example.*/)) {	
+			archivesBaseName = project.name
+		}
 }
                              
 dependsOnChildren()
 
 distRootFolder = "$archivesBaseName-${-> version}"
-
-platformProjects = [project(':s4-core'), project(':s4-comm'), project(':s4-driver')]
 
 /* Generate Javadoc. */
 task s4Javadoc(type: Javadoc) {
