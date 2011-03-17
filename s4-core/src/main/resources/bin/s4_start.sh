@@ -37,6 +37,7 @@ if [ "$1" == "-h" ]; then
   exit 1
 fi
 BASE_DIR=`dirname $($READLINK -f $0)`
+LIB_DIR=`$READLINK -f ${BASE_DIR}/../lib`
 CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4-core`
 APPS_HOME=`$READLINK -f ${BASE_DIR}/../s4-apps`
 EXTS_HOME=`$READLINK -f ${BASE_DIR}/../s4-exts`
@@ -155,6 +156,7 @@ fi
 
 JAVA_OPTS="$JAVA_OPTS -Dlog_loc=${LOG_LOC} "
 
+echo "LIB_DIR='$LIB_DIR'"
 echo "CORE_HOME='$CORE_HOME'"
 echo "APPS_HOME='$APPS_HOME'"
 echo "EXTS_HOME='$EXTS_HOME'"
@@ -175,7 +177,7 @@ echo `${JAVA_LOC}java -version`
 #ADDING EXTENSIONS AND APPS JARS TO CLASSPATH
 #---------------------------------------------
 
-CLASSPATH=`find $CORE_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
+CLASSPATH=`find $LIB_DIR -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 CLASSPATH=$CLASSPATH$CP_SEP`find $APPS_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 CLASSPATH=$CLASSPATH$CP_SEP`find $EXTS_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 
