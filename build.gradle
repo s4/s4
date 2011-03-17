@@ -1,8 +1,46 @@
-allprojects {
-	apply plugin: "java"
-	sourceCompatibility = 1.6
-	targetCompatibility = 1.6
-}
+/*
+ * Copyright (c) 2010 Yahoo! Inc. All rights reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the
+ * License. See accompanying LICENSE file. 
+ */
+
+/*
+ * S4 Top Level Build Script
+ *
+ * To learn Gradle: http://www.gradle.org
+ *
+ * The S4 Project is built using a multilevel project. The subprojects are defined in
+ * file "settings.gradle".
+ *
+ * USAGE: gradle TASK1 TASK2 ...  (If you have gradle installed.)
+ * USAGE: gradlew TASK1 TASK2 ... (Wrapper, doesn't require to install gradle.)
+ *
+ *
+ * Main Tasks:
+ *
+ * clean: deletes all the build dirs
+ * jar: creates all the jars in PROJECT/build/libs
+ * binImage: creates an image in the ./build subdir that includes jars, scripts, 
+ *           and other resources required to run the S4 server and sample applications.
+ * binTgz: same in a gzipped tar file in ./build/distributions.
+ * allImage: creates an image in the ./build subdir that includes what is in binImage
+ *           plus sources, javadoc, and other documents.
+ * allTgz: same in a gzipped tar file in ./build/distributions.
+ * install: installs jars and POMs in local Maven repo (eg. ~/.m2) 
+ * 
+ */
+
+apply plugin: "java"
 
 platformProjects = [project(':s4-core'), project(':s4-comm'), project(':s4-driver')]
 
@@ -57,6 +95,10 @@ scala_library:      'org.scala-lang:scala-library:2.8.1'
 subprojects { 
     apply plugin: 'eclipse'
 	apply plugin: 'maven'
+	apply plugin: "java"
+	
+	sourceCompatibility = 1.6
+	targetCompatibility = 1.6
 
     //defaultTasks 'build'
 
@@ -78,13 +120,6 @@ subprojects {
         'Implementation-Vendor': 'The S4 Project',
         'Implementation-Vendor-Id': 'io.s4'
         )
-
-		/* For some reason I need to set this property explictly to get the maven install to work
-		by using the default artifacts in the archives configuration. Don't install examples in the 
-		maven repo. */ 
-		if (!(project.name ==~ /^s4-example.*/)) {	
-			archivesBaseName = project.name
-		}
 }
                              
 dependsOnChildren()
@@ -111,27 +146,56 @@ dependencies {
     binLibs project(path: ':s4-core'), project(path: ':s4-driver')
 }
 
+configurations { 
+    allLibs 
+} 
+
+dependencies { 
+    allLibs subprojects
+}
+
 binDistImage = copySpec {
     /* Include all the resources. */
     from project(':s4-core').sourceSets.main.resources 
 
     /* Include all dependent jars. */
-    projectName = project(':s4-core').name
-    into ("$projectName/lib") {
+    //projectName = project(':s4-core').name
+    //into ("$projectName/lib") {
+	    into ("lib") {
         from configurations.binLibs
     }
 }
 
 allDistImage = copySpec {
     with binDistImage
-    subprojects.findAll {project -> 
-        into('src') {
+	subprojects.findAll {project -> 
+		into('src') {
             from project.sourceSets.main.allJava
         }
-    }
-    into('doc') {
+		if(project.name != 's4-core') {
+			into(project.name) {
+				from project.sourceSets.main.resources 
+			}
+		}
+	}
+	into ("lib") {
+		from configurations.allLibs
+	}
+    into('javadoc') {
         from "$buildDir/javadoc"
     }
+}
+
+task binImage(type: Copy) {
+	description = "Create binary image"
+	destinationDir = file("$buildDir/s4-image")
+    with binDistImage
+}
+
+task allImage(type: Copy, dependsOn: s4Javadoc) {
+	description = "Create complete image"
+	destinationDir = file("$buildDir/s4-image")
+    with allDistImage
 }
 
 task binTgz( type: Tar) {
