@@ -108,7 +108,6 @@ subprojects {
     dependencies { 
         compile( libraries.log4j )
         compile( libraries.commons_logging )
-        compile( libraries.zk )
         compile( libraries.spring )
         testCompile( libraries.junit )
     }
@@ -139,14 +138,6 @@ task s4Javadoc(type: Javadoc) {
 }
 
 configurations { 
-    binLibs 
-} 
-
-dependencies { 
-    binLibs project(path: ':s4-core'), project(path: ':s4-driver')
-}
-
-configurations { 
     allLibs 
 } 
 
@@ -158,28 +149,64 @@ binDistImage = copySpec {
     /* Include all the resources. */
     from project(':s4-core').sourceSets.main.resources 
 
-    /* Include all dependent jars. */
-    //projectName = project(':s4-core').name
-    //into ("$projectName/lib") {
-	    into ("lib") {
-        from configurations.binLibs
+	[project('s4-core'), project('s4-driver')].collect { project ->
+		into (project.name + "/lib") {
+			from project.configurations.runtime
+	        from project.configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+	    }
     }
 }
 
+//println project(':s4-core').configurations.runtime.asPath
+//println project(':s4-core').configurations.archives.asPath
+//println project(':s4-core').configurations.default.asPath
+
+
 allDistImage = copySpec {
     with binDistImage
-	subprojects.findAll {project -> 
+	subprojects.findAll {proj -> 
 		into('src') {
-            from project.sourceSets.main.allJava
+            from proj.sourceSets.main.allJava
         }
-		if(project.name != 's4-core') {
-			into(project.name) {
-				from project.sourceSets.main.resources 
-			}
+		switch(proj.name) {
+			case "s4-core":
+				break
+				
+			case "s4-driver":
+				break
+				
+			case "s4-example-driver":
+				into("s4-driver") {
+					from proj.sourceSets.main.resources
+				}
+				into ("s4-driver/lib") {
+					from proj.configurations.runtime
+					from proj.configurations.archives.allArtifactFiles
+				}
+				break
+			
+			case ~/(s4\-example).*/:
+				into ("s4-example-apps/" + proj.name + "/lib") {
+					from(
+						proj.configurations.runtime
+							- project("s4-core").configurations.runtime
+					)
+					from proj.configurations.archives.allArtifactFiles
+				}
+				into ("s4-example-apps/" + proj.name) {
+					from proj.sourceSets.main.resources
+				}
+				break
+			
+			default :
+				println("default")
+			
 		}
-	}
-	into ("lib") {
-		from configurations.allLibs
+		//if(project.name != 's4-core') {
+		//	into(project.name) {
+		//		from project.sourceSets.main.resources 
+		//	}
+		//}
 	}
     into('javadoc') {
         from "$buildDir/javadoc"

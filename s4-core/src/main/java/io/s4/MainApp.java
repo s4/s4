@@ -42,9 +42,9 @@ import org.springframework.core.io.ClassPathResource;
 
 public class MainApp {
 
-    private static String coreHome = "../s4_core";
-    private static String appsHome = "../s4_apps";
-    private static String extsHome = "../s4_exts";
+    private static String coreHome = "../s4-core";
+    private static String appsHome = "../s4-apps";
+    private static String extsHome = "../s4-exts";
 
     public static void main(String args[]) throws Exception {
         Options options = new Options();
@@ -160,12 +160,12 @@ public class MainApp {
         // String s4ConfigXml = (String) loArgs.get(0);
         // System.out.println("s4ConfigXml is " + s4ConfigXml);
 
-        ClassPathResource propResource = new ClassPathResource("s4_core.properties");
+        ClassPathResource propResource = new ClassPathResource("s4-core.properties");
         Properties prop = new Properties();
         if (propResource.exists()) {
             prop.load(propResource.getInputStream());
         } else {
-            System.err.println("Unable to find s4_core.properties. It must be available in classpath");
+            System.err.println("Unable to find s4-core.properties. It must be available in classpath");
             System.exit(1);
         }
 
@@ -177,11 +177,11 @@ public class MainApp {
         File configFile = null;
 
         // load clock configuration
-        configPath = configBase + File.separatorChar + clockType + "_clock.xml";            
+        configPath = configBase + File.separatorChar + clockType + "-clock.xml";            
         coreConfigUrls.add(configPath);
 
         // load core config xml
-        configPath = configBase + File.separatorChar + "s4_core_conf.xml";
+        configPath = configBase + File.separatorChar + "s4-core-conf.xml";
         configFile = new File(configPath);
         if (!configFile.exists()) {
             System.err.printf("S4 core config file %s does not exist\n",
@@ -274,7 +274,7 @@ public class MainApp {
         for (File moduleDir : moduleDirs) {
             if (moduleDir.isDirectory()) {
                 String confFileName = moduleDir.getAbsolutePath() + "/"
-                        + moduleDir.getName() + "_conf.xml";
+                        + moduleDir.getName() + "-conf.xml";
                 File appsConfFile = new File(confFileName);
                 if (appsConfFile.exists()) {
                     configFileList.add(appsConfFile.getAbsolutePath());

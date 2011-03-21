@@ -16,5 +16,3 @@
 dependencies {
     compile project(':s4-driver')
 }
-
-

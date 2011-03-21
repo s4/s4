@@ -31,7 +31,7 @@ if [ "$1" == "-h" ]; then
 fi
 
 BASE_DIR=`dirname $($READLINK -f $0)`
-CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4_core`
+CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4-core`
 CP_SEP=":"
 REDBUTTON_MODE="false"
 
@@ -83,7 +83,7 @@ fi
 if [ "x$SCHEMA_FILE_LIST" != "x" ] ; then
     SCHEMA_FILE_LIST="${SCHEMA_FILE_LIST},"
 fi
-SCHEMA_FILE_LIST="${SCHEMA_FILE_LIST}${CORE_HOME}/conf/typical/schemas/EventWrapper_schema.js"
+SCHEMA_FILE_LIST="${SCHEMA_FILE_LIST}${CORE_HOME}/conf/typical/schemas/EventWrapper-schema.js"
 
 if [ "x$LOCK_DIR" == "x" ] ; then
     LOCK_DIR="${CORE_HOME}/lock"

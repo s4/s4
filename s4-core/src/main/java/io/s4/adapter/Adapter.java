@@ -171,7 +171,7 @@ public class Adapter implements EventHandler {
         String configBase = coreHome + File.separatorChar + "conf"
                 + File.separatorChar + configType;
         String configPath = configBase + File.separatorChar
-                + "adapter_conf.xml";
+                + "adapter-conf.xml";
         File configFile = new File(configPath);
         if (!configFile.exists()) {
             System.err.printf("adapter config file %s does not exist\n",

@@ -26,13 +26,13 @@
         <appender-ref ref="S"/>
   </logger>
   <appender name="R" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="${log_loc}/s4_core/s4_core_${instanceId}.log" />
+    <param name="File" value="${log_loc}/s4-core/s4-core_${instanceId}.log" />
     <layout class="org.apache.log4j.PatternLayout"> 
       <param name="ConversionPattern" value="%d %c %p (%F:%L) %m%n"/>
     </layout> 
   </appender> 
   <appender name="S" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="${log_loc}/s4_core/s4_core_${instanceId}.mon" />
+    <param name="File" value="${log_loc}/s4-core/s4-core_${instanceId}.mon" />
     <layout class="org.apache.log4j.PatternLayout">
       <param name="ConversionPattern" value="%d %c %p (%F:%L) %m%n"/>
     </layout>

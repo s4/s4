@@ -16,5 +16,4 @@
 dependencies {
     compile( libraries.json )
     compile( libraries.gson )
-    compile project(':s4-core')
 }

@@ -2,7 +2,7 @@
 
 get_property()
 {
-  val=`sed '/^\#/d' ${CONF_LOC}/s4_core.properties_header | grep $1  | tail -n 1 | sed 's/^[^=]*=//;s/^[[:space:]]*//;s/[[:space:]]*$//'`
+  val=`sed '/^\#/d' ${CONF_LOC}/s4\-core.properties\-header | grep $1  | tail -n 1 | sed 's/^[^=]*=//;s/^[[:space:]]*//;s/[[:space:]]*$//'`
   echo "$val"
 }
 
@@ -36,7 +36,6 @@ if [ "$1" == "-h" ]; then
 fi
 
 BASE_DIR=`dirname $($READLINK -f $0)`
-LIB_DIR=`$READLINK -f ${BASE_DIR}/../lib`
 CORE_HOME=`$READLINK -f ${BASE_DIR}/../s4-core`
 APPS_HOME=`$READLINK -f ${BASE_DIR}/../s4-apps`
 CP_SEP=":"
@@ -70,7 +69,7 @@ if [ "x$CONF_TYPE" == "x" ] ; then
     CONF_TYPE="default"
 fi
 
-CONF_FILE=${CORE_HOME}"/conf/"${CONF_TYPE}"/adapter_conf.xml"
+CONF_FILE=${CORE_HOME}"/conf/"${CONF_TYPE}"/adapter-conf.xml"
 CONF_LOC=`dirname $CONF_FILE`
 LOG_LOC="${CORE_HOME}/logs"
 COMMLAYER_MODE=$(get_property "commlayer_mode")
@@ -119,7 +118,7 @@ echo `${JAVA_LOC}java -version`
 #ADDING CORE JARS TO CLASSPATH
 #---------------------------------------------
 
-CLASSPATH=`find $LIB_DIR -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
+CLASSPATH=`find ${CORE_HOME} -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 CLASSPATH=$CLASSPATH$CP_SEP`find $APPS_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 JAVA_OPTS="$JAVA_OPTS -Dzk_session_timeout=5000"
 
