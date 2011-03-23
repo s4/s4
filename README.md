@@ -72,7 +72,7 @@ chmod u+x ./build/s4-image/scripts/*
 cp -rp build/s4-image/s4-example-apps/s4-example-twittertopiccount build/s4-image/s4-apps/
 
 # Enter your twitter user/pass in config file
-$EDITOR build/s4-image/s4-apps/s4-example-twittertopiccount/adapter_conf.xml 
+$EDITOR build/s4-image/s4-apps/s4-example-twittertopiccount/adapter-conf.xml 
 
 # Start server with s4-example-twittertopiccount app
 ./build/s4-image/scripts/s4-start.sh &
