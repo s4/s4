@@ -60,6 +60,12 @@ public class ByteArrayIOChannel implements IOChannel {
 
         if (size == 0)
             return null;
+        
+        // ignore ridiculous sizes
+        // TODO: come up with a better solution than this
+        if (size < 0 || size > (10*1024*1024)) {
+            throw new IOException("Bizarre size "  + size);
+        }
 
         byte[] v = new byte[size];
 
