@@ -15,6 +15,6 @@
  */
 dependencies {
 
-    compile project(':s4-core')
+    compile project(':s4-example-speech01')
 }
 
