@@ -24,8 +24,5 @@ dependencies {
     compile( libraries.asm )
     compile( libraries.commons_cli )
     compile( libraries.commons_jexl )
-    compile( libraries.avro )
-    compile( libraries.jackson_core_asl )
-    compile( libraries.jackson_mapper_asl )
     compile project(':s4-comm')
 }
