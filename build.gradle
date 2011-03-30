@@ -147,37 +147,34 @@ binDistImage = copySpec {
     from project(':s4-core').sourceSets.main.resources 
 
 	into ("s4-core/lib") {
-		from project.configurations.runtime
-        from project.configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+		from project("s4-core").configurations.runtime
+        from project("s4-core").configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
     }
 	into ("s4-driver/lib/java") {
-		from project.configurations.runtime
-        from project.configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+		from project("s4-driver").configurations.runtime
+        from project("s4-driver").configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
     }
-
 }
 
 allDistImage = copySpec {
     with binDistImage
+
+	base = "${project(":").projectDir}/s4-driver"
+	into ("s4-driver/lib/perl") {		
+		from "$base/perl"
+	}
+	into ("s4-driver/lib/python") {		
+		from "$base/python"
+	}
+	into ("testinput") {
+		from "${project(":").projectDir}/s4-examples/testinput"
+    }
+	
 	subprojects.findAll {proj -> 
 		into('src') {
             from proj.sourceSets.main.allJava
         }
-		switch(proj.name) {
-			case "s4-core":
-				break
-				
-			case "s4-driver":
-				base = "${project(":").projectDir}/s4-driver"
-			
-				into ("s4-driver/lib/perl") {		
-					from "$base/perl"
-				}
-				into ("s4-driver/lib/python") {		
-					from "$base/python"
-				}
-				break
-				
+		switch(proj.name) {	
 			case "s4-example-driver":
 				into("s4-driver") {
 					from proj.sourceSets.main.resources
@@ -200,7 +197,6 @@ allDistImage = copySpec {
 					from proj.sourceSets.main.resources
 				}
 				break
-			
 		}
 	}
     into('javadoc') {

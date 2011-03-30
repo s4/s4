@@ -1,0 +1,37 @@
+# Run client examples.
+
+# Create a directory for all the s4 project repositories.
+mkdir s4project
+cd s4project
+
+# Clone repo.
+git clone git@github.com:s4/s4.git
+
+# Build it!
+cd s4
+gradlew clean allImage
+
+# Create some environment variables. 
+export IMAGE_BASE=`pwd`'/build/s4-image'
+export PYTHONPATH=${IMAGE_BASE}/s4-driver/lib/python
+export PERLLIB=${IMAGE_BASE}/s4-driver/lib/perl
+
+# Change script permissions.
+chmod u+x $IMAGE_BASE/scripts/*
+
+# Copy speech02 app to apps deployment directory.
+cp -r $IMAGE_BASE/s4-example-apps/s4-example-speech02 $IMAGE_BASE/s4-apps
+
+# Start S4 server in standalone mode.
+$IMAGE_BASE/scripts/s4-start.sh -r client-adapter &
+
+# Start client adapter.
+$IMAGE_BASE/scripts/run-client-adapter.sh -s client-adapter -g s4 \
+-x -d $IMAGE_BASE/s4-core/conf/default/client-stub-conf.xml &
+
+# Inject events.
+perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSpeech \
+io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
+
+perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSentence \
+io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
