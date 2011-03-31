@@ -6,16 +6,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 public class DefaultFileSystemStateStorage implements StateStorage {
 
