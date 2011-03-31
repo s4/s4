@@ -20,12 +20,18 @@ import io.s4.dispatcher.partitioner.KeyInfo;
 import io.s4.dispatcher.partitioner.KeyInfo.KeyPathElement;
 import io.s4.dispatcher.partitioner.KeyInfo.KeyPathElementIndex;
 import io.s4.dispatcher.partitioner.KeyInfo.KeyPathElementName;
+import io.s4.ft.InitiateCheckpointingEvent;
+import io.s4.ft.RecoveryEvent;
+import io.s4.ft.SafeKeeper;
+import io.s4.ft.SafeKeeperId;
 import io.s4.persist.Persister;
 import io.s4.schema.Schema;
 import io.s4.schema.Schema.Property;
 import io.s4.schema.SchemaContainer;
 import io.s4.util.clock.Clock;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +39,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
+
 
 /**
  * This is the base class for processor classes. While it is possible to create
@@ -59,24 +66,52 @@ public abstract class AbstractPE implements ProcessingElement {
         }
     }
 
-    private Clock s4Clock;
-    private int outputFrequency = 1;
-    private FrequencyType outputFrequencyType = FrequencyType.EVENTCOUNT;
-    private int outputFrequencyOffset = 0;
-    private int eventCount = 0;
-    private int ttl = -1;
-    private Persister lookupTable;
-    private List<EventAdvice> eventAdviceList = new ArrayList<EventAdvice>();
-    private List<Object> keyValue;
-    private List<Object> keyRecord;
-    private String keyValueString;
-    private String streamName;
-    private boolean saveKeyRecord = false;
-    private int outputsBeforePause = -1;
-    private long pauseTimeInMillis;
-    private boolean logPauses = false;
-    private String initMethod = null;
+    public static enum PeriodicInvokerType {
+        OUTPUT, CHECKPOINTING;
+
+        public String getName() {
+            if (OUTPUT == this) {
+                return "PeriodicOutputInvoker";
+            } else {
+                return "PeriodicCheckpointingInvoker";
+            }
+        }
+    }
+
+    transient private static Logger LOG = Logger.getLogger(AbstractPE.class);
+
+    transient private Clock s4Clock;
+    transient private int outputFrequency = 1;
+    transient private FrequencyType outputFrequencyType = FrequencyType.EVENTCOUNT;
+    transient private int outputFrequencyOffset = 0;
+    transient private int eventCount = 0;
+    transient private int ttl = -1;
+    transient private Persister lookupTable;
+    transient private List<EventAdvice> eventAdviceList = new ArrayList<EventAdvice>();
+    transient private List<Object> keyValue;
+    transient private List<Object> keyRecord;
+    transient private String keyValueString;
+    transient private String streamName;
+    transient private boolean saveKeyRecord = false;
+    transient private int outputsBeforePause = -1;
+    transient private long pauseTimeInMillis;
+    transient private boolean logPauses = false;
+    transient private String initMethod = null;
+    transient protected SchemaContainer schemaContainer = new SchemaContainer();
     
+    transient private boolean recoveryAttempted = false;
+    transient private boolean checkpointable = false; // true if state may have
+                                                      // changed
+
+    transient private SafeKeeper safeKeeper; // handles fault tolerance
+    transient private int checkpointingFrequency = 0;
+    transient private FrequencyType checkpointingFrequencyType = FrequencyType.EVENTCOUNT;
+    transient private int checkpointingFrequencyOffset = 0;
+    transient private int checkpointableEventCount = 0;
+
+    transient private OverloadDispatcher overloadDispatcher;
+
+
     public void setSaveKeyRecord(boolean saveKeyRecord) {
         this.saveKeyRecord = saveKeyRecord;
     }
@@ -117,8 +152,6 @@ public abstract class AbstractPE implements ProcessingElement {
         return s4Clock;
     }
 
-    private OverloadDispatcher overloadDispatcher;
-
     public AbstractPE() {
         OverloadDispatcherGenerator oldg = new OverloadDispatcherGenerator(this.getClass());
         Class<?> overloadDispatcherClass = oldg.generate();
@@ -147,6 +180,11 @@ public abstract class AbstractPE implements ProcessingElement {
 
         this.streamName = streamName;
 
+        if (safeKeeper != null && !recoveryAttempted) {
+            recover();
+            recoveryAttempted = true;
+        }
+
         overloadDispatcher.dispatch(this, event);
 
         if (saveKeyRecord) {
@@ -165,6 +203,23 @@ public abstract class AbstractPE implements ProcessingElement {
                                  e);
                 }
             }
+        }
+        
+        // do not take into account checkpointing/recovery trigger messages
+        // FIXME find a better way than instanceof... although there
+        // is no common superclass for these events
+        if (!((event instanceof InitiateCheckpointingEvent) || (event instanceof RecoveryEvent))) {
+            checkpointable = true; // dirty flag
+
+            // FIXME there may be a nicer way
+            if (checkpointingFrequencyType == FrequencyType.EVENTCOUNT
+                    && checkpointingFrequency > 0) {
+                checkpointableEventCount++;
+                if (checkpointableEventCount % checkpointingFrequency == 0) {
+                    initiateCheckpoint();
+                }
+            }
+
         }
     }
 
@@ -196,8 +251,6 @@ public abstract class AbstractPE implements ProcessingElement {
     public String getStreamName() {
         return streamName;
     }
-
-    SchemaContainer schemaContainer = new SchemaContainer();
 
     private void setKeyValue(Object event, CompoundKeyInfo compoundKeyInfo) {
         if (compoundKeyInfo == null) {
@@ -291,7 +344,14 @@ public abstract class AbstractPE implements ProcessingElement {
     public void setOutputFrequencyByEventCount(int outputFrequency) {
         this.outputFrequency = outputFrequency;
         this.outputFrequencyType = FrequencyType.EVENTCOUNT;
-        initFrequency();
+        initFrequency(PeriodicInvokerType.OUTPUT);
+    }
+
+    // TODO factor with output mechanism
+    public void setCheckpointingFrequencyByEventCount(int checkpointingFrequency) {
+        this.checkpointingFrequency = checkpointingFrequency;
+        this.checkpointingFrequencyType = FrequencyType.EVENTCOUNT;
+        initFrequency(PeriodicInvokerType.CHECKPOINTING);
     }
 
     /**
@@ -326,7 +386,13 @@ public abstract class AbstractPE implements ProcessingElement {
     public void setOutputFrequencyByTimeBoundary(int outputFrequency) {
         this.outputFrequency = outputFrequency;
         this.outputFrequencyType = FrequencyType.TIMEBOUNDARY;
-        initFrequency();
+    }
+
+    // TODO factor with output mechanism
+    public void setCheckpointingFrequencyByTimeBoundary(
+            int checkpointingFrequency) {
+        this.checkpointingFrequency = checkpointingFrequency;
+        this.checkpointingFrequencyType = FrequencyType.TIMEBOUNDARY;
     }
 
     /**
@@ -345,6 +411,11 @@ public abstract class AbstractPE implements ProcessingElement {
         this.outputFrequencyOffset = outputFrequencyOffset;
     }
 
+    // TODO factor with output mechanism
+    public void setCheckpointingFrequencyOffset(int checkpointingFrequencyOffset) {
+        this.checkpointingFrequencyOffset = checkpointingFrequencyOffset;
+    }
+
     public void setKeys(String[] keys) {
         for (String key : keys) {
             StringTokenizer st = new StringTokenizer(key);
@@ -352,17 +423,29 @@ public abstract class AbstractPE implements ProcessingElement {
         }
     }
 
-    private void initFrequency() {
-        if (outputFrequency < 0) {
-            return;
+    private void initFrequency(PeriodicInvokerType type) {
+        Runnable r = null;
+        if (PeriodicInvokerType.OUTPUT.equals(type)) {
+            if (outputFrequency < 0) {
+                return;
+            }
+
+            if (outputFrequencyType == FrequencyType.TIMEBOUNDARY) {
+                // create a thread that calls output on time boundaries
+                // that are multiples of frequency
+                r = new PeriodicInvoker(type);
+
+            }
+        } else {
+            if (checkpointingFrequency < 0) {
+                return;
+            }
+            if (checkpointingFrequencyType == FrequencyType.TIMEBOUNDARY) {
+                r = new PeriodicInvoker(type);
+            }
         }
-
-        if (outputFrequencyType == FrequencyType.TIMEBOUNDARY) {
-            // create a thread that calls output on time boundaries
-            // that are multiples of frequency
-            Runnable r = new OutputInvoker();
-
-            Thread t = new Thread(r);
+        if (r != null) {
+            Thread t = new Thread(r, type.getName());
             t.start();
         }
     }
@@ -409,7 +492,120 @@ public abstract class AbstractPE implements ProcessingElement {
      **/
     abstract public void output();
 
-    class OutputInvoker implements Runnable {
+    private void checkpoint() {
+    
+    	byte[] serializedState = serializeState();
+    	// NOTE: assumes pe id is keyvalue from the PE...
+    	saveState(getSafeKeeperId(), serializedState);
+    
+    }
+
+    private void saveState(SafeKeeperId key, byte[] serializedState) {
+    	safeKeeper.saveState(key, serializedState);
+    }
+
+    protected void recover() {
+    	byte[] serializedState = safeKeeper.fetchSerializedState(getSafeKeeperId());
+    	if (serializedState == null) {
+    		return;
+    	}
+    	AbstractPE peInOldState = deserializeState(serializedState);
+    	restoreState(peInOldState);
+    }
+
+    public SafeKeeperId getSafeKeeperId() {
+    	// TODO check keyvaluestring
+    	return new SafeKeeperId(getStreamName(), getId(), getClass().getName(),
+    			getKeyValueString());
+    }
+
+    public void setSafeKeeper(SafeKeeper safeKeeper) {
+    	this.safeKeeper = safeKeeper;
+    }
+
+    public void processEvent(InitiateCheckpointingEvent checkpointingEvent) {
+    	if (isCheckpointable()) {
+    		checkpoint();
+    	}
+    }
+
+    protected boolean isCheckpointable() {
+    	return checkpointable;
+    }
+
+    protected void setCheckpointable(boolean checkpointable) {
+    	this.checkpointable = checkpointable;
+    }
+
+    public final void initiateCheckpoint() {
+    	// TODO delegate everything to safekeeper?
+    	// enqueue checkpointing event
+    	safeKeeper.generateCheckpoint(this);
+    
+    
+    }
+
+    public byte[] serializeState() {
+        return safeKeeper.getSerializer().serialize(this);
+    }
+
+    public AbstractPE deserializeState(byte[] loadedState) {
+        return (AbstractPE) safeKeeper.getSerializer().deserialize(loadedState);
+    }
+
+    public void restoreState(AbstractPE oldState) {
+        // TODO access fields up in the hierarchy till AbstractPE
+        Field[] fields = oldState.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if (!Modifier.isTransient(field.getModifiers())) {
+                if (!Modifier.isPublic(field.getModifiers())) {
+                    field.setAccessible(true);
+                }
+                try {
+                    // TODO use reflectasm
+                    field.set(this, field.get(oldState));
+                } catch (IllegalArgumentException e) {
+                    LOG.error("Cannot recover old state for this PE [" + this
+                            + "]", e);
+                    return;
+                } catch (IllegalAccessException e) {
+                    LOG.error("Cannot recover old state for this PE [" + this
+                            + "]", e);
+                    return;
+                }
+
+            }
+        }
+    }
+
+    public void processEvent(RecoveryEvent recoveryEvent) {
+    	recover();
+    }
+
+    class PeriodicInvoker implements Runnable {
+        
+        PeriodicInvokerType type;
+
+        public PeriodicInvoker(PeriodicInvokerType type) {
+            this.type = type;
+        }
+
+        public long getFrequencyInMillis() {
+            if (type.equals(PeriodicInvokerType.OUTPUT)) {
+                return outputFrequency * 1000;
+            } else {
+                return checkpointingFrequency * 1000;
+            }
+        }
+
+        public long getFrequencyOffset() {
+            if (type.equals(PeriodicInvokerType.OUTPUT)) {
+                return outputFrequencyOffset;
+            } else {
+                return checkpointingFrequencyOffset;
+            }
+        }
+
         public void run() {
             synchronized (AbstractPE.this) {
                 while (s4Clock == null) {
@@ -420,7 +616,7 @@ public abstract class AbstractPE implements ProcessingElement {
                 }
             }
             int outputCount = 0;
-            long frequencyInMillis = outputFrequency * 1000;
+            long frequencyInMillis = getFrequencyInMillis();
 
             long currentTime = getCurrentTime();
             while (!Thread.interrupted()) {
@@ -428,46 +624,55 @@ public abstract class AbstractPE implements ProcessingElement {
                         * frequencyInMillis;
                 long nextBoundary = currentBoundary + frequencyInMillis;
                 currentTime = s4Clock.waitForTime(nextBoundary
-                        + (outputFrequencyOffset * 1000));
-                if (lookupTable != null) {
-                    Set peKeys = lookupTable.keySet();
-                    for (Iterator it = peKeys.iterator(); it.hasNext();) {
-                        String peKey = (String) it.next();
-                        AbstractPE pe = null;
-                        try {
-                            pe = (AbstractPE) lookupTable.get(peKey);
-                        } catch (InterruptedException ie) {
-                        }
+                        + (getFrequencyOffset() * 1000));
 
-                        if (pe == null) {
-                            continue;
-                        }
-
-                        try {
-                            pe.output();
-                            outputCount++;
-                        } catch (Exception e) {
-                            Logger.getLogger("s4")
-                                  .error("Exception calling output() method", e);
-                        }
-
-                        if (outputCount == outputsBeforePause) {
-                            if (logPauses) {
-                                Logger.getLogger("s4").info("Pausing "
-                                        + getId() + " at count " + outputCount
-                                        + " for " + pauseTimeInMillis
-                                        + " milliseconds");
-                            }
-                            outputCount = 0;
+                if (type.equals(PeriodicInvokerType.OUTPUT)) {
+                    if (lookupTable != null) {
+                        Set peKeys = lookupTable.keySet();
+                        for (Iterator it = peKeys.iterator(); it.hasNext();) {
+                            String peKey = (String) it.next();
+                            AbstractPE pe = null;
                             try {
-                                Thread.sleep(pauseTimeInMillis);
+                                pe = (AbstractPE) lookupTable.get(peKey);
                             } catch (InterruptedException ie) {
-                                Thread.currentThread().interrupt();
                             }
-                        }
-                    } // end for each pe in lookup table
-                } // end if lookup table is not null
+
+                            if (pe == null) {
+                                continue;
+                            }
+
+                            try {
+                                pe.output();
+                                outputCount++;
+                            } catch (Exception e) {
+                                Logger.getLogger("s4").error(
+                                        "Exception calling output() method", e);
+                            }
+
+                            if (outputCount == outputsBeforePause) {
+                                if (logPauses) {
+                                    Logger.getLogger("s4").info(
+                                            "Pausing " + getId() + " at count "
+                                                    + outputCount + " for "
+                                                    + pauseTimeInMillis
+                                                    + " milliseconds");
+                                }
+                                outputCount = 0;
+                                try {
+                                    Thread.sleep(pauseTimeInMillis);
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                        } // end for each pe in lookup table
+                    } // end if lookup table is not null
+                } else {
+                    // checkpointing
+                    initiateCheckpoint();
+                }
             }
         }
+        
+
     }
 }

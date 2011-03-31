@@ -428,7 +428,7 @@ public class LoadGenerator {
     }
 
     @SuppressWarnings("unchecked")
-    private Object makeRecord(JSONObject jsonRecord, Schema schema) {
+	public static Object makeRecord(JSONObject jsonRecord, Schema schema) {
         Object event = null;
         try {
             event = schema.getType().newInstance();
@@ -459,7 +459,7 @@ public class LoadGenerator {
     }
 
     @SuppressWarnings("unchecked")
-    private Object makeSettableValue(Property property, Object value) {
+	public static Object makeSettableValue(Property property, Object value) {
         String propertyName = property.getName();
         Class propertyType = property.getType();
 
@@ -523,7 +523,7 @@ public class LoadGenerator {
         return null;
     }
 
-    public Object makeList(Property property, JSONArray jsonArray) {
+	public static Object makeList(Property property, JSONArray jsonArray) {
         Property componentProperty = property.getComponentProperty();
 
         int size = jsonArray.length();
@@ -543,7 +543,7 @@ public class LoadGenerator {
     }
 
     @SuppressWarnings("unchecked")
-    public Object makeArray(Property property, JSONArray jsonArray) {
+	public static Object makeArray(Property property, JSONArray jsonArray) {
         Property componentProperty = property.getComponentProperty();
         Class clazz = componentProperty.getType();
 
@@ -619,7 +619,7 @@ public class LoadGenerator {
         return rateInfo;
     }
 
-    static class EventTypeInfo {
+	public static class EventTypeInfo {
         private Schema schema;
         private String streamName;
 

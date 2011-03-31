@@ -15,6 +15,7 @@
  */
 package io.s4.processor;
 
+import io.s4.ft.SafeKeeper;
 import io.s4.persist.ConMapPersister;
 import io.s4.persist.Persister;
 import io.s4.util.clock.Clock;
@@ -29,6 +30,7 @@ public class PrototypeWrapper {
     private static Logger logger = Logger.getLogger(PrototypeWrapper.class);
     private ProcessingElement prototype;
     Persister lookupTable;
+	SafeKeeper safeKeeper;
 
     public String getId() {
         return prototype.getId();
@@ -72,6 +74,9 @@ public class PrototypeWrapper {
             pe = (ProcessingElement) lookupTable.get(keyValue);
             if (pe == null) {
                 pe = (ProcessingElement) prototype.clone();
+                if (pe instanceof AbstractPE) {
+					((AbstractPE) pe).setSafeKeeper(safeKeeper);
+				}
                 //invoke the initialization method if it has been specified
                 if (pe.getInitMethod() != null) {
                    Method initMethod = pe.getClass().getMethod(pe.getInitMethod(), new Class[0]);
@@ -118,4 +123,8 @@ public class PrototypeWrapper {
     public List<EventAdvice> advise() {
         return prototype.advise();
     }
+
+	public void setSafeKeeper(SafeKeeper safeKeeper) {
+		this.safeKeeper = safeKeeper;
+	}
 }

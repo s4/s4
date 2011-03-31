@@ -28,6 +28,7 @@ import static io.s4.util.MetricsName.pecontainer_qsz;
 import static io.s4.util.MetricsName.pecontainer_qsz_w;
 import io.s4.collector.EventWrapper;
 import io.s4.dispatcher.partitioner.CompoundKeyInfo;
+import io.s4.ft.SafeKeeper;
 import io.s4.logger.Monitor;
 import io.s4.util.clock.Clock;
 import io.s4.util.clock.EventClock;
@@ -51,6 +52,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
     private int maxQueueSize = 1000;
     private boolean trackByKey;
     private Map<String, Integer> countByEventType = Collections.synchronizedMap(new HashMap<String, Integer>());
+	private SafeKeeper safeKeeper;
 
     private ControlEventProcessor controlEventProcessor = null;
 
@@ -74,9 +76,14 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
         this.trackByKey = trackByKey;
     }
 
+	public void setSafeKeeper(SafeKeeper sk) {
+		this.safeKeeper = sk;
+	}
+
     public void addProcessor(ProcessingElement processor) {
         System.out.println("adding pe: " + processor);
         PrototypeWrapper pw = new PrototypeWrapper(processor, s4Clock);
+		pw.setSafeKeeper(safeKeeper);
         prototypeWrappers.add(pw);
         adviceLists.add(pw.advise());
     }
@@ -103,6 +110,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
         workQueue = new LinkedBlockingQueue<EventWrapper>(maxQueueSize);
         for (PrototypeWrapper pw : prototypeWrappers) {
             adviceLists.add(pw.advise());
+			pw.setSafeKeeper(safeKeeper);
         }
         Thread t = new Thread(this, "PEContainer");
         t.start();
