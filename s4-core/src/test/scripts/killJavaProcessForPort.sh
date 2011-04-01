@@ -1,1 +1,0 @@
-kill -9 `lsof -i | grep $1 | awk '/java/ {print $2}'`

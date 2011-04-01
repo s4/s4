@@ -31,7 +31,6 @@ public class S4TestCase extends TestCase {
 
     String configType = "typical";
     long seedTime = 0;
-    String coreHome = "/Users/matthieu/";
     ApplicationContext appContext = null;
     ApplicationContext adapterContext = null;
     private String configBase;

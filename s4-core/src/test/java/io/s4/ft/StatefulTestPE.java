@@ -40,7 +40,11 @@ public class StatefulTestPE extends AbstractPE implements Watcher {
                 throw new RuntimeException(e);
             }
         }
+        if (!S4TestCase.registeredPEs.containsKey(getSafeKeeperId())) {
+            S4TestCase.registeredPEs.put(getSafeKeeperId(), this);
+        }
         try {
+
             if ("value1".equals(event.getKey())) {
                 setValue1(event.getValue());
                 zk.create("/value1Set", new byte[0], Ids.OPEN_ACL_UNSAFE,
@@ -50,14 +54,6 @@ public class StatefulTestPE extends AbstractPE implements Watcher {
                 zk.create("/value2Set", new byte[0], Ids.OPEN_ACL_UNSAFE,
                         CreateMode.PERSISTENT);
             } else if ("initiateCheckpoint".equals(event.getKey())) {
-                try {
-                    new File(System.getProperty("user.dir")
-                            + "/tmp/requestInitiateCheckpointEvent")
-                            .createNewFile();
-                } catch (IOException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
                 initiateCheckpoint();
             } else {
                 throw new RuntimeException("unidentified event: " + event);
@@ -90,16 +86,9 @@ public class StatefulTestPE extends AbstractPE implements Watcher {
         this.id = id;
     }
 
-    public void processEvent(InitiateCheckpointingEvent checkpointingEvent) {
-        System.out.println("initiateCheckpointingEvent");
-        try {
-            new File(System.getProperty("user.dir")
-                    + "/tmp/processCheckpointEvent").createNewFile();
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-        super.processEvent(checkpointingEvent);
+    protected void checkpoint() {
+        System.out.println("checkpointing");
+        super.checkpoint();
         try {
             zk.create("/checkpointed", new byte[0], Ids.OPEN_ACL_UNSAFE,
                     CreateMode.PERSISTENT);

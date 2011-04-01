@@ -102,6 +102,8 @@ public abstract class AbstractPE implements ProcessingElement {
     transient private boolean recoveryAttempted = false;
     transient private boolean checkpointable = false; // true if state may have
                                                       // changed
+    // use a flag for identifying checkpointing events
+    transient private boolean isCheckpointingEvent = false;
 
     transient private SafeKeeper safeKeeper; // handles fault tolerance
     transient private int checkpointingFrequency = 0;
@@ -180,9 +182,14 @@ public abstract class AbstractPE implements ProcessingElement {
 
         this.streamName = streamName;
 
-        if (safeKeeper != null && !recoveryAttempted) {
-            recover();
-            recoveryAttempted = true;
+
+        if (safeKeeper != null) {
+            // initialize checkpointing event flag
+            this.isCheckpointingEvent = false;
+            if (!recoveryAttempted) {
+                recover();
+                recoveryAttempted = true;
+            }
         }
 
         overloadDispatcher.dispatch(this, event);
@@ -206,9 +213,7 @@ public abstract class AbstractPE implements ProcessingElement {
         }
         
         // do not take into account checkpointing/recovery trigger messages
-        // FIXME find a better way than instanceof... although there
-        // is no common superclass for these events
-        if (!((event instanceof InitiateCheckpointingEvent) || (event instanceof RecoveryEvent))) {
+        if (!isCheckpointingEvent) {
             checkpointable = true; // dirty flag
 
             // FIXME there may be a nicer way
@@ -492,7 +497,7 @@ public abstract class AbstractPE implements ProcessingElement {
      **/
     abstract public void output();
 
-    private void checkpoint() {
+    protected void checkpoint() {
     
     	byte[] serializedState = serializeState();
     	// NOTE: assumes pe id is keyvalue from the PE...
@@ -523,7 +528,8 @@ public abstract class AbstractPE implements ProcessingElement {
     	this.safeKeeper = safeKeeper;
     }
 
-    public void processEvent(InitiateCheckpointingEvent checkpointingEvent) {
+    public final void processEvent(InitiateCheckpointingEvent checkpointingEvent) {
+        isCheckpointingEvent = true;
     	if (isCheckpointable()) {
     		checkpoint();
     	}
@@ -579,6 +585,7 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public void processEvent(RecoveryEvent recoveryEvent) {
+        isCheckpointingEvent = true;
     	recover();
     }
 

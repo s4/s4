@@ -10,6 +10,7 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooKeeperMain;
 import org.apache.zookeeper.Watcher.Event.EventType;
+import org.apache.zookeeper.server.NIOServerCnxn.Factory;
 import org.junit.Test;
 
 public class RecoveryTest extends S4TestCase {
@@ -20,46 +21,45 @@ public class RecoveryTest extends S4TestCase {
     @Test
     public void testCheckpointRestorationThroughApplicationEvent()
             throws Exception {
-
-        // note: this should run automatically but does not...
-        S4TestCase.initS4Parameters();
-
-        TestUtils.startZookeeperServer();
-        Thread.sleep(1000);
-        final ZooKeeper zk = TestUtils.createZkClient();
+        Factory zookeeperServerConnectionFactory = null;
+        Process forkedS4App = null;
         try {
-            zk.delete("/value1Set", -1);
-        } catch (Exception ignored) {
-        }
-        try {
-            // FIXME can't figure out where this is retained
-            zk.delete("/value2Set", -1);
-        } catch (Exception ignored) {
-        }
-        try {
-            // FIXME can't figure out where this is retained
-            zk.delete("/checkpointed", -1);
-        } catch (Exception ignored) {
-        }
+            // note: this should run automatically but does not...
+            S4TestCase.initS4Parameters();
 
-        // 0. cleanup storage dir
+            TestUtils.startZookeeperServer();
+            final ZooKeeper zk = TestUtils.createZkClient();
+            try {
+                zk.delete("/value1Set", -1);
+            } catch (Exception ignored) {
+            }
+            try {
+                // FIXME can't figure out where this is retained
+                zk.delete("/value2Set", -1);
+            } catch (Exception ignored) {
+            }
+            try {
+                // FIXME can't figure out where this is retained
+                zk.delete("/checkpointed", -1);
+            } catch (Exception ignored) {
+            }
 
-        // cleanup
-        if (CheckpointingTest.DEFAULT_TEST_OUTPUT_DIR.exists()) {
-            TestUtils
-                    .deleteDirectoryContents(CheckpointingTest.DEFAULT_TEST_OUTPUT_DIR);
-        }
-        CheckpointingTest.DEFAULT_STORAGE_DIR.mkdirs();
+            // 0. cleanup storage dir
 
-        try {
+            // cleanup
+            if (CheckpointingTest.DEFAULT_TEST_OUTPUT_DIR.exists()) {
+                TestUtils
+                        .deleteDirectoryContents(CheckpointingTest.DEFAULT_TEST_OUTPUT_DIR);
+            }
+            CheckpointingTest.DEFAULT_STORAGE_DIR.mkdirs();
+
             // 1. instantiate remote S4 app
-            Process forkedS4App = TestUtils.forkS4App(getClass().getName());
+            forkedS4App = TestUtils.forkS4App(getClass().getName());
             // TODO synchro
             Thread.sleep(2000);
 
             CountDownLatch signalValue1Set = new CountDownLatch(1);
-            TestUtils.watchAndSignalCreation("/value1Set",
-                    signalValue1Set, zk);
+            TestUtils.watchAndSignalCreation("/value1Set", signalValue1Set, zk);
 
             // 2. generate a simple event that changes the state of the PE
             // --> this event triggers recovery
@@ -82,8 +82,7 @@ public class RecoveryTest extends S4TestCase {
             signalCheckpointed.await();
 
             signalValue1Set = new CountDownLatch(1);
-            TestUtils.watchAndSignalCreation("/value1Set",
-                    signalValue1Set, zk);
+            TestUtils.watchAndSignalCreation("/value1Set", signalValue1Set, zk);
             gen.injectValueEvent(new KeyValue("value1", "message1b"),
                     "Stream1", 0);
             signalValue1Set.await();
@@ -92,16 +91,15 @@ public class RecoveryTest extends S4TestCase {
             // kill app
             forkedS4App.destroy();
             // S4App.killS4App(getClass().getName());
-            
+
             StatefulTestPE.DATA_FILE.delete();
 
-            TestUtils.forkS4App(getClass().getName());
+            forkedS4App = TestUtils.forkS4App(getClass().getName());
             // TODO synchro
             Thread.sleep(2000);
             // trigger recovery by sending application event to set value 2
             CountDownLatch signalValue2Set = new CountDownLatch(1);
-            TestUtils.watchAndSignalCreation("/value2Set",
-                    signalValue2Set, zk);
+            TestUtils.watchAndSignalCreation("/value2Set", signalValue2Set, zk);
 
             gen.injectValueEvent(new KeyValue("value2", "message2"), "Stream1",
                     0);
@@ -112,10 +110,11 @@ public class RecoveryTest extends S4TestCase {
             // (latest)
             Assert.assertEquals("value1=message1 ; value2=message2",
                     TestUtils.readFile(StatefulTestPE.DATA_FILE));
-            
-        } finally {
-            TestUtils.stopZookeeperServer();
-            TestUtils.killS4App(getClass().getName());
+        }
+
+        finally {
+            TestUtils.stopZookeeperServer(zookeeperServerConnectionFactory);
+            TestUtils.killS4App(forkedS4App);
         }
     }
 

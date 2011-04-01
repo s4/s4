@@ -12,6 +12,7 @@ import junit.framework.Assert;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.server.NIOServerCnxn.Factory;
 import org.junit.Test;
 
 import com.esotericsoftware.reflectasm.FieldAccess;
@@ -28,11 +29,11 @@ public class CheckpointingTest extends S4TestCase {
     // TODO add timeout
     @Test
     public void testCheckpointStorage() throws Exception {
+        Factory zookeeperServerConnectionFactory = null;
         try {
-            Field[] declaredFields = StatefulTestPE.class.getDeclaredFields();
 
-            // NOTE: a bit overkill for this test (could use static latches)
-            TestUtils.startZookeeperServer();
+            zookeeperServerConnectionFactory = TestUtils
+                    .startZookeeperServer();
             final ZooKeeper zk = TestUtils.createZkClient();
             try {
                 // FIXME can't figure out where this is retained
@@ -110,11 +111,9 @@ public class CheckpointingTest extends S4TestCase {
             Assert.assertTrue(Arrays.equals(refBytes,
                     TestUtils.readFileAsByteArray(expected)));
 
-            // String state = readFileAsString(expected);
-            // Assert.assertEquals("message1|", state);
 
         } finally {
-            TestUtils.stopZookeeperServer();
+            TestUtils.stopZookeeperServer(zookeeperServerConnectionFactory);
         }
     }
 
