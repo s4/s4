@@ -356,7 +356,6 @@ public abstract class AbstractPE implements ProcessingElement {
     public void setCheckpointingFrequencyByEventCount(int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
         this.checkpointingFrequencyType = FrequencyType.EVENTCOUNT;
-        initFrequency(PeriodicInvokerType.CHECKPOINTING);
     }
 
     /**
@@ -391,6 +390,7 @@ public abstract class AbstractPE implements ProcessingElement {
     public void setOutputFrequencyByTimeBoundary(int outputFrequency) {
         this.outputFrequency = outputFrequency;
         this.outputFrequencyType = FrequencyType.TIMEBOUNDARY;
+        initFrequency(PeriodicInvokerType.OUTPUT);
     }
 
     // TODO factor with output mechanism
@@ -398,6 +398,7 @@ public abstract class AbstractPE implements ProcessingElement {
             int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
         this.checkpointingFrequencyType = FrequencyType.TIMEBOUNDARY;
+        initFrequency(PeriodicInvokerType.CHECKPOINTING);
     }
 
     /**
