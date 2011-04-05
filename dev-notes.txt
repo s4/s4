@@ -1,4 +1,6 @@
-# Run client examples.
+### Run client examples.
+
+## Injecting Events with a Perl Client
 
 # Create a directory for all the s4 project repositories.
 mkdir s4project
@@ -18,9 +20,10 @@ export PERLLIB=${IMAGE_BASE}/s4-driver/lib/perl
 
 # Change script permissions.
 chmod u+x $IMAGE_BASE/scripts/*
+chmod u+x $IMAGE_BASE/s4-driver/scripts/*
 
 # Copy speech02 app to apps deployment directory.
-cp -r $IMAGE_BASE/s4-example-apps/s4-example-speech02 $IMAGE_BASE/s4-apps
+cp -fr $IMAGE_BASE/s4-example-apps/s4-example-speech02 $IMAGE_BASE/s4-apps
 
 # Start S4 server in standalone mode.
 $IMAGE_BASE/scripts/s4-start.sh -r client-adapter &
@@ -34,4 +37,16 @@ perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSpeech \
 io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
 
 perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSentence \
+io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
+
+
+## Injecting Events with a Java Client
+
+# Follow same steps as before to start S4 server and client adapter.
+
+# Inject events.
+$IMAGE_BASE/s4-driver/scripts/inject.sh localhost 2334 RawSpeech \
+io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
+
+$IMAGE_BASE/s4-driver/scripts/inject.sh localhost 2334 RawSentence \
 io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
