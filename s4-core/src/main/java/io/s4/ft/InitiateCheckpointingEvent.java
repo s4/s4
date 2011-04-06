@@ -1,23 +1,16 @@
 package io.s4.ft;
 
-public class InitiateCheckpointingEvent {
+// TODO this needs some kind of routing information, provided by safeKeeperId?
+public class InitiateCheckpointingEvent extends CheckpointingEvent {
 
-	private SafeKeeperId safeKeeperId;
+    public InitiateCheckpointingEvent() {
+        // as required by default kryo serializer
+    }
 
-	public InitiateCheckpointingEvent() {
-	}
+    public InitiateCheckpointingEvent(SafeKeeperId safeKeeperId) {
+        super(safeKeeperId);
+    }
 
-	public InitiateCheckpointingEvent(SafeKeeperId safeKeeperId) {
-		super();
-		this.safeKeeperId = safeKeeperId;
-	}
 
-	public SafeKeeperId getSafeKeeperId() {
-		return safeKeeperId;
-	}
-
-	public void setSafeKeeperId(SafeKeeperId id) {
-		this.safeKeeperId = id;
-	}
 
 }
