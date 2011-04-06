@@ -8,26 +8,62 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
-public class DefaultFileSystemStateStorage implements StateStorage {
+public class DefaultFileSystemStateStorage 
+extends Thread
+implements StateStorage {
 
     private static Logger LOG = Logger.getLogger(DefaultFileSystemStateStorage.class);
     private String storageRootPath;
-
+    private ArrayBlockingQueue<ToSave> queue= new ArrayBlockingQueue<ToSave>(1000);
+    private boolean shutdown = false;
+    
+    class ToSave {
+        SafeKeeperId key;
+        byte[] state;
+        StorageCallback cb;
+        
+        ToSave(SafeKeeperId key, byte[] state,
+            StorageCallback callback) {
+            this.key = key;
+            this.state = state;
+            this.cb = callback;
+        }
+        
+    }
     @Override
     public void saveState(SafeKeeperId key, byte[] state,
             StorageCallback callback) {
-        // TODO asynchronous
-
-        File f = safeKeeperID2File(key);
-        if (!f.exists()) {
-            if (!f.getParentFile().exists()) {
-                // parent file has prototype id
-                if (!f.getParentFile().mkdir()) {
-                    callback.storageOperationResult(
+        
+        ToSave toSave = new ToSave(key, state, callback);
+        queue.add(toSave);
+    }
+    
+    public void run(){
+        while(!shutdown){
+            ToSave toSave = null;
+            
+            try{
+                toSave = queue.poll(1000, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting on incoming queue.", e);
+            }
+            
+            if(toSave == null){
+                continue;
+            }
+        
+            File f = safeKeeperID2File(toSave.key);
+            if (!f.exists()) {
+                if (!f.getParentFile().exists()) {
+                    // parent file has prototype id
+                    if (!f.getParentFile().mkdir()) {
+                        toSave.cb.storageOperationResult(
                             SafeKeeper.StorageResultCode.FAILURE,
                             "Cannot create directory for storing PE for prototype: "
                                     + f.getParentFile().getAbsolutePath());
@@ -38,19 +74,19 @@ public class DefaultFileSystemStateStorage implements StateStorage {
             try {
                 f.createNewFile();
             } catch (IOException e) {
-                callback.storageOperationResult(
+                toSave.cb.storageOperationResult(
                         SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
             }
         }
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(f);
-            fos.write(state);
+            fos.write(toSave.state);
         } catch (FileNotFoundException e) {
-            callback.storageOperationResult(
+            toSave.cb.storageOperationResult(
                     SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
         } catch (IOException e) {
-            callback.storageOperationResult(
+            toSave.cb.storageOperationResult(
                     SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
         } finally {
             try {
@@ -61,7 +97,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 LOG.error(e);
             }
         }
-
+        }
     }
 
     @Override
@@ -200,6 +236,12 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 }
             }
         }
+    }
+    
+    public boolean shutdown(){
+        boolean current = shutdown;
+        shutdown = true;
+        return current;
     }
 
 }
