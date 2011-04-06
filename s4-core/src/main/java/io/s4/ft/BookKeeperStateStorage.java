@@ -10,10 +10,14 @@ import java.util.Set;
 
 import org.apache.bookkeeper.client.LedgerEntry;
 import org.apache.bookkeeper.client.LedgerHandle;
+import org.apache.bookkeeper.client.BKException.Code;
+import org.apache.bookkeeper.client.BookKeeper;
+import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.AsyncCallback.DataCallback;
 import org.apache.zookeeper.AsyncCallback.ChildrenCallback;
 import org.apache.zookeeper.data.Stat;
+import org.apache.zookeeper.KeeperException;
 
 /**
  * This class implements a BookKeeper backend to persist checkpoints. 
@@ -226,7 +230,7 @@ ReadCallback {
     void createComplete(int rc, LedgerHandle lh, Object ctx){
         SaveCtx sctx = (SaveCtx) ctx;
         
-        if(rc == OK){
+        if(rc == BKException.Code.OK){
             lh.asyncAddEntry(sctx.state, this, sctx);
         } else {
             logger.error("Failed to create a ledger to store checkpoint: " + rc);
@@ -238,6 +242,13 @@ ReadCallback {
         }
     }
     
+    /**
+     * BookKeeper open ccallback.
+     * 
+     * @param rc
+     * @param lh
+     * @param ctx
+     */
     public void openComplete(int rc, LedgerHandle lh, Object ctx){
         /*
          * Read from the ledger
@@ -245,16 +256,26 @@ ReadCallback {
         lh.asyncReadEntry(0, this, sb);
     }
     
+    /**
+     * BookKeeper read callback.
+     * 
+     * @param rc
+     * @param lh
+     * @param seq
+     * @param ctx
+     */
     void readComplete(int rc, LedgerHandle lh, Enumeration<LedgerEntry> seq,
             Object ctx){
         FetchCtx fctx = (FetchCtx) ctx;
-        if(rc == OK) {
+        if(rc == BKException.Code.OK) {
             fctx.state = seq.nextElement();
-            if(fctx.sb != null){
-                fctx.sb.cross();
-            }
+            
         } else {
             logger.error("Reading checkpoint failed.");
+        }
+        
+        if(fctx.sb != null){
+            fctx.sb.cross();
         }
         
     }
@@ -262,7 +283,7 @@ ReadCallback {
     void addComplete(int rc, LedgerHandle lh, long entryId, Object ctx){
         SaveCtx sctx = (SaveCtx) ctx;
         
-        if(rc == OK) {
+        if(rc == BKException.Code.OK) {
             /*
              * Record on ZooKeeper the ledger id the key maps to
              */
@@ -298,14 +319,20 @@ ReadCallback {
             Stat stat){
         FetchCtx fctx = (FetchCtx) ctx;
         
-        /*
-         * Open ledger for reading.
-         */
-        ByteBuffer ledgerIdBB = ByteBuffer.wrap(data);
-        bk.asyncOpenLedger(ledgerIdBB.getLong());
+        if(KeeperException.Code.get(rc) == KeeperException.Code.OK){
+            /*
+             * Open ledger for reading.
+             */
+            ByteBuffer ledgerIdBB = ByteBuffer.wrap(data);
+            bk.asyncOpenLedger(ledgerIdBB.getLong());
+        } else {
+            logger.error("Failed to open ledger for reading: " + rc);
+        }
     }
     
     /**
+     * ZooKeeper get children callback.
+     * 
      * @param rc
      * @param path
      * @param ctx
@@ -315,13 +342,13 @@ ReadCallback {
             List<String> children){
         FetchKeysCtx fkCtx = (FetchKeysCtx) ctx;
         
-        if(rc == OK){
+        if(KeeperException.Code.get(rc) == KeeperException.Code.OK){
             /*
              * Add keys to set.
              */
             Set<SafeKeeperId> set = new HashSet<SafeKeeperId>();
-            for(String s : sb.list){
-                set.add(new SafeKeeperId(s));        
+            for(String s : children){
+                fkCtx.keys.add(new SafeKeeperId(s));        
             }
             fkCtx.keys = set;
         } else {
@@ -330,9 +357,6 @@ ReadCallback {
         
         if(fkCtx.sb != null){
             fkCtx.sb.cross();
-        }
-        
-        
+        } 
     }
-    
 }
