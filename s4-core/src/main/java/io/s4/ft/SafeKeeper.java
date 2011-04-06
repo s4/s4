@@ -32,7 +32,7 @@ public class SafeKeeper {
     }
 
     public void init() {
-        // start background eager fetching thread (TODO: if eager fetching)
+        // start background eager fetching thread (TODO: iff eager fetching)
         eagerFetchingThread = new Thread(new EagerSerializedStateFetcher(this),
                 "EagerSerializedStateLoader");
         eagerFetchingThread.start();
@@ -64,6 +64,10 @@ public class SafeKeeper {
         }
     }
 
+    public void invalidateStateCacheEntry(SafeKeeperId safeKeeperId) {
+        serializedStateCache.remove(safeKeeperId);
+    }
+
     public void generateCheckpoint(AbstractPE pe) {
         // generate event
         InitiateCheckpointingEvent initiateCheckpointingEvent = new InitiateCheckpointingEvent(
@@ -72,6 +76,12 @@ public class SafeKeeper {
         // inject event
         loopbackDispatcher.dispatchEvent(pe.getStreamName(),
                 initiateCheckpointingEvent);
+    }
+
+    public void initiateRecovery(SafeKeeperId safeKeeperId) {
+        RecoveryEvent recoveryEvent = new RecoveryEvent(safeKeeperId);
+        loopbackDispatcher.dispatchEvent(safeKeeperId.getStreamName(),
+                recoveryEvent);
     }
 
     public void setStateStorage(StateStorage stateStorage) {
@@ -87,7 +97,6 @@ public class SafeKeeper {
     }
 
     public void cacheSerializedState(SafeKeeperId safeKeeperId, byte[] state) {
-        //
         serializedStateCache.putIfAbsent(safeKeeperId, state);
     }
 

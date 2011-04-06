@@ -56,6 +56,8 @@ public class EagerSerializedStateFetcher implements Runnable {
                     byte[] state = sk.fetchSerializedState(safeKeeperId);
                     if (state != null) {
                         sk.cacheSerializedState(safeKeeperId, state);
+                        // send an event to recover
+                        sk.initiateRecovery(safeKeeperId);
                     }
                     tokenCount--;
                 }

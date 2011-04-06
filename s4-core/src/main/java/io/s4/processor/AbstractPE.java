@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
 
@@ -81,6 +82,9 @@ public abstract class AbstractPE implements ProcessingElement {
     transient private static Logger LOG = Logger.getLogger(AbstractPE.class);
 
     transient private Clock s4Clock;
+    // FIXME replaces monitor wait on AbstractPE, for triggering possible extra
+    // thread when checkpointing activated
+    transient private CountDownLatch s4ClockSetSignal = new CountDownLatch(1);
     transient private int outputFrequency = 1;
     transient private FrequencyType outputFrequencyType = FrequencyType.EVENTCOUNT;
     transient private int outputFrequencyOffset = 0;
@@ -100,16 +104,19 @@ public abstract class AbstractPE implements ProcessingElement {
     transient protected SchemaContainer schemaContainer = new SchemaContainer();
     
     transient private boolean recoveryAttempted = false;
-    transient private boolean checkpointable = false; // true if state may have
-                                                      // changed
+    // true if state may have changed
+    transient private boolean checkpointable = false;
     // use a flag for identifying checkpointing events
     transient private boolean isCheckpointingEvent = false;
 
     transient private SafeKeeper safeKeeper; // handles fault tolerance
+    transient private CountDownLatch safeKeeperSetSignal = new CountDownLatch(1);
     transient private int checkpointingFrequency = 0;
     transient private FrequencyType checkpointingFrequencyType = FrequencyType.EVENTCOUNT;
     transient private int checkpointingFrequencyOffset = 0;
     transient private int checkpointableEventCount = 0;
+    transient private int checkpointsBeforePause = -1;
+    transient private long checkpointingPauseTimeInMillis;
 
     transient private OverloadDispatcher overloadDispatcher;
 
@@ -122,19 +129,25 @@ public abstract class AbstractPE implements ProcessingElement {
         this.outputsBeforePause = outputsBeforePause;
     }
 
+    public void setCheckpointsBeforePause(int checkpointsBeforePause) {
+        this.checkpointsBeforePause = checkpointsBeforePause;
+    }
+
     public void setPauseTimeInMillis(long pauseTimeInMillis) {
         this.pauseTimeInMillis = pauseTimeInMillis;
     }
 
+    public void setCheckpointingPauseTimeInMillis(
+            long checkpointingPauseTimeInMillis) {
+        this.checkpointingPauseTimeInMillis = checkpointingPauseTimeInMillis;
+    }
     public void setLogPauses(boolean logPauses) {
         this.logPauses = logPauses;
     }
 
     public void setS4Clock(Clock s4Clock) {
-        synchronized (this) {
-            this.s4Clock = s4Clock;
-            this.notify();
-        }
+        this.s4Clock = s4Clock;
+        this.s4ClockSetSignal.countDown();
     }
 
     /**
@@ -511,12 +524,17 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     protected void recover() {
-    	byte[] serializedState = safeKeeper.fetchSerializedState(getSafeKeeperId());
-    	if (serializedState == null) {
-    		return;
-    	}
-    	AbstractPE peInOldState = deserializeState(serializedState);
-    	restoreState(peInOldState);
+        if (recoveryAttempted) {
+            safeKeeper.invalidateStateCacheEntry(getSafeKeeperId());
+        } else {
+            byte[] serializedState = safeKeeper
+                    .fetchSerializedState(getSafeKeeperId());
+            if (serializedState == null) {
+                return;
+            }
+            AbstractPE peInOldState = deserializeState(serializedState);
+            restoreState(peInOldState);
+        }
     }
 
     public SafeKeeperId getSafeKeeperId() {
@@ -527,6 +545,9 @@ public abstract class AbstractPE implements ProcessingElement {
 
     public void setSafeKeeper(SafeKeeper safeKeeper) {
     	this.safeKeeper = safeKeeper;
+        if (safeKeeper != null) {
+            this.safeKeeperSetSignal.countDown();
+        }
     }
 
     public final void processEvent(InitiateCheckpointingEvent checkpointingEvent) {
@@ -547,9 +568,9 @@ public abstract class AbstractPE implements ProcessingElement {
     public final void initiateCheckpoint() {
     	// TODO delegate everything to safekeeper?
     	// enqueue checkpointing event
-    	safeKeeper.generateCheckpoint(this);
-    
-    
+        if (safeKeeper != null) {
+            safeKeeper.generateCheckpoint(this);
+        }
     }
 
     public byte[] serializeState() {
@@ -615,15 +636,22 @@ public abstract class AbstractPE implements ProcessingElement {
         }
 
         public void run() {
-            synchronized (AbstractPE.this) {
-                while (s4Clock == null) {
-                    try {
-                        AbstractPE.this.wait();
-                    } catch (InterruptedException ie) {
-                    }
+            if (s4Clock == null) {
+                try {
+                    s4ClockSetSignal.await();
+                } catch (InterruptedException e) {
                 }
             }
+            if (PeriodicInvokerType.CHECKPOINTING.equals(type)
+                    && safeKeeper == null) {
+                try {
+                    safeKeeperSetSignal.await();
+                } catch (InterruptedException e) {
+                }
+            }
+
             int outputCount = 0;
+            int checkpointCount = 0;
             long frequencyInMillis = getFrequencyInMillis();
 
             long currentTime = getCurrentTime();
@@ -634,21 +662,21 @@ public abstract class AbstractPE implements ProcessingElement {
                 currentTime = s4Clock.waitForTime(nextBoundary
                         + (getFrequencyOffset() * 1000));
 
-                if (type.equals(PeriodicInvokerType.OUTPUT)) {
-                    if (lookupTable != null) {
-                        Set peKeys = lookupTable.keySet();
-                        for (Iterator it = peKeys.iterator(); it.hasNext();) {
-                            String peKey = (String) it.next();
-                            AbstractPE pe = null;
-                            try {
-                                pe = (AbstractPE) lookupTable.get(peKey);
-                            } catch (InterruptedException ie) {
-                            }
+                if (lookupTable != null) {
+                    Set peKeys = lookupTable.keySet();
+                    for (Iterator it = peKeys.iterator(); it.hasNext();) {
+                        String peKey = (String) it.next();
+                        AbstractPE pe = null;
+                        try {
+                            pe = (AbstractPE) lookupTable.get(peKey);
+                        } catch (InterruptedException ie) {
+                        }
 
-                            if (pe == null) {
-                                continue;
-                            }
+                        if (pe == null) {
+                            continue;
+                        }
 
+                        if (PeriodicInvokerType.OUTPUT.equals(type)) {
                             try {
                                 pe.output();
                                 outputCount++;
@@ -672,11 +700,38 @@ public abstract class AbstractPE implements ProcessingElement {
                                     Thread.currentThread().interrupt();
                                 }
                             }
+                        } else if (PeriodicInvokerType.CHECKPOINTING
+                                .equals(type)) {
+                            try {
+                                if (pe.isCheckpointable()) {
+                                    pe.checkpoint();
+                                    checkpointCount++;
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                Logger.getLogger("s4").error(
+                                        "Exception calling checkpoint() method",
+                                        e);
+                            }
+
+                            if (checkpointCount == checkpointsBeforePause) {
+                                if (logPauses) {
+                                    Logger.getLogger("s4").info(
+                                            "Pausing " + getId()
+                                            + " at checkpoint count "
+                                            + checkpointCount + " for "
+                                            + checkpointingPauseTimeInMillis
+                                            + " milliseconds");
+                                }
+                                checkpointCount = 0;
+                                try {
+                                    Thread.sleep(checkpointingPauseTimeInMillis);
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
                         } // end for each pe in lookup table
                     } // end if lookup table is not null
-                } else {
-                    // checkpointing
-                    initiateCheckpoint();
                 }
             }
         }
