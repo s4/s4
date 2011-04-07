@@ -113,17 +113,7 @@ ReadCallback {
             if(released) return;
             else wait();    
         }
-        
-        synchronized void cross(List<String> list){
-            this.list = list;
-            cross();
-        }
-        
-        synchronized void cross(byte[] data){
-            this.data = data;
-            cross();
-        }
-        
+                
         synchronized void cross(){
             released = true;
             notify();
@@ -252,9 +242,10 @@ ReadCallback {
             logger.error("Failed to create a ledger to store checkpoint: " + rc);
             /*
              * Request failed, so have to call back if object is not null.
-             * TODO: Complete callback parameters
              */
-            if(sctx.cb != null) sctx.cb();
+            if(sctx.cb != null){
+                sctx.cb(SafeKeeper.StorageResultCode.FAILURE, BKException.getMessage(rc));
+            }
         }
     }
     
@@ -308,17 +299,21 @@ ReadCallback {
                     -1, 
                     this, 
                     null);
+            if(sctx.cb != null){
+                sctx.cb(SafeKeeper.StorageResultCode.SUCCESS, BKException.getMessage(rc));
+            }
+            
         } else {
-            logger.error("Failed to write state to BookKeeper.");
+            logger.error("Failed to write state to BookKeeper: " + rc);
+            if(sctx.cb != null){
+                sctx.cb(SafeKeeper.StorageResultCode.FAILURE, BKException.getMessage(rc));
+            }
         }
         
         /*
          * If callback is not null, have to return, independent of result
          * TODO: Complete callback
          */
-        if(sctx.cb != null){
-            sctx.cb();
-        }
         
     }
     
