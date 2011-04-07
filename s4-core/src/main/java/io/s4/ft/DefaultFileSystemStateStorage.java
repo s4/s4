@@ -155,7 +155,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 + File.separator
                 + key.getPrototypeId()
                 + File.separator
-                + Base64.encodeBase64String(key.getStringRepresentation()
+                + Base64.encodeBase64URLSafeString(key.getStringRepresentation()
                         .getBytes()));
     }
 
