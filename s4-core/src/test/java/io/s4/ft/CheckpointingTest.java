@@ -96,7 +96,7 @@ public class CheckpointingTest extends S4TestCase {
                     + File.separator
                     + safeKeeperId.getPrototypeId()
                     + File.separator
-                    + Base64.encodeBase64String(safeKeeperId
+                    + Base64.encodeBase64URLSafeString(safeKeeperId
                             .getStringRepresentation().getBytes()));
 
             // 4. verify that state was correctly persisted
