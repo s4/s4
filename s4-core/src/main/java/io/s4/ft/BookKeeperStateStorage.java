@@ -24,11 +24,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.bookkeeper.client.AsyncCallback;
+import org.apache.bookkeeper.client.AsyncCallback.OpenCallback;
+import org.apache.bookkeeper.client.AsyncCallback.CreateCallback;
+import org.apache.bookkeeper.client.AsyncCallback.DeleteCallback;
+import org.apache.bookkeeper.client.AsyncCallback.AddCallback;
+import org.apache.bookkeeper.client.AsyncCallback.ReadCallback;
+import org.apache.bookkeeper.client.BKException;
+import org.apache.bookkeeper.client.BookKeeper.DigestType;
 import org.apache.bookkeeper.client.LedgerEntry;
 import org.apache.bookkeeper.client.LedgerHandle;
-import org.apache.bookkeeper.client.BKException.Code;
 import org.apache.bookkeeper.client.BookKeeper;
-import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.AsyncCallback.DataCallback;
 import org.apache.zookeeper.AsyncCallback.ChildrenCallback;
@@ -45,7 +51,7 @@ DataCallback,
 ChildrenCallback, 
 CreateCallback, 
 OpenCallback,
-DeleteCallback,
+//DeleteCallback,
 AddCallback,
 ReadCallback {
     private static Logger logger = Logger.getLogger(BookKeeperStateStorage.class);
@@ -93,7 +99,7 @@ ReadCallback {
         
         FetchKeysCtx(SmallBarrier sb){
             this.sb = sb;
-            this.set = null;
+            this.keys = null;
         }
     }
     
@@ -109,7 +115,8 @@ ReadCallback {
             this.released = false;
         }
         
-        synchronized void block(){
+        synchronized void block()
+        throws InterruptedException {
             if(released) return;
             else wait();    
         }
@@ -135,7 +142,7 @@ ReadCallback {
     /**
      * Initializes storage object.
      */
-    public void init(){
+    public void init() throws Throwable{
         BookKeeper bk = new BookKeeper(zkServers);
     }
     
@@ -151,7 +158,11 @@ ReadCallback {
         /*
          * Creates a new ledger to store the checkpoint
          */
-        LedgerHandle lh = bk.asyncCreateLedger(this, sctx);
+        bk.asyncCreateLedger(4, 2, 
+                DigestType.CRC32, 
+                "flaviowashere".getBytes(), 
+                (AsyncCallback.CreateCallback) this, 
+                (Object) sctx);
         
     }
     
@@ -164,8 +175,15 @@ ReadCallback {
         /*
          * Wait until it receives a response for the read call 
          * or fails.
+         * TODO: Not very elegant to catch the exception here, but
+         *  the interface does not accept it currently.
          */
-        sb.block();
+        try{
+            sb.block();
+        } catch (InterruptedException e) {
+            logger.warn("Interrupted while waiting for state.", e);
+            return null;
+        }
     
         /*
          * Data returns null if operation was unsuccessful.
@@ -179,12 +197,11 @@ ReadCallback {
      * @param sb
      * @return
      */
-    public byte[] asyncFetchState(SafeKeeperId key, FetchCtx fctx) {
+    public void asyncFetchState(SafeKeeperId key, FetchCtx fctx) {
         /*
          * Determines ledger id for this key. 
          */
-        Stat stat;
-        byte[] ledgerIdByte = bk.getZKHandle().getData(PREFIX + key.toString(), 
+        bk.getZkHandle().getData(PREFIX + key.toString(), 
                 null,
                 this,
                 fctx);
@@ -193,7 +210,7 @@ ReadCallback {
     @Override
     public Set<SafeKeeperId> fetchStoredKeys() {
         SmallBarrier sb = new SmallBarrier();
-        FetchKeyCtx ctx = new FetchKeysCtx(sb);
+        FetchKeysCtx ctx = new FetchKeysCtx(sb);
         
         /*
          * Asynchronous call to fetch keys.
@@ -203,13 +220,17 @@ ReadCallback {
         /*
          * Blocks until operation completes.
          */
-        sb.block();
-        
+        try{
+            sb.block();
+        } catch (InterruptedException e) {
+            logger.warn("Interrupted while waiting for keys.", e);
+            return null;
+        }
         /*
          * Returns an empty set if list is empty
          */
         
-        return fkCtx.set;
+        return ctx.keys;
     }
     
     /**
@@ -219,8 +240,7 @@ ReadCallback {
         /*
          * Get children from zk.
          */
-        SmallBarrier sb = new SmallBarrier();
-        bk.getZKHandle().getChildren(PREFIX, 
+        bk.getZkHandle().getChildren(PREFIX, 
                 null,
                 this,
                 ctx);
@@ -233,7 +253,7 @@ ReadCallback {
      * @param lh
      * @param ctx
      */
-    void createComplete(int rc, LedgerHandle lh, Object ctx){
+    public void createComplete(int rc, LedgerHandle lh, Object ctx){
         SaveCtx sctx = (SaveCtx) ctx;
         
         if(rc == BKException.Code.OK){
@@ -244,7 +264,7 @@ ReadCallback {
              * Request failed, so have to call back if object is not null.
              */
             if(sctx.cb != null){
-                sctx.cb(SafeKeeper.StorageResultCode.FAILURE, BKException.getMessage(rc));
+                sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, BKException.getMessage(rc));
             }
         }
     }
@@ -260,7 +280,7 @@ ReadCallback {
         /*
          * Read from the ledger
          */
-        lh.asyncReadEntry(0, this, sb);
+        lh.asyncReadEntries(0, 0, (AsyncCallback.ReadCallback) this, (Object) ctx);
     }
     
     /**
@@ -271,11 +291,11 @@ ReadCallback {
      * @param seq
      * @param ctx
      */
-    void readComplete(int rc, LedgerHandle lh, Enumeration<LedgerEntry> seq,
+    public void readComplete(int rc, LedgerHandle lh, Enumeration<LedgerEntry> seq,
             Object ctx){
         FetchCtx fctx = (FetchCtx) ctx;
         if(rc == BKException.Code.OK) {
-            fctx.state = seq.nextElement();
+            fctx.state = seq.nextElement().getEntry();
             
         } else {
             logger.error("Reading checkpoint failed.");
@@ -287,34 +307,33 @@ ReadCallback {
         
     }
     
-    void addComplete(int rc, LedgerHandle lh, long entryId, Object ctx){
+    /**
+     * Add complete.
+     */
+    public void addComplete(int rc, LedgerHandle lh, long entryId, Object ctx){
         SaveCtx sctx = (SaveCtx) ctx;
         
         if(rc == BKException.Code.OK) {
             /*
              * Record on ZooKeeper the ledger id the key maps to
              */
-            bk.getZKHandle().setData(PREFIX + sctx.key.toString(), 
-                    lh.get().toBytes(), 
+            ByteBuffer bb = ByteBuffer.allocate(8);
+            bb.putLong(lh.getId());
+            bk.getZkHandle().setData(PREFIX + sctx.key.toString(), 
+                    bb.array(), 
                     -1, 
-                    this, 
-                    null);
+                    (StatCallback) this, 
+                    (Object) null);
             if(sctx.cb != null){
-                sctx.cb(SafeKeeper.StorageResultCode.SUCCESS, BKException.getMessage(rc));
+                sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.SUCCESS, BKException.getMessage(rc));
             }
             
         } else {
             logger.error("Failed to write state to BookKeeper: " + rc);
             if(sctx.cb != null){
-                sctx.cb(SafeKeeper.StorageResultCode.FAILURE, BKException.getMessage(rc));
+                sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, BKException.getMessage(rc));
             }
         }
-        
-        /*
-         * If callback is not null, have to return, independent of result
-         * TODO: Complete callback
-         */
-        
     }
     
     /**
@@ -335,7 +354,11 @@ ReadCallback {
              * Open ledger for reading.
              */
             ByteBuffer ledgerIdBB = ByteBuffer.wrap(data);
-            bk.asyncOpenLedger(ledgerIdBB.getLong());
+            bk.asyncOpenLedger(ledgerIdBB.getLong(), 
+                    DigestType.CRC32, 
+                    "flaviowashere".getBytes(),
+                    (AsyncCallback.OpenCallback) this,
+                    (Object) fctx);
         } else {
             logger.error("Failed to open ledger for reading: " + rc);
         }
