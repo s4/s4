@@ -177,6 +177,7 @@
 
 	<bean id="safeKeeper" class="io.s4.ft.SafeKeeper" init-method="init">
 		<property name="stateStorage" ref="fsStateStorage" />
+	<!--	<property name="stateStorage" ref="redisStateStorage" /> -->
 		<property name="loopbackDispatcher" ref="loopbackDispatcher" />
 		<property name="serializer" ref="serDeser"/>
 	</bean>
@@ -186,6 +187,9 @@
 		<property name="storageRootPath" value="${storage_root_path}" /> -->
 	</bean>
 
-
+	<bean id="redisStateStorage" class="io.s4.ft.RedisStateStorage" init-method="connect">
+		<property name="redisHost" value="localhost" />
+		<property name="redisPort" value="6379" />
+	</bean>
 
 </beans>
