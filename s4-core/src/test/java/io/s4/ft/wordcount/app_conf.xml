@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+	<!-- <bean id="printEventPE" class="io.s4.processor.PrintEventPE"> <property 
+		name="id" value="printEventPE"/> <property name="keys"> <list> <value>TopicSeen 
+		topic</value> </list> </property> </bean> -->
+
+	<bean id="wordSplitter" class="io.s4.wordcount.WordSplitter">
+		<property name="id" value="wordSplitter" />
+		<property name="keys">
+			<list>
+				<value>Sentences *</value>
+			</list>
+		</property>
+		<property name="outputStreamName" value="Words" />
+		<property name="dispatcher" ref="wordDispatcher" />
+	</bean>
+
+	<bean id="wordCounter" class="io.s4.wordcount.WordCounter">
+		<property name="id" value="wordMapper" />
+		<property name="keys">
+			<list>
+				<value>Words word</value>
+			</list>
+		</property>
+		<property name="outputFrequencyByEventCount" value="1" />
+		<property name="outputStreamName" value="WordsCount" />
+		<property name="dispatcher" ref="wordsCountDispatcher" />
+		<property name="checkpointingFrequencyByEventCount" value="1" />
+	</bean>
+
+	<bean id="wordClassifier" class="io.s4.wordcount.WordClassifier">
+		<property name="id" value="wordClassifier" />
+		<property name="keys">
+			<list>
+				<value>WordsCount *</value>
+			</list>
+		</property>
+		<property name="checkpointingFrequencyByEventCount" value="1" />
+	</bean>
+
+	<bean id="wordDispatcher" class="io.s4.dispatcher.Dispatcher"
+		init-method="init">
+		<property name="partitioners">
+			<list>
+				<ref bean="wordPartitioner" />
+			</list>
+		</property>
+		<property name="eventEmitter" ref="commLayerEmitter" />
+		<property name="loggerName" value="s4" />
+	</bean>
+
+	<bean id="wordPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+		<property name="streamNames">
+			<list>
+				<value>Words</value>
+			</list>
+		</property>
+		<property name="hashKey">
+			<list>
+				<value>word</value>
+			</list>
+		</property>
+		<property name="hasher" ref="hasher" />
+		<property name="debug" value="false" />
+	</bean>
+	
+	<bean id="wordsCountDispatcher" class="io.s4.dispatcher.Dispatcher"
+        init-method="init">
+        <property name="partitioners">
+            <list>
+                <ref bean="wordsCountPartitioner" />
+            </list>
+        </property>
+        <property name="eventEmitter" ref="commLayerEmitter" />
+        <property name="loggerName" value="s4" />
+    </bean>
+    
+	<bean id="wordsCountPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+        <property name="streamNames">
+            <list>
+                <value>WordsCount</value>
+            </list>
+        </property>
+        <property name="debug" value="false" />
+    </bean>
+	
+	
+	
+</beans>

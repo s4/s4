@@ -31,14 +31,18 @@ public class PrototypeWrapper {
     private ProcessingElement prototype;
     Persister lookupTable;
 	SafeKeeper safeKeeper;
+    private int partitionId;
 
     public String getId() {
         return prototype.getId();
     }
 
-    public PrototypeWrapper(ProcessingElement prototype, Clock s4Clock) {
+    public PrototypeWrapper(ProcessingElement prototype, Clock s4Clock,
+            int partitionId) {
         this.prototype = prototype;
+        this.partitionId = partitionId;
         lookupTable = new ConMapPersister(s4Clock);
+        // TODO lookup table with PEIds
         System.out.println("Using ConMapPersister ..");
         // this bit of reflection is not a performance issue because it is only
         // invoked at configuration time
@@ -58,6 +62,7 @@ public class PrototypeWrapper {
         }
     }
 
+
     /**
      * Find PE corresponding to keyValue. If no such PE exists, then a new one
      * is created by cloning the prototype and this is returned. As a
@@ -75,6 +80,7 @@ public class PrototypeWrapper {
             if (pe == null) {
                 pe = (ProcessingElement) prototype.clone();
                 if (pe instanceof AbstractPE) {
+                    // Logger.getLogger("s4").info("injecting safekeeper");
 					((AbstractPE) pe).setSafeKeeper(safeKeeper);
 				}
                 //invoke the initialization method if it has been specified

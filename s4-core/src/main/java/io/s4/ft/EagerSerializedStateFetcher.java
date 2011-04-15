@@ -1,7 +1,7 @@
 package io.s4.ft;
 
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
 
@@ -13,6 +13,7 @@ public class EagerSerializedStateFetcher implements Runnable {
             .getProperty("s4.ft.fetcher.token.time", "50"));
     SafeKeeper sk;
 
+    private CountDownLatch signalSafeKeeperReady = new CountDownLatch(1);
     private static Logger LOG = Logger
             .getLogger(EagerSerializedStateFetcher.class);
 
@@ -20,13 +21,38 @@ public class EagerSerializedStateFetcher implements Runnable {
         this.sk = sk;
     }
 
+    public void setSafeKeeperReady() {
+        signalSafeKeeperReady.countDown();
+    }
+
     @Override
     public void run() {
         // FIXME log
         System.out.println("STARTING EAGER FETCHING THREAD");
+        try {
+            sk.getReadySignal().await();
+        } catch (InterruptedException e1) {
+        }
         Set<SafeKeeperId> storedKeys = sk.getStateStorage().fetchStoredKeys();
+        int nodeCount = sk.getLoopbackDispatcher().getEventEmitter()
+                .getNodeCount();
+        while (nodeCount == 0) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            nodeCount = sk.getLoopbackDispatcher().getEventEmitter()
+                    .getNodeCount();
+        }
+
         for (SafeKeeperId key : storedKeys) {
-            // TODO validate ids through hash function?
+            // validate ids through hash function
+            if (Integer.valueOf(sk.getPartitionId()).equals(
+                    (sk.getHasher().hash(key.getKey()) % nodeCount))) {
+                sk.getKeysToRecover().add(key);
+            }
         }
         sk.getKeysToRecover().addAll(storedKeys);
 

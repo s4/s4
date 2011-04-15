@@ -20,12 +20,6 @@ import com.esotericsoftware.reflectasm.FieldAccess;
 public class CheckpointingTest extends S4TestCase {
 
     private static boolean delete;
-    public static File DEFAULT_TEST_OUTPUT_DIR = new File(
-            System.getProperty("user.dir") + File.separator + "tmp");
-    public static File DEFAULT_STORAGE_DIR = new File(
-            DEFAULT_TEST_OUTPUT_DIR.getAbsolutePath() + File.separator
-                    + "storage");
-
     // TODO add timeout
     @Test
     public void testCheckpointStorage() throws Exception {
@@ -53,10 +47,10 @@ public class CheckpointingTest extends S4TestCase {
 
             // 0. cleanup storage dir
 
-            if (DEFAULT_STORAGE_DIR.exists()) {
-                TestUtils.deleteDirectoryContents(DEFAULT_STORAGE_DIR);
+            if (S4TestCase.DEFAULT_STORAGE_DIR.exists()) {
+                TestUtils.deleteDirectoryContents(S4TestCase.DEFAULT_STORAGE_DIR);
             }
-            DEFAULT_STORAGE_DIR.mkdirs();
+            S4TestCase.DEFAULT_STORAGE_DIR.mkdirs();
 
             // 1. instantiate S4 app
             initializeS4App(getClass());
@@ -76,7 +70,7 @@ public class CheckpointingTest extends S4TestCase {
             signalValue1Set.await();
             StatefulTestPE pe = (StatefulTestPE) S4TestCase.registeredPEs
                     .get(new SafeKeeperId("Stream1", "statefulPE",
-                            StatefulTestPE.class.getName(), null));
+                            StatefulTestPE.class.getName(), (String) null, "0"));
             Assert.assertEquals("message1", pe.getValue1());
             Assert.assertEquals("", pe.getValue2());
 
@@ -105,6 +99,7 @@ public class CheckpointingTest extends S4TestCase {
             StatefulTestPE refPE = new StatefulTestPE();
             refPE.setValue1("message1");
             refPE.setId("statefulPE");
+            refPE.setKeys(new String[] {});
             KryoSerDeser kryoSerDeser = new KryoSerDeser();
             byte[] refBytes = kryoSerDeser.serialize(refPE);
 

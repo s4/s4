@@ -33,11 +33,16 @@ import io.s4.util.clock.Clock;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -147,7 +152,9 @@ public abstract class AbstractPE implements ProcessingElement {
 
     public void setS4Clock(Clock s4Clock) {
         this.s4Clock = s4Clock;
-        this.s4ClockSetSignal.countDown();
+        if (this.s4Clock != null) {
+            this.s4ClockSetSignal.countDown();
+        }
     }
 
     /**
@@ -192,6 +199,12 @@ public abstract class AbstractPE implements ProcessingElement {
             if (compoundKeyInfo != null)
                 keyValueString = compoundKeyInfo.getCompoundValue();
         }
+        System.out.println("*** " + getKeyValueString() + " / "
+                + ((keyValue != null) ? Arrays.toString(keyValue.toArray())
+                        : "")
+                + "/"
+                + ((keyRecord != null) ? Arrays.toString(keyRecord.toArray())
+                        : ""));
 
         this.streamName = streamName;
 
@@ -228,7 +241,6 @@ public abstract class AbstractPE implements ProcessingElement {
         // do not take into account checkpointing/recovery trigger messages
         if (!isCheckpointingEvent) {
             checkpointable = true; // dirty flag
-
             // FIXME there may be a nicer way
             if (checkpointingFrequencyType == FrequencyType.EVENTCOUNT
                     && checkpointingFrequency > 0) {
@@ -540,11 +552,12 @@ public abstract class AbstractPE implements ProcessingElement {
     public SafeKeeperId getSafeKeeperId() {
     	// TODO check keyvaluestring
     	return new SafeKeeperId(getStreamName(), getId(), getClass().getName(),
-    			getKeyValueString());
+                getKeyValueString(),
+                String.valueOf(safeKeeper.getPartitionId()));
     }
 
     public void setSafeKeeper(SafeKeeper safeKeeper) {
-    	this.safeKeeper = safeKeeper;
+        this.safeKeeper = safeKeeper;
         if (safeKeeper != null) {
             this.safeKeeperSetSignal.countDown();
         }
@@ -704,7 +717,7 @@ public abstract class AbstractPE implements ProcessingElement {
                                 .equals(type)) {
                             try {
                                 if (pe.isCheckpointable()) {
-                                    pe.checkpoint();
+                                    pe.initiateCheckpoint();
                                     checkpointCount++;
                                 }
                             } catch (Exception e) {

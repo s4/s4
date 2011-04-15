@@ -149,6 +149,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         return keys;
     }
 
+    // files kept as : root/<partitionId>/<prototypeId>/encodedKeyWithFullInfo
     private File safeKeeperID2File(SafeKeeperId key) {
 
         return new File(storageRootPath

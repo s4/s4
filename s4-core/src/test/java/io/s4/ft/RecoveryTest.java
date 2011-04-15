@@ -18,6 +18,7 @@ public class RecoveryTest extends S4TestCase {
     // TODO parameter
     public static long ZOOKEEPER_PORT = 21810;
 
+
     @Test
     public void testCheckpointRestorationThroughApplicationEvent()
             throws Exception {
@@ -27,7 +28,7 @@ public class RecoveryTest extends S4TestCase {
             // note: this should run automatically but does not...
             S4TestCase.initS4Parameters();
 
-            TestUtils.startZookeeperServer();
+            zookeeperServerConnectionFactory = TestUtils.startZookeeperServer();
             final ZooKeeper zk = TestUtils.createZkClient();
             try {
                 zk.delete("/value1Set", -1);
@@ -47,11 +48,6 @@ public class RecoveryTest extends S4TestCase {
             // 0. cleanup storage dir
 
             // cleanup
-            if (CheckpointingTest.DEFAULT_TEST_OUTPUT_DIR.exists()) {
-                TestUtils
-                        .deleteDirectoryContents(CheckpointingTest.DEFAULT_TEST_OUTPUT_DIR);
-            }
-            CheckpointingTest.DEFAULT_STORAGE_DIR.mkdirs();
 
             // 1. instantiate remote S4 app
             forkedS4App = TestUtils.forkS4App(getClass().getName());

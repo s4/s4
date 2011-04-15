@@ -5,7 +5,6 @@ import java.util.regex.Pattern;
 
 public class SafeKeeperId {
 
-    // TODO add field for taskId
     private String streamName;
     private String prototypeId;
     private String className;
@@ -18,7 +17,7 @@ public class SafeKeeperId {
     }
 
     public SafeKeeperId(String streamName, String prototypeID,
-            String className, String key) {
+            String className, String key, String partitionId) {
         super();
         this.streamName = streamName;
         this.prototypeId = prototypeID;

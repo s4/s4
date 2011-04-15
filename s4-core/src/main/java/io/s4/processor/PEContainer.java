@@ -28,6 +28,7 @@ import static io.s4.util.MetricsName.pecontainer_qsz;
 import static io.s4.util.MetricsName.pecontainer_qsz_w;
 import io.s4.collector.EventWrapper;
 import io.s4.dispatcher.partitioner.CompoundKeyInfo;
+import io.s4.ft.CheckpointingEvent;
 import io.s4.ft.SafeKeeper;
 import io.s4.logger.Monitor;
 import io.s4.util.clock.Clock;
@@ -53,6 +54,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
     private boolean trackByKey;
     private Map<String, Integer> countByEventType = Collections.synchronizedMap(new HashMap<String, Integer>());
 	private SafeKeeper safeKeeper;
+    private int partitionId;
 
     private ControlEventProcessor controlEventProcessor = null;
 
@@ -82,8 +84,9 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
 
     public void addProcessor(ProcessingElement processor) {
         System.out.println("adding pe: " + processor);
-        PrototypeWrapper pw = new PrototypeWrapper(processor, s4Clock);
-		pw.setSafeKeeper(safeKeeper);
+        PrototypeWrapper pw = new PrototypeWrapper(processor, s4Clock,
+                partitionId);
+        pw.setSafeKeeper(safeKeeper);
         prototypeWrappers.add(pw);
         adviceLists.add(pw.advise());
     }
@@ -98,6 +101,17 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
 
     public void setControlEventProcessor(ControlEventProcessor cep) {
         this.controlEventProcessor = cep;
+    }
+
+    public void setPartitionId(int partitionId) {
+        this.partitionId = partitionId;
+        if (safeKeeper != null) {
+            safeKeeper.setPartitionId(String.valueOf(partitionId));
+        }
+    }
+
+    public int getPartitionId() {
+        return this.partitionId;
     }
 
     public PEContainer() {
@@ -259,13 +273,27 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
                             continue;
                         }
 
-                        for (CompoundKeyInfo compoundKeyInfo : eventWrapper.getCompoundKeys()) {
-                            if (eventAdvice.getKey()
-                                           .equals(compoundKeyInfo.getCompoundKey())) {
-                                invokePE(prototypeWrappers.get(i)
-                                                          .getPE(compoundKeyInfo.getCompoundValue()),
-                                         eventWrapper,
-                                         compoundKeyInfo);
+                        if (eventWrapper.getEvent() instanceof CheckpointingEvent) {
+                            // TODO we could remove this instanceof check by
+                            // using a flag in the event wrapper
+                            invokePE(
+                                    prototypeWrappers.get(i).getPE(
+                                            eventWrapper.getCompoundKeys()
+                                                    .iterator().next()
+                                                    .getCompoundKey()),
+                                    eventWrapper, null);
+                        } else {
+                            for (CompoundKeyInfo compoundKeyInfo : eventWrapper
+                                    .getCompoundKeys()) {
+                                if (eventAdvice.getKey().equals(
+                                        compoundKeyInfo.getCompoundKey())) {
+                                    invokePE(
+                                            prototypeWrappers
+                                                    .get(i)
+                                                    .getPE(compoundKeyInfo
+                                                            .getCompoundValue()),
+                                            eventWrapper, compoundKeyInfo);
+                                }
                             }
                         }
                     }

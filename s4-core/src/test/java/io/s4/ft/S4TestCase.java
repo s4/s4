@@ -28,7 +28,6 @@ import org.springframework.core.io.ClassPathResource;
 
 public class S4TestCase extends TestCase {
 
-
     String configType = "typical";
     long seedTime = 0;
     ApplicationContext appContext = null;
@@ -36,6 +35,11 @@ public class S4TestCase extends TestCase {
     private String configBase;
     boolean configPathsInitialized = false;
     private String[] coreConfigFileUrls;
+    public static File DEFAULT_TEST_OUTPUT_DIR = new File(
+            System.getProperty("user.dir") + File.separator + "tmp");
+    public static File DEFAULT_STORAGE_DIR = new File(
+            DEFAULT_TEST_OUTPUT_DIR.getAbsolutePath() + File.separator
+                    + "storage");
 
     // use a static map to track PE instances
     public static final Map<Object, ProcessingElement> registeredPEs = new Hashtable<Object, ProcessingElement>();
@@ -54,8 +58,8 @@ public class S4TestCase extends TestCase {
         } else {
             TestUtils.deleteDirectoryContents(lockDir);
         }
-
     }
+
 
     public void initConfigPaths(Class testClass) throws IOException {
         if (!configPathsInitialized) {
