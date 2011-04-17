@@ -49,6 +49,7 @@ public class TestUtils {
         pb.redirectErrorStream();
         pb.toString();
         final Process process = pb.start();
+        // TODO some synchro with s4 platform ready state
         Thread.sleep(1500);
 
         // if (start.exitValue() != 0) {

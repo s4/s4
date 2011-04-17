@@ -84,8 +84,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
 
     public void addProcessor(ProcessingElement processor) {
         System.out.println("adding pe: " + processor);
-        PrototypeWrapper pw = new PrototypeWrapper(processor, s4Clock,
-                partitionId);
+        PrototypeWrapper pw = new PrototypeWrapper(processor, s4Clock);
         pw.setSafeKeeper(safeKeeper);
         prototypeWrappers.add(pw);
         adviceLists.add(pw.advise());

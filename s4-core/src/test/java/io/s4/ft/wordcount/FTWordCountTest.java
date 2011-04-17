@@ -9,6 +9,7 @@ import io.s4.wordcount.WordCountTest;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
@@ -42,7 +43,6 @@ public class FTWordCountTest extends S4TestCase {
 
         // add authorizations for processing
         for (int i = 1; i <= WordCountTest.SENTENCE_1_TOTAL_WORDS; i++) {
-            System.out.println("$$$" + i);
             zk.create("/continue_" + i, new byte[0], Ids.OPEN_ACL_UNSAFE,
                     CreateMode.EPHEMERAL);
         }
@@ -60,13 +60,15 @@ public class FTWordCountTest extends S4TestCase {
         gen.injectValueEvent(
                 new KeyValue("sentence", WordCountTest.SENTENCE_2),
                 "Sentences", 0);
+
+            // add authorizations for continuing processing. Without these, the
+            // WordClassifier processed keeps waiting
         for (int i = WordCountTest.SENTENCE_1_TOTAL_WORDS + 1; i <= WordCountTest.SENTENCE_1_TOTAL_WORDS
                 + WordCountTest.SENTENCE_2_TOTAL_WORDS; i++) {
-            System.out.println("$$$" + i);
             zk.create("/continue_" + i, new byte[0], Ids.OPEN_ACL_UNSAFE,
                     CreateMode.EPHEMERAL);
         }
-        signalTextProcessed.await();
+            signalTextProcessed.await(10, TimeUnit.SECONDS);
         File results = new File(System.getProperty("java.io.tmpdir")
                 + File.separator + "wordcount");
         String s = TestUtils.readFile(results);

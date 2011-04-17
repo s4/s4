@@ -2,16 +2,18 @@ package io.s4.wordcount;
 
 public class WordCount {
 
-    public String word;
-    public int count;
+    private String word;
+    private int count;
+    private String routingKey;
 
     public WordCount() {
     }
 
-    public WordCount(String word, int count) {
+    public WordCount(String word, int count, String routingKey) {
         super();
         this.word = word;
         this.count = count;
+        this.routingKey = routingKey;
     }
 
     public String getWord() {
@@ -28,6 +30,14 @@ public class WordCount {
 
     public void setCount(int count) {
         this.count = count;
+    }
+
+    public String getRoutingKey() {
+        return routingKey;
+    }
+
+    public void setRoutingKey(String routingKey) {
+        this.routingKey = routingKey;
     }
 
 }

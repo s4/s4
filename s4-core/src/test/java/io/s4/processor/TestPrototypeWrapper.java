@@ -19,7 +19,7 @@ public class TestPrototypeWrapper
        prototype.setInitMethod("testInitialize");
        
         PrototypeWrapper prototypeWrapper = new PrototypeWrapper(prototype,
-                new WallClock(), 0);
+                new WallClock());
 
        assertEquals(0, prototype.getInitializeCount());
        MockPE instance = (MockPE)prototypeWrapper.getPE("asd");

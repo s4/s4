@@ -37,6 +37,7 @@ public class SafeKeeper {
     private Hasher hasher;
     // FIXME currently using partition id to identify current node
     private String partitionId;
+    // monitor field injection through a latch
     private CountDownLatch signalReady = new CountDownLatch(3);
 
     public SafeKeeper() {
@@ -90,7 +91,6 @@ public class SafeKeeper {
             loopbackDispatcher.dispatchEvent(pe.getStreamName(),
                     initiateCheckpointingEvent);
         } else {
-            // FIXME find correct pattern for extracting compound key names
             List<String> list = new ArrayList<String>(1);
             list.add(pe.getKeyValueString());
             compoundKeyNames = new ArrayList<List<String>>(1);

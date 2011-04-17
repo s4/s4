@@ -31,16 +31,13 @@ public class PrototypeWrapper {
     private ProcessingElement prototype;
     Persister lookupTable;
 	SafeKeeper safeKeeper;
-    private int partitionId;
 
     public String getId() {
         return prototype.getId();
     }
 
-    public PrototypeWrapper(ProcessingElement prototype, Clock s4Clock,
-            int partitionId) {
+    public PrototypeWrapper(ProcessingElement prototype, Clock s4Clock) {
         this.prototype = prototype;
-        this.partitionId = partitionId;
         lookupTable = new ConMapPersister(s4Clock);
         // TODO lookup table with PEIds
         System.out.println("Using ConMapPersister ..");

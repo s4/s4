@@ -34,7 +34,8 @@
 		<property name="id" value="wordClassifier" />
 		<property name="keys">
 			<list>
-				<value>WordsCount *</value>
+			    <!-- use a predefined agreed-upon key -->
+				<value>WordsCount routingKey</value>
 			</list>
 		</property>
 	</bean>
@@ -82,6 +83,7 @@
                 <value>WordsCount</value>
             </list>
         </property>
+        <property name="hasher" ref="hasher" />
         <property name="debug" value="false" />
     </bean>
 	

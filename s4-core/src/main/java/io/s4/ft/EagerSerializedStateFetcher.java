@@ -36,6 +36,7 @@ public class EagerSerializedStateFetcher implements Runnable {
         Set<SafeKeeperId> storedKeys = sk.getStateStorage().fetchStoredKeys();
         int nodeCount = sk.getLoopbackDispatcher().getEventEmitter()
                 .getNodeCount();
+        // required wait until nodes are available
         while (nodeCount == 0) {
             try {
                 Thread.sleep(500);

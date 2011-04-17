@@ -12,6 +12,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.Set;
 import java.util.TreeMap;
 
+import junit.framework.Assert;
+
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -24,6 +26,7 @@ public class WordClassifier extends AbstractPE implements Watcher {
     int counter;
     transient private ZooKeeper zk;
     private String id;
+    public final static String ROUTING_KEY = "classifier";
 
     public void setId(String id) {
         this.id = id;
@@ -43,7 +46,9 @@ public class WordClassifier extends AbstractPE implements Watcher {
                 throw new RuntimeException(e);
             }
         }
-        System.out.println("seen: " + wordCount.word + "/" + wordCount.count);
+
+        System.out.println("seen: " + wordCount.getWord() + "/"
+                + wordCount.getCount());
 
         if (!counts.containsKey(wordCount.getWord())
                 || (counts.containsKey(wordCount.getWord()) && counts.get(

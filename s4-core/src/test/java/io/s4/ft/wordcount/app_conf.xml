@@ -35,7 +35,8 @@
 		<property name="id" value="wordClassifier" />
 		<property name="keys">
 			<list>
-				<value>WordsCount *</value>
+			    <!-- using a common agreed-upon routing key value -->
+				<value>WordsCount routingKey</value>
 			</list>
 		</property>
 		<property name="checkpointingFrequencyByEventCount" value="1" />
@@ -84,6 +85,7 @@
                 <value>WordsCount</value>
             </list>
         </property>
+        <property name="hasher" ref="hasher" />
         <property name="debug" value="false" />
     </bean>
 	

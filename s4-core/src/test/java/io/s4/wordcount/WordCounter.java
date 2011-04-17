@@ -1,5 +1,8 @@
 package io.s4.wordcount;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.s4.dispatcher.EventDispatcher;
 import io.s4.ft.KeyValue;
 import io.s4.processor.AbstractPE;
@@ -41,14 +44,17 @@ public class WordCounter extends AbstractPE {
         // System.out.println("seen word " + word.getWord());
     }
 
-
     @Override
     public void output() {
         System.out.println("dispatch: " + getKeyValueString() + " / "
                 + wordCounter);
-        dispatcher.dispatchEvent(outputStreamName, null, new WordCount(
-                getKeyValueString(), wordCounter));
+        List<List<String>> compoundKeyNames = new ArrayList<List<String>>();
+        List<String> keyNames = new ArrayList<String>();
+        keyNames.add("routingKey");
+        compoundKeyNames.add(keyNames);
+        dispatcher.dispatchEvent(outputStreamName, compoundKeyNames,
+                new WordCount(getKeyValueString(), wordCounter,
+                        WordClassifier.ROUTING_KEY));
     }
-
 
 }
