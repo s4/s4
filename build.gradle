@@ -86,7 +86,8 @@ spring:             'org.springframework:spring:2.5.6',
 junit:              'junit:junit:4.4',
 scala_compiler:     'org.scala-lang:scala-compiler:2.8.1',
 scala_library:      'org.scala-lang:scala-library:2.8.1',
-bookkeeper:	    'org.apache.bookkeeper:bookkeeper-server:3.4.0-SNAPSHOT'
+bookkeeper:	    'org.apache.bookkeeper:bookkeeper-server:3.4.0-SNAPSHOT',
+jedis:		    'redis.clients:jedis:1.5.2'
 ]
 
 
