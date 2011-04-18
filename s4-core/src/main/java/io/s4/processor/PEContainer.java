@@ -232,56 +232,52 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
                 }
                 // printPlainPartitionInfoList(event.getCompoundKeyList());
 
-                boolean ctrlEvent = testControlEvent(eventWrapper);
+                if (eventWrapper.getStreamName().endsWith("_checkpointing")
+                        || eventWrapper.getStreamName().endsWith("_recovery")) {
+                    handleCheckpointingOrRecovery(eventWrapper);
+                } else {
 
-                // execute the PEs interested in this event
-                for (int i = 0; i < prototypeWrappers.size(); i++) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("STEP 6 (PEContainer): prototypeWrappers("
-                                + i + ") - "
-                                + prototypeWrappers.get(i).toString() + " - "
-                                + eventWrapper.getStreamName());
-                    }
+                    boolean ctrlEvent = testControlEvent(eventWrapper);
 
-                    // first check if this is a control message and handle it if
-                    // so.
-                    if (ctrlEvent) {
-                        if (controlEventProcessor != null) {
-                            controlEventProcessor.process(eventWrapper,
-                                                          prototypeWrappers.get(i));
+                    // execute the PEs interested in this event
+                    for (int i = 0; i < prototypeWrappers.size(); i++) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("STEP 6 (PEContainer): prototypeWrappers("
+                                    + i
+                                    + ") - "
+                                    + prototypeWrappers.get(i).toString()
+                                    + " - " + eventWrapper.getStreamName());
                         }
 
-                        continue;
-                    }
+                        // first check if this is a control message and handle
+                        // it if
+                        // so.
+                        if (ctrlEvent) {
+                            if (controlEventProcessor != null) {
+                                controlEventProcessor.process(eventWrapper,
+                                        prototypeWrappers.get(i));
+                            }
 
-                    // otherwise, continue processing event.
-                    List<EventAdvice> adviceList = adviceLists.get(i);
-                    for (EventAdvice eventAdvice : adviceList) {
-                        if (eventAdvice.getEventName().equals("*")
-                                || eventAdvice.getEventName()
-                                              .equals(eventWrapper.getStreamName())) {
-                            // event name matches
-                        } else {
                             continue;
                         }
 
-                        if (eventAdvice.getKey().equals("*")) {
-                            invokePE(prototypeWrappers.get(i).getPE("*"),
-                                     eventWrapper,
-                                     null);
-                            continue;
-                        }
+                        // otherwise, continue processing event.
+                        List<EventAdvice> adviceList = adviceLists.get(i);
+                        for (EventAdvice eventAdvice : adviceList) {
+                            if (eventAdvice.getEventName().equals("*")
+                                    || eventAdvice.getEventName().equals(
+                                            eventWrapper.getStreamName())) {
+                                // event name matches
+                            } else {
+                                continue;
+                            }
 
-                        if (eventWrapper.getEvent() instanceof CheckpointingEvent) {
-                            // TODO we could remove this instanceof check by
-                            // using a flag in the event wrapper
-                            invokePE(
-                                    prototypeWrappers.get(i).getPE(
-                                            eventWrapper.getCompoundKeys()
-                                                    .iterator().next()
-                                                    .getCompoundKey()),
-                                    eventWrapper, null);
-                        } else {
+                            if (eventAdvice.getKey().equals("*")) {
+                                invokePE(prototypeWrappers.get(i).getPE("*"),
+                                        eventWrapper, null);
+                                continue;
+                            }
+
                             for (CompoundKeyInfo compoundKeyInfo : eventWrapper
                                     .getCompoundKeys()) {
                                 if (eventAdvice.getKey().equals(
@@ -313,6 +309,32 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
                       .error("Exception choosing processing element to run", e);
             }
         }
+    }
+
+    private void handleCheckpointingOrRecovery(EventWrapper eventWrapper) {
+        CheckpointingEvent checkpointingEvent = null;
+        try {
+            checkpointingEvent = (CheckpointingEvent) eventWrapper.getEvent();
+        } catch (ClassCastException e) {
+            logger.error("Checkpointing stream ["
+                    + eventWrapper.getStreamName()
+                    + "] can only handle checkpointing events. Received event is not a checkpointing event; it will be ignored.");
+            return;
+        }
+        // 1. event is targeted towards pe prototype whose name is given by the
+        // name of the stream
+        // 2. PE id is given by the event
+        for (int i = 0; i < prototypeWrappers.size(); i++) {
+            if (checkpointingEvent.getSafeKeeperId().getPrototypeId()
+                    .equals(prototypeWrappers.get(i).getId())) {
+                invokePE(
+                        prototypeWrappers.get(i).getPE(
+                                checkpointingEvent.getSafeKeeperId().getKey()),
+                        eventWrapper, null);
+            }
+        }
+        
+
     }
 
     private void invokePE(ProcessingElement pe, EventWrapper eventWrapper,

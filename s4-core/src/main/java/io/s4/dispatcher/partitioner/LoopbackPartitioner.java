@@ -16,6 +16,8 @@ public class LoopbackPartitioner implements Partitioner, VariableKeyPartitioner 
         List<CompoundKeyInfo> partitionInfoList = new ArrayList<CompoundKeyInfo>();
         CompoundKeyInfo partitionInfo = new CompoundKeyInfo();
         StringBuilder compoundKeyBuilder = new StringBuilder();
+        // This partitioning ignores the values of the keyed attributes;
+        // it partitions to the current partition id of the pe container
         partitionInfo.setPartitionId(peContainer.getPartitionId());
         for (List<String> keyNames : compoundKeyNames) {
             for (String keyName : keyNames) {

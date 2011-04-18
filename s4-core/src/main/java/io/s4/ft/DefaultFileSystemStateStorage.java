@@ -14,7 +14,8 @@ import org.apache.log4j.Logger;
 
 public class DefaultFileSystemStateStorage implements StateStorage {
 
-    private static Logger LOG = Logger.getLogger(DefaultFileSystemStateStorage.class);
+    private static Logger logger = Logger
+            .getLogger(DefaultFileSystemStateStorage.class);
     private String storageRootPath;
 
     @Override
@@ -23,6 +24,11 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         // TODO asynchronous
 
         File f = safeKeeperID2File(key);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Checkpointing [" + key + "] into file: ["
+                    + f.getAbsolutePath()
+                    + "]");
+        }
         if (!f.exists()) {
             if (!f.getParentFile().exists()) {
                 // parent file has prototype id
@@ -40,6 +46,15 @@ public class DefaultFileSystemStateStorage implements StateStorage {
             } catch (IOException e) {
                 callback.storageOperationResult(
                         SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                return;
+            }
+        } else {
+            if (!f.delete()) {
+                callback.storageOperationResult(
+                        SafeKeeper.StorageResultCode.FAILURE,
+                        "Cannot delete previously saved checkpoint file ["
+                                + f.getParentFile().getAbsolutePath() + "]");
+                return;
             }
         }
         FileOutputStream fos = null;
@@ -58,7 +73,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                     fos.close();
                 }
             } catch (IOException e) {
-                LOG.error(e);
+                logger.error(e);
             }
         }
 
@@ -67,8 +82,8 @@ public class DefaultFileSystemStateStorage implements StateStorage {
     @Override
     public byte[] fetchState(SafeKeeperId key) {
         File file = safeKeeperID2File(key);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Fetching " + file.getAbsolutePath() + "for : " + key);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Fetching " + file.getAbsolutePath() + "for : " + key);
         }
         if (file != null && file.exists()) {
 
@@ -108,15 +123,15 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 in.close();
                 return buffer;
             } catch (FileNotFoundException e1) {
-                LOG.error(e1);
+                logger.error(e1);
             } catch (IOException e2) {
-                LOG.error(e2);
+                logger.error(e2);
             } finally {
                 if (in != null) {
                     try {
                         in.close();
                     } catch (Exception e) {
-                        LOG.warn(e);
+                        logger.warn(e);
                     }
                 }
             }
@@ -175,7 +190,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         File rootPathFile = new File(storageRootPath);
         if (!rootPathFile.exists()) {
             if (!rootPathFile.mkdirs()) {
-                LOG.error("could not create root storage directory : "
+                logger.error("could not create root storage directory : "
                         + storageRootPath);
             }
 
@@ -188,13 +203,13 @@ public class DefaultFileSystemStateStorage implements StateStorage {
             File defaultStorageDir = new File(System.getProperty("user.dir")
                     + File.separator + "tmp" + File.separator + "storage");
             storageRootPath = defaultStorageDir.getAbsolutePath();
-            if (LOG.isInfoEnabled()) {
-                LOG.info("Unspecified storage dir; using default dir: "
+            if (logger.isInfoEnabled()) {
+                logger.info("Unspecified storage dir; using default dir: "
                         + defaultStorageDir.getAbsolutePath());
             }
             if (!defaultStorageDir.exists()) {
                 if (!(defaultStorageDir.mkdirs())) {
-                    LOG.error("Storage directory not specified, and cannot create default storage directory : "
+                    logger.error("Storage directory not specified, and cannot create default storage directory : "
                             + defaultStorageDir.getAbsolutePath());
                     // TODO exit?
                     System.exit(-1);

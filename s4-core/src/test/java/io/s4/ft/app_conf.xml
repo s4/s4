@@ -14,7 +14,7 @@
     <property name="id" value="statefulPE"/>
     <property name="keys">
       <list>
-        <value>Stream1 *</value>
+        <value>Stream1 key</value>
       </list>
     </property>
   </bean>

@@ -24,7 +24,7 @@ public class SafeKeeper {
         SUCCESS, FAILURE
     }
 
-    private static Logger LOG = Logger.getLogger(SafeKeeper.class);
+    private static Logger logger = Logger.getLogger(SafeKeeper.class);
     private ConcurrentMap<SafeKeeperId, byte[]> serializedStateCache = new ConcurrentHashMap<SafeKeeperId, byte[]>(
             16, 0.75f, 2);
     private Set<SafeKeeperId> keysToRecover = Collections
@@ -34,6 +34,7 @@ public class SafeKeeper {
     private StateStorage stateStorage;
     private Dispatcher loopbackDispatcher;
     private SerializerDeserializer serializer;
+    private boolean eagerRecovery = false;
     private Hasher hasher;
     // FIXME currently using partition id to identify current node
     private String partitionId;
@@ -45,11 +46,11 @@ public class SafeKeeper {
 
     public void init() {
         
-        
-        // start background eager fetching thread (TODO: iff eager fetching)
-        eagerFetchingThread = new Thread(new EagerSerializedStateFetcher(this),
-                "EagerSerializedStateLoader");
-        eagerFetchingThread.start();
+        if (eagerRecovery) {
+            eagerFetchingThread = new Thread(new EagerSerializedStateFetcher(
+                    this), "EagerSerializedStateLoader");
+            eagerFetchingThread.start();
+        }
     }
 
     public void saveState(SafeKeeperId key, byte[] state) {
@@ -72,8 +73,8 @@ public class SafeKeeper {
         @Override
         public void storageOperationResult(StorageResultCode code,
                 Object message) {
-            if (LOG.isInfoEnabled()) {
-                LOG.info("Callback from storage: " + message);
+            if (logger.isInfoEnabled()) {
+                logger.info("Callback from storage: " + message);
             }
         }
     }
@@ -88,21 +89,22 @@ public class SafeKeeper {
 
         List<List<String>> compoundKeyNames;
         if (pe.getKeyValueString() == null) {
-            loopbackDispatcher.dispatchEvent(pe.getStreamName(),
-                    initiateCheckpointingEvent);
+            logger.warn("Only keyed PEs can be checkpointed. Current PE ["
+                    + pe.getSafeKeeperId() + "] will not be checkpointed.");
         } else {
             List<String> list = new ArrayList<String>(1);
-            list.add(pe.getKeyValueString());
+            list.add("");
             compoundKeyNames = new ArrayList<List<String>>(1);
             compoundKeyNames.add(list);
-            loopbackDispatcher.dispatchEvent(pe.getStreamName(),
+            loopbackDispatcher.dispatchEvent(pe.getId() + "_checkpointing",
                     compoundKeyNames, initiateCheckpointingEvent);
         }
     }
 
     public void initiateRecovery(SafeKeeperId safeKeeperId) {
         RecoveryEvent recoveryEvent = new RecoveryEvent(safeKeeperId);
-        loopbackDispatcher.dispatchEvent(safeKeeperId.getStreamName(),
+        loopbackDispatcher.dispatchEvent(safeKeeperId.getPrototypeId()
+                + "_recovery",
                 recoveryEvent);
     }
 

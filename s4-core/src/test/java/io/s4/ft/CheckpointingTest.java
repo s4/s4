@@ -19,9 +19,7 @@ import com.esotericsoftware.reflectasm.FieldAccess;
 
 public class CheckpointingTest extends S4TestCase {
 
-    private static boolean delete;
-    // TODO add timeout
-    @Test
+    @Test(timeout = 5000)
     public void testCheckpointStorage() throws Exception {
         Factory zookeeperServerConnectionFactory = null;
         try {
@@ -63,22 +61,23 @@ public class CheckpointingTest extends S4TestCase {
             final CountDownLatch signalValue1Set = new CountDownLatch(1);
 
             TestUtils.watchAndSignalCreation("/value1Set", signalValue1Set, zk);
+            final CountDownLatch signalCheckpointed = new CountDownLatch(1);
+            TestUtils.watchAndSignalCreation("/checkpointed",
+                    signalCheckpointed, zk);
             EventGenerator gen = new EventGenerator();
             gen.injectValueEvent(new KeyValue("value1", "message1"), "Stream1",
                     0);
 
             signalValue1Set.await();
             StatefulTestPE pe = (StatefulTestPE) S4TestCase.registeredPEs
-                    .get(new SafeKeeperId("Stream1", "statefulPE",
-                            StatefulTestPE.class.getName(), (String) null, "0"));
+                    .get(new SafeKeeperId("statefulPE",
+                            StatefulTestPE.class.getName(), "value", "0"));
             Assert.assertEquals("message1", pe.getValue1());
             Assert.assertEquals("", pe.getValue2());
 
             // 3. generate a checkpoint event
-            final CountDownLatch signalCheckpointed = new CountDownLatch(1);
-            TestUtils.watchAndSignalCreation("/checkpointed",
-                    signalCheckpointed, zk);
-            pe.initiateCheckpoint();
+            gen.injectValueEvent(new KeyValue("initiateCheckpoint", "blah"),
+                    "Stream1", 0);
             signalCheckpointed.await();
 
             SafeKeeperId safeKeeperId = pe.getSafeKeeperId();

@@ -14,7 +14,7 @@ public class EagerSerializedStateFetcher implements Runnable {
     SafeKeeper sk;
 
     private CountDownLatch signalSafeKeeperReady = new CountDownLatch(1);
-    private static Logger LOG = Logger
+    private static Logger logger = Logger
             .getLogger(EagerSerializedStateFetcher.class);
 
     public EagerSerializedStateFetcher(SafeKeeper sk) {
@@ -67,7 +67,7 @@ public class EagerSerializedStateFetcher implements Runnable {
                         Thread.sleep(TOKEN_COUNT * TOKEN_TIME_MS
                                 - (System.currentTimeMillis() - startTime));
                     } catch (InterruptedException e) {
-                        LOG.error(e);
+                        logger.error(e);
                     }
                 }
                 tokenCount = TOKEN_COUNT;
@@ -76,8 +76,8 @@ public class EagerSerializedStateFetcher implements Runnable {
 
             if (sk.getKeysToRecover().contains(safeKeeperId)) {
                 if (!sk.isCached(safeKeeperId)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Fetching state for id: " + safeKeeperId);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Fetching state for id: " + safeKeeperId);
                     }
 
                     byte[] state = sk.fetchSerializedState(safeKeeperId);

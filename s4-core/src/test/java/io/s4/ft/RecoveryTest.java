@@ -19,7 +19,7 @@ public class RecoveryTest extends S4TestCase {
     public static long ZOOKEEPER_PORT = 21810;
 
 
-    @Test
+    @Test(timeout = 10000)
     public void testCheckpointRestorationThroughApplicationEvent()
             throws Exception {
         Factory zookeeperServerConnectionFactory = null;
