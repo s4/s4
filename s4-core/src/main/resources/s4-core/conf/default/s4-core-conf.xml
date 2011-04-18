@@ -103,7 +103,6 @@
     <property name="trackByKey" value="true"/>
     <property name="s4Clock" ref="clock"/>
     <property name="controlEventProcessor" ref="ctrlHandler"/>
-    <property name="safeKeeper" ref="safeKeeper"/>
   </bean>
 
   <bean id="rawListener" class="io.s4.listener.CommLayerListener" init-method="init">
@@ -149,31 +148,5 @@
 
   <!-- Partitioner to achieve broadcast -->
   <bean id="broadcastPartitioner" class="io.s4.dispatcher.partitioner.BroadcastPartitioner"/>
-  
-  <bean id="loopbackDispatcher" class="io.s4.dispatcher.Dispatcher"
-        init-method="init">
-        <property name="partitioners">
-            <list>
-                <ref bean="loopbackPartitioner" />
-            </list>
-        </property>
-        <property name="eventEmitter" ref="commLayerEmitter" />
-        <property name="loggerName" value="s4" />
-    </bean>
-
-    <bean id="loopbackPartitioner" class="io.s4.dispatcher.partitioner.LoopbackPartitioner">
-        <property name="peContainer" ref="peContainer"/>
-    </bean>
-
-    <bean id="safeKeeper" class="io.s4.ft.SafeKeeper" init-method="init">
-        <property name="stateStorage" ref="fsStateStorage" />
-        <property name="loopbackDispatcher" ref="loopbackDispatcher" />
-        <property name="serializer" ref="serDeser"/>
-    </bean>
-
-    <bean id="fsStateStorage" class="io.s4.ft.DefaultFileSystemStateStorage" init-method="checkStorageDir">
-        <!-- if not specified, default is <current_dir>/tmp/storage 
-        <property name="storageRootPath" value="${storage_root_path}" /> -->
-    </bean>
   
 </beans>
