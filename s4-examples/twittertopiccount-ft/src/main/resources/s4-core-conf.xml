@@ -154,14 +154,14 @@
         init-method="init">
         <property name="partitioners">
             <list>
-                <ref bean="zeroPartitioner" />
+                <ref bean="loopbackPartitioner" />
             </list>
         </property>
         <property name="eventEmitter" ref="commLayerEmitter" />
         <property name="loggerName" value="s4" />
     </bean>
 
-    <bean id="zeroPartitioner" class="io.s4.dispatcher.partitioner.DummyPartitioner" />
+    <bean id="loopbackPartitioner" class="io.s4.dispatcher.partitioner.LoopbackPartitioner" />
 
     <bean id="safeKeeper" class="io.s4.ft.SafeKeeper" init-method="init">
         <property name="stateStorage" ref="fsStateStorage" />
