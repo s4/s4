@@ -52,6 +52,10 @@ public class Dispatcher implements EventDispatcher {
         this.eventEmitter = eventEmitter;
     }
 
+    public EventEmitter getEventEmitter() {
+        return this.eventEmitter;
+    }
+
     public void setConfigFilename(String configFilename) {
         this.configFilename = configFilename;
     }

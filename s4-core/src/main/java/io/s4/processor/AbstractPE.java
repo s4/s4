@@ -33,11 +33,16 @@ import io.s4.util.clock.Clock;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -141,28 +146,30 @@ public abstract class AbstractPE implements ProcessingElement {
             long checkpointingPauseTimeInMillis) {
         this.checkpointingPauseTimeInMillis = checkpointingPauseTimeInMillis;
     }
+
     public void setLogPauses(boolean logPauses) {
         this.logPauses = logPauses;
     }
 
     public void setS4Clock(Clock s4Clock) {
         this.s4Clock = s4Clock;
-        this.s4ClockSetSignal.countDown();
+        if (this.s4Clock != null) {
+            this.s4ClockSetSignal.countDown();
+        }
     }
 
     /**
-     * The name of a method to be used as an initializer.  The method will be
+     * The name of a method to be used as an initializer. The method will be
      * called after the object is cloned from the prototype PE.
      */
-    public void setInitMethod(String initMethod)
-    {
-       this.initMethod = initMethod;
+    public void setInitMethod(String initMethod) {
+        this.initMethod = initMethod;
     }
-    
+
     public String getInitMethod() {
-       return this.initMethod;
+        return this.initMethod;
     }
-    
+
     public Clock getS4Clock() {
         return s4Clock;
     }
@@ -192,9 +199,8 @@ public abstract class AbstractPE implements ProcessingElement {
             if (compoundKeyInfo != null)
                 keyValueString = compoundKeyInfo.getCompoundValue();
         }
-
+      
         this.streamName = streamName;
-
 
         if (safeKeeper != null) {
             // initialize checkpointing event flag
@@ -228,7 +234,6 @@ public abstract class AbstractPE implements ProcessingElement {
         // do not take into account checkpointing/recovery trigger messages
         if (!isCheckpointingEvent) {
             checkpointable = true; // dirty flag
-
             // FIXME there may be a nicer way
             if (checkpointingFrequencyType == FrequencyType.EVENTCOUNT
                     && checkpointingFrequency > 0) {
@@ -512,15 +517,15 @@ public abstract class AbstractPE implements ProcessingElement {
     abstract public void output();
 
     protected void checkpoint() {
-    
-    	byte[] serializedState = serializeState();
-    	// NOTE: assumes pe id is keyvalue from the PE...
-    	saveState(getSafeKeeperId(), serializedState);
-    
+
+        byte[] serializedState = serializeState();
+        // NOTE: assumes pe id is keyvalue from the PE...
+        saveState(getSafeKeeperId(), serializedState);
+
     }
 
     private void saveState(SafeKeeperId key, byte[] serializedState) {
-    	safeKeeper.saveState(key, serializedState);
+        safeKeeper.saveState(key, serializedState);
     }
 
     protected void recover() {
@@ -538,13 +543,13 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public SafeKeeperId getSafeKeeperId() {
-    	// TODO check keyvaluestring
-    	return new SafeKeeperId(getStreamName(), getId(), getClass().getName(),
-    			getKeyValueString());
+        return new SafeKeeperId(getId(), getClass().getName(),
+                getKeyValueString(),
+                String.valueOf(safeKeeper.getPartitionId()));
     }
 
     public void setSafeKeeper(SafeKeeper safeKeeper) {
-    	this.safeKeeper = safeKeeper;
+        this.safeKeeper = safeKeeper;
         if (safeKeeper != null) {
             this.safeKeeperSetSignal.countDown();
         }
@@ -552,22 +557,22 @@ public abstract class AbstractPE implements ProcessingElement {
 
     public final void processEvent(InitiateCheckpointingEvent checkpointingEvent) {
         isCheckpointingEvent = true;
-    	if (isCheckpointable()) {
-    		checkpoint();
-    	}
+        if (isCheckpointable()) {
+            checkpoint();
+        }
     }
 
     protected boolean isCheckpointable() {
-    	return checkpointable;
+        return checkpointable;
     }
 
     protected void setCheckpointable(boolean checkpointable) {
-    	this.checkpointable = checkpointable;
+        this.checkpointable = checkpointable;
     }
 
     public final void initiateCheckpoint() {
-    	// TODO delegate everything to safekeeper?
-    	// enqueue checkpointing event
+        // TODO delegate everything to safekeeper?
+        // enqueue checkpointing event
         if (safeKeeper != null) {
             safeKeeper.generateCheckpoint(this);
         }
@@ -582,37 +587,45 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public void restoreState(AbstractPE oldState) {
-        // TODO access fields up in the hierarchy till AbstractPE
-        Field[] fields = oldState.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            if (!Modifier.isTransient(field.getModifiers())) {
-                if (!Modifier.isPublic(field.getModifiers())) {
-                    field.setAccessible(true);
-                }
-                try {
-                    // TODO use reflectasm
-                    field.set(this, field.get(oldState));
-                } catch (IllegalArgumentException e) {
-                    LOG.error("Cannot recover old state for this PE [" + this
-                            + "]", e);
-                    return;
-                } catch (IllegalAccessException e) {
-                    LOG.error("Cannot recover old state for this PE [" + this
-                            + "]", e);
-                    return;
-                }
+        restoreFieldsForClass(oldState.getClass(), oldState);
+    }
 
+    private void restoreFieldsForClass(Class currentInOldStateClassHierarchy, AbstractPE oldState) {
+        if (!AbstractPE.class.isAssignableFrom(currentInOldStateClassHierarchy)) {
+            return;
+        } else {
+            Field[] fields = oldState.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                if (!Modifier.isTransient(field.getModifiers())) {
+                    if (!Modifier.isPublic(field.getModifiers())) {
+                        field.setAccessible(true);
+                    }
+                    try {
+                        // TODO use reflectasm
+                        field.set(this, field.get(oldState));
+                    } catch (IllegalArgumentException e) {
+                        LOG.error("Cannot recover old state for this PE ["
+                                + this + "]", e);
+                        return;
+                    } catch (IllegalAccessException e) {
+                        LOG.error("Cannot recover old state for this PE ["
+                                + this + "]", e);
+                        return;
+                    }
+
+                }
             }
+            restoreFieldsForClass(currentInOldStateClassHierarchy.getSuperclass(), oldState);
         }
     }
 
     public void processEvent(RecoveryEvent recoveryEvent) {
         isCheckpointingEvent = true;
-    	recover();
+        recover();
     }
 
     class PeriodicInvoker implements Runnable {
-        
+
         PeriodicInvokerType type;
 
         public PeriodicInvoker(PeriodicInvokerType type) {
@@ -704,14 +717,14 @@ public abstract class AbstractPE implements ProcessingElement {
                                 .equals(type)) {
                             try {
                                 if (pe.isCheckpointable()) {
-                                    pe.checkpoint();
+                                    pe.initiateCheckpoint();
                                     checkpointCount++;
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                Logger.getLogger("s4").error(
-                                        "Exception calling checkpoint() method",
-                                        e);
+                                Logger.getLogger("s4")
+                                        .error("Exception calling checkpoint() method",
+                                                e);
                             }
 
                             if (checkpointCount == checkpointsBeforePause) {
@@ -735,7 +748,6 @@ public abstract class AbstractPE implements ProcessingElement {
                 }
             }
         }
-        
 
     }
 }

@@ -31,6 +31,7 @@ public class EventListener implements EventHandler {
     private AsynchronousEventProcessor eventProcessor;
     private io.s4.listener.EventListener rawListener;
     private Monitor monitor;
+    private int partitionId;
 
     public void setMonitor(Monitor monitor) {
         this.monitor = monitor;
@@ -38,6 +39,7 @@ public class EventListener implements EventHandler {
 
     public void setPeContainer(PEContainer peContainer) {
         this.eventProcessor = peContainer;
+        ((PEContainer) this.eventProcessor).setPartitionId(partitionId);
     }
 
     public void setEventProcessor(AsynchronousEventProcessor eventProcessor) {
@@ -54,6 +56,14 @@ public class EventListener implements EventHandler {
 
     public int getEventCount() {
         return eventCount;
+    }
+
+    public void setPartitionId(int partitionId) {
+        this.partitionId = partitionId;
+    }
+
+    public int getPartitionId() {
+        return this.partitionId;
     }
 
     public EventListener() {

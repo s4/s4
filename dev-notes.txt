@@ -1,4 +1,6 @@
-# Run client examples.
+### Run client examples.
+
+## Injecting Events with a Perl Client
 
 # Create a directory for all the s4 project repositories.
 mkdir s4project
@@ -18,9 +20,10 @@ export PERLLIB=${IMAGE_BASE}/s4-driver/lib/perl
 
 # Change script permissions.
 chmod u+x $IMAGE_BASE/scripts/*
+chmod u+x $IMAGE_BASE/s4-driver/scripts/*
 
 # Copy speech02 app to apps deployment directory.
-cp -r $IMAGE_BASE/s4-example-apps/s4-example-speech02 $IMAGE_BASE/s4-apps
+cp -fr $IMAGE_BASE/s4-example-apps/s4-example-speech02 $IMAGE_BASE/s4-apps
 
 # Start S4 server in standalone mode.
 $IMAGE_BASE/scripts/s4-start.sh -r client-adapter &
@@ -35,3 +38,94 @@ io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in
 
 perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSentence \
 io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
+
+
+## Injecting Events with a Java Client
+
+# Follow same steps as before to start S4 server and client adapter.
+
+# Inject events.
+$IMAGE_BASE/s4-driver/scripts/inject.sh localhost 2334 RawSpeech \
+io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
+
+$IMAGE_BASE/s4-driver/scripts/inject.sh localhost 2334 RawSentence \
+io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
+
+
+## Receiving Events
+
+# Follow same steps as before to start S4 server and client adapter.
+
+# Start a reader client.
+
+perl $IMAGE_BASE/s4-driver/scripts/read.pl  \
+  '{ 
+      readMode => "select",
+      readInclude => ["SentenceJoined"]
+    }'
+
+# In a different window, inject messages like in the previous section.
+
+# Remember to initialize the environment variables in the new shell.
+export IMAGE_BASE=`pwd`'/build/s4-image'
+export PYTHONPATH=${IMAGE_BASE}/s4-driver/lib/python
+export PERLLIB=${IMAGE_BASE}/s4-driver/lib/perl
+
+# Inject events.
+perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSpeech \
+io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
+
+perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSentence \
+io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
+
+
+## Request-Response
+
+# Example 1: query the prototype of the joiner (SentenceJoinPE) 
+# in the speech02 application.
+python $IMAGE_BASE/s4-driver/scripts/request.py '#sentenceJoinPE' \
+'io.s4.message.PrototypeRequest' < $IMAGE_BASE/testinput/proto-query 
+
+# Example 2: request to a single PE from 
+ python $IMAGE_BASE/s4-driver/scripts/request.py '#sentenceJoinPE' \
+'io.s4.message.SinglePERequest' < $IMAGE_BASE/testinput/pe-query 
+
+-------
+
+### How to set up dev environment for application developer.
+
+# Create project dir.
+mkdir myapp
+cd myapp
+export MYAPP_BASE=`pwd`
+mkdir lib
+
+# Create directory for s4 images.
+cd SOME_DIR
+mkdir s4images
+cd s4images
+
+# Download S4 binary distribution.
+# put a command here to download bin tgz file.
+
+# Extract image from tgz file.
+tar xvzf  s4-0.3-SNAPSHOT-bin.tgz
+rm -f  s4-0.3-SNAPSHOT-bin.tgz
+cd s4-0.3-SNAPSHOT
+export S4_IMAGE=`pwd`
+
+# The build script will expect to find the S4_IMAGE env variable.
+
+
+### Using Eclipse
+
+# Configure Gradle as an external configuration in Eclipse:
+# http://docs.codehaus.org/display/GRADLE/Running+Gradle+from+Eclipse
+
+# To edit the build.gradle file use the Groovy editor.
+# 1. Install Groovy Eclipse plugin.
+# 2. Right click on the "build.gradle" file.
+# 3. Select Open With -> Other -> Groovy Editor
+
+More info. Gradle screencasts:
+http://www.gradlecasts.org/

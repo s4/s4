@@ -19,4 +19,5 @@ import io.s4.collector.EventWrapper;
 
 public interface EventHandler {
     void processEvent(EventWrapper eventWrapper);
+
 }

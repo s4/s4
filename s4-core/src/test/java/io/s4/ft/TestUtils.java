@@ -40,7 +40,7 @@ public class TestUtils {
                 + "/src/test/resources/log4j.xml");
         // cmdList.add("-Xdebug");
         // cmdList.add("-Xnoagent");
-        // cmdList.add("-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n");
+        // cmdList.add("-Xrunjdwp:transport=dt_socket,address=8788,server=y,suspend=n");
         cmdList.add(S4App.class.getName());
         cmdList.add(testClassName);
 
@@ -49,6 +49,8 @@ public class TestUtils {
         pb.redirectErrorStream();
         pb.toString();
         final Process process = pb.start();
+        // TODO some synchro with s4 platform ready state
+        Thread.sleep(1500);
 
         // if (start.exitValue() != 0) {
         // System.out.println("here");
@@ -357,6 +359,14 @@ public class TestUtils {
             }
         }
         return false;
+    }
+
+    public static void cleanupTmpDirs() {
+        if (S4TestCase.DEFAULT_TEST_OUTPUT_DIR.exists()) {
+            deleteDirectoryContents(S4TestCase.DEFAULT_TEST_OUTPUT_DIR);
+        }
+        S4TestCase.DEFAULT_STORAGE_DIR.mkdirs();
+    
     }
 
 }

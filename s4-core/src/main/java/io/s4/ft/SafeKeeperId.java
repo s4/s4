@@ -5,22 +5,19 @@ import java.util.regex.Pattern;
 
 public class SafeKeeperId {
 
-    // TODO add field for taskId
-    private String streamName;
     private String prototypeId;
     private String className;
     private String key;
 
     private static final Pattern STRING_REPRESENTATION_PATTERN = Pattern
-            .compile("\\[(\\S*)\\];\\[(\\S*)\\];\\[(\\S*)\\];\\[(\\S*)\\]");
+            .compile("\\[(\\S*)\\];\\[(\\S*)\\];\\[(\\S*)\\]");
 
     public SafeKeeperId() {
     }
 
-    public SafeKeeperId(String streamName, String prototypeID,
-            String className, String key) {
+    public SafeKeeperId(String prototypeID, String className, String key,
+            String partitionId) {
         super();
-        this.streamName = streamName;
         this.prototypeId = prototypeID;
         this.className = className;
         this.key = key;
@@ -28,18 +25,15 @@ public class SafeKeeperId {
 
     public SafeKeeperId(String keyAsString) {
         Matcher matcher = STRING_REPRESENTATION_PATTERN.matcher(keyAsString);
-
         try {
             matcher.find();
-            streamName = "".equals(matcher.group(1)) ? null : matcher.group(1);
-            prototypeId = "".equals(matcher.group(2)) ? null : matcher.group(2);
-            className = "".equals(matcher.group(3)) ? null : matcher.group(3);
-            key = "".equals(matcher.group(4)) ? null : matcher.group(4);
+            prototypeId = "".equals(matcher.group(1)) ? null : matcher.group(2);
+            className = "".equals(matcher.group(2)) ? null : matcher.group(3);
+            key = "".equals(matcher.group(3)) ? null : matcher.group(4);
         } catch (IndexOutOfBoundsException e) {
             // FIXME logger
             System.err.println(e);
         }
-
     }
 
     public String getKey() {
@@ -50,22 +44,16 @@ public class SafeKeeperId {
         return className;
     }
 
-    public String getStreamName() {
-        return streamName;
-    }
-
     public String getPrototypeId() {
         return prototypeId;
     }
 
     public String toString() {
-        return "[STREAM];[PROTO_ID];[CLASS];[KEY] --> "
-                + getStringRepresentation();
+        return "[PROTO_ID];[CLASS];[KEY] --> " + getStringRepresentation();
     }
 
     public String getStringRepresentation() {
-        return "[" + (streamName == null ? "" : streamName) + "];["
-                + (prototypeId == null ? "" : prototypeId) + "];["
+        return "[" + (prototypeId == null ? "" : prototypeId) + "];["
                 + (className == null ? "" : className) + "];["
                 + (key == null ? "" : key) + "]";
     }
@@ -77,7 +65,6 @@ public class SafeKeeperId {
 
     @Override
     public boolean equals(Object obj) {
-        // FIXME arrange this stuff
         if (this == obj) {
             return true;
         }
@@ -100,11 +87,6 @@ public class SafeKeeperId {
             if (other.prototypeId != null)
                 return false;
         } else if (!prototypeId.equals(other.prototypeId))
-            return false;
-        if (streamName == null) {
-            if (other.streamName != null)
-                return false;
-        } else if (!streamName.equals(other.streamName))
             return false;
         return true;
     }

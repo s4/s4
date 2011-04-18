@@ -19,15 +19,7 @@ import com.esotericsoftware.reflectasm.FieldAccess;
 
 public class CheckpointingTest extends S4TestCase {
 
-    private static boolean delete;
-    public static File DEFAULT_TEST_OUTPUT_DIR = new File(
-            System.getProperty("user.dir") + File.separator + "tmp");
-    public static File DEFAULT_STORAGE_DIR = new File(
-            DEFAULT_TEST_OUTPUT_DIR.getAbsolutePath() + File.separator
-                    + "storage");
-
-    // TODO add timeout
-    @Test
+    @Test(timeout = 5000)
     public void testCheckpointStorage() throws Exception {
         Factory zookeeperServerConnectionFactory = null;
         try {
@@ -53,10 +45,10 @@ public class CheckpointingTest extends S4TestCase {
 
             // 0. cleanup storage dir
 
-            if (DEFAULT_STORAGE_DIR.exists()) {
-                TestUtils.deleteDirectoryContents(DEFAULT_STORAGE_DIR);
+            if (S4TestCase.DEFAULT_STORAGE_DIR.exists()) {
+                TestUtils.deleteDirectoryContents(S4TestCase.DEFAULT_STORAGE_DIR);
             }
-            DEFAULT_STORAGE_DIR.mkdirs();
+            S4TestCase.DEFAULT_STORAGE_DIR.mkdirs();
 
             // 1. instantiate S4 app
             initializeS4App(getClass());
@@ -69,22 +61,23 @@ public class CheckpointingTest extends S4TestCase {
             final CountDownLatch signalValue1Set = new CountDownLatch(1);
 
             TestUtils.watchAndSignalCreation("/value1Set", signalValue1Set, zk);
+            final CountDownLatch signalCheckpointed = new CountDownLatch(1);
+            TestUtils.watchAndSignalCreation("/checkpointed",
+                    signalCheckpointed, zk);
             EventGenerator gen = new EventGenerator();
             gen.injectValueEvent(new KeyValue("value1", "message1"), "Stream1",
                     0);
 
             signalValue1Set.await();
             StatefulTestPE pe = (StatefulTestPE) S4TestCase.registeredPEs
-                    .get(new SafeKeeperId("Stream1", "statefulPE",
-                            StatefulTestPE.class.getName(), null));
+                    .get(new SafeKeeperId("statefulPE",
+                            StatefulTestPE.class.getName(), "value", "0"));
             Assert.assertEquals("message1", pe.getValue1());
             Assert.assertEquals("", pe.getValue2());
 
             // 3. generate a checkpoint event
-            final CountDownLatch signalCheckpointed = new CountDownLatch(1);
-            TestUtils.watchAndSignalCreation("/checkpointed",
-                    signalCheckpointed, zk);
-            pe.initiateCheckpoint();
+            gen.injectValueEvent(new KeyValue("initiateCheckpoint", "blah"),
+                    "Stream1", 0);
             signalCheckpointed.await();
 
             SafeKeeperId safeKeeperId = pe.getSafeKeeperId();
@@ -96,7 +89,7 @@ public class CheckpointingTest extends S4TestCase {
                     + File.separator
                     + safeKeeperId.getPrototypeId()
                     + File.separator
-                    + Base64.encodeBase64String(safeKeeperId
+                    + Base64.encodeBase64URLSafeString(safeKeeperId
                             .getStringRepresentation().getBytes()));
 
             // 4. verify that state was correctly persisted
@@ -105,6 +98,7 @@ public class CheckpointingTest extends S4TestCase {
             StatefulTestPE refPE = new StatefulTestPE();
             refPE.setValue1("message1");
             refPE.setId("statefulPE");
+            refPE.setKeys(new String[] {});
             KryoSerDeser kryoSerDeser = new KryoSerDeser();
             byte[] refBytes = kryoSerDeser.serialize(refPE);
 
