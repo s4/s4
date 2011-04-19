@@ -35,7 +35,7 @@ public class StatefulTestPE extends AbstractPE implements Watcher {
     public void processEvent(KeyValue event) {
         if (zk == null) {
             try {
-                zk = new ZooKeeper("localhost:21810", 4000, this);
+                zk = new ZooKeeper("localhost:" + TestUtils.ZK_PORT, 4000, this);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

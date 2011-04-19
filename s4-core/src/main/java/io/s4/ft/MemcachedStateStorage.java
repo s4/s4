@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 	        http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -13,21 +13,30 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-apply plugin: 'eclipse'
-dependencies {
-    compile( libraries.gson )
-    compile( libraries.flexjson )
-    compile( libraries.bcel )
-    compile( libraries.jakarta_regexp )
-    compile( libraries.kryo )
-    compile( libraries.reflectasm )
-    compile( libraries.minlog )
-    compile( libraries.asm )
-    compile( libraries.commons_cli )
-    compile( libraries.commons_jexl )
-    compile( libraries.commons_codec )
-    /*compile( libraries.bookkeeper )*/
-    compile( libraries.jedis )
-    compile( libraries.netty )
-    compile project(':s4-comm')
+
+package io.s4.ft;
+
+import java.util.Set;
+
+public class MemcachedStateStorage implements StateStorage {
+
+    @Override
+    public void saveState(SafeKeeperId key, byte[] state,
+            StorageCallback callback) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public byte[] fetchState(SafeKeeperId key) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Set<SafeKeeperId> fetchStoredKeys() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

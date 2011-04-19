@@ -26,6 +26,8 @@ import org.apache.zookeeper.server.ZooKeeperServer;
 
 public class TestUtils {
 
+    public static final int ZK_PORT = 21810;
+
     public static Process forkS4App(String testClassName) throws IOException,
             InterruptedException {
         List<String> cmdList = new ArrayList<String>();
@@ -155,10 +157,10 @@ public class TestUtils {
         // SyncRequestProcessor.setSnapCount(1000);
         // final int PORT = Integer.parseInt(HOSTPORT.split(":")[1]);
         NIOServerCnxn.Factory nioZookeeperConnectionFactory = new NIOServerCnxn.Factory(
-                new InetSocketAddress(21810));
+                new InetSocketAddress(ZK_PORT));
         nioZookeeperConnectionFactory.startup(zks);
         Assert.assertTrue("waiting for server being up",
-                waitForServerUp("localhost", 21810, 4000));
+                waitForServerUp("localhost", ZK_PORT, 4000));
         return nioZookeeperConnectionFactory;
 
     }
@@ -168,7 +170,7 @@ public class TestUtils {
         if (f != null) {
             f.shutdown();
             Assert.assertTrue("waiting for server down",
-                    waitForServerDown("localhost", 21810, 3000));
+                    waitForServerDown("localhost", ZK_PORT, 3000));
         }
         // List<String> cmdList = new ArrayList<String>();
         // cmdList.add(System.getProperty("user.dir")
@@ -259,7 +261,7 @@ public class TestUtils {
     }
 
     public static ZooKeeper createZkClient() throws IOException {
-        final ZooKeeper zk = new ZooKeeper("localhost:21810", 4000,
+        final ZooKeeper zk = new ZooKeeper("localhost:" + ZK_PORT, 4000,
                 new Watcher() {
                     @Override
                     public void process(WatchedEvent event) {

@@ -15,8 +15,7 @@ public class SafeKeeperId {
     public SafeKeeperId() {
     }
 
-    public SafeKeeperId(String prototypeID, String className, String key,
-            String partitionId) {
+    public SafeKeeperId(String prototypeID, String className, String key) {
         super();
         this.prototypeId = prototypeID;
         this.className = className;

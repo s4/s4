@@ -11,7 +11,9 @@ import java.util.concurrent.CountDownLatch;
 import junit.framework.Assert;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.server.NIOServerCnxn.Factory;
 import org.junit.Test;
 
@@ -43,6 +45,23 @@ public class CheckpointingTest extends S4TestCase {
             } catch (Exception ignored) {
             }
 
+            try {
+                // FIXME can't figure out where this is retained
+                zk.delete("/ledgers/available", -1);
+            } catch (Exception ignored) {
+            }
+
+            try {
+                // FIXME can't figure out where this is retained
+                zk.delete("/ledgers", -1);
+            } catch (Exception ignored) {
+            }
+
+            zk.create("/ledgers", new byte[0], Ids.OPEN_ACL_UNSAFE,
+                    CreateMode.PERSISTENT);
+            zk.create("/ledgers/available", new byte[0],
+                    Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+
             // 0. cleanup storage dir
 
             if (S4TestCase.DEFAULT_STORAGE_DIR.exists()) {
@@ -70,8 +89,8 @@ public class CheckpointingTest extends S4TestCase {
 
             signalValue1Set.await();
             StatefulTestPE pe = (StatefulTestPE) S4TestCase.registeredPEs
-                    .get(new SafeKeeperId("statefulPE",
-                            StatefulTestPE.class.getName(), "value", "0"));
+                    .get(new SafeKeeperId("statefulPE", StatefulTestPE.class
+                            .getName(), "value"));
             Assert.assertEquals("message1", pe.getValue1());
             Assert.assertEquals("", pe.getValue2());
 

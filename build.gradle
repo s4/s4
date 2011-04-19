@@ -59,6 +59,7 @@ allprojects {
 
         mavenLocal()
         mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
+        mavenRepo name: "repository.jboss.org", urls: "https://repository.jboss.org/nexus/content/repositories/releases/"
 		mavenCentral()
     }
 }
@@ -68,6 +69,7 @@ libraries = [
 json:               'org.json:json:20090211',
 lift_json:          'net.liftweb:lift-json_2.8.1:2.2',
 gson:               'com.google.code.gson:gson:1.6',
+junit:              'junit:junit:4.4',
 zk:                 'org.apache.zookeeper:zookeeper:3.3.1',
 log4j:              'log4j:log4j:1.2.15',
 flexjson:           'net.sf.flexjson:flexjson:2.1',
@@ -83,9 +85,11 @@ commons_jexl:       'commons-jexl:commons-jexl:1.1',
 commons_codec:      'commons-codec:commons-codec:1.4',
 commons_httpclient: 'commons-httpclient:commons-httpclient:3.1',
 spring:             'org.springframework:spring:2.5.6',
-junit:              'junit:junit:4.4',
 scala_compiler:     'org.scala-lang:scala-compiler:2.8.1',
-scala_library:      'org.scala-lang:scala-library:2.8.1'
+scala_library:      'org.scala-lang:scala-library:2.8.1',
+jedis:              'redis.clients:jedis:1.5.2',
+/*bookkeeper:         'org.apache.bookkeeper:bookkeeper:3.3.3'*/
+netty:              'org.jboss.netty:netty:3.2.4.Final'
 ]
 
 

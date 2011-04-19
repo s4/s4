@@ -178,7 +178,7 @@
     </bean>
 
     <bean id="safeKeeper" class="io.s4.ft.SafeKeeper" init-method="init">
-        <property name="stateStorage" ref="fsStateStorage" />
+        <property name="stateStorage" ref="bkStateStorage" />
         <property name="loopbackDispatcher" ref="loopbackDispatcher" />
         <property name="serializer" ref="serDeser"/>
         <property name="hasher" ref="hasher"/>
@@ -187,6 +187,12 @@
     <bean id="fsStateStorage" class="io.s4.ft.DefaultFileSystemStateStorage" init-method="checkStorageDir">
         <!-- if not specified, default is <current_dir>/tmp/storage 
         <property name="storageRootPath" value="${storage_root_path}" /> -->
+    </bean>
+    
+    <bean id="bkStateStorage" class="io.s4.ft.BookKeeperStateStorage" init-method="init">
+        <!-- if not specified, default is <current_dir>/tmp/storage 
+        <property name="storageRootPath" value="${storage_root_path}" /> -->
+        <property name="zkServers" value="localhost:2181"/>
     </bean>
 
 

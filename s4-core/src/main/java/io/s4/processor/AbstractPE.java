@@ -544,8 +544,7 @@ public abstract class AbstractPE implements ProcessingElement {
 
     public SafeKeeperId getSafeKeeperId() {
         return new SafeKeeperId(getId(), getClass().getName(),
-                getKeyValueString(),
-                String.valueOf(safeKeeper.getPartitionId()));
+                getKeyValueString());
     }
 
     public void setSafeKeeper(SafeKeeper safeKeeper) {

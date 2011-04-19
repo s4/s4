@@ -19,7 +19,7 @@
 	</bean>
 
 	<bean id="wordCounter" class="io.s4.wordcount.WordCounter">
-		<property name="id" value="wordMapper" />
+		<property name="id" value="wordCounter" />
 		<property name="keys">
 			<list>
 				<value>Words word</value>

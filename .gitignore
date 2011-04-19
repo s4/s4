@@ -17,4 +17,7 @@ build/
 *~
 
 # Misc hidden files
-.DS_Store 
+.DS_Store
+
+# class files
+*.class 

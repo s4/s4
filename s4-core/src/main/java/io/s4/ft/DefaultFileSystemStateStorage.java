@@ -8,80 +8,32 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 public class DefaultFileSystemStateStorage implements StateStorage {
 
-    private static Logger logger = Logger
-            .getLogger(DefaultFileSystemStateStorage.class);
+    private static Logger logger = Logger.getLogger(DefaultFileSystemStateStorage.class);
     private String storageRootPath;
+    // NOTE: we may use a ThreadPoolExecutor for fine tuning
+    ExecutorService threadPool;
+
+    public DefaultFileSystemStateStorage() {
+        threadPool = Executors.newCachedThreadPool();
+    }
 
     @Override
     public void saveState(SafeKeeperId key, byte[] state,
             StorageCallback callback) {
-        // TODO asynchronous
-
-        File f = safeKeeperID2File(key);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Checkpointing [" + key + "] into file: ["
-                    + f.getAbsolutePath()
-                    + "]");
-        }
-        if (!f.exists()) {
-            if (!f.getParentFile().exists()) {
-                // parent file has prototype id
-                if (!f.getParentFile().mkdir()) {
-                    callback.storageOperationResult(
-                            SafeKeeper.StorageResultCode.FAILURE,
-                            "Cannot create directory for storing PE for prototype: "
-                                    + f.getParentFile().getAbsolutePath());
-                    return;
-                }
-            }
-            // TODO handle IO exception
-            try {
-                f.createNewFile();
-            } catch (IOException e) {
-                callback.storageOperationResult(
-                        SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
-                return;
-            }
-        } else {
-            if (!f.delete()) {
-                callback.storageOperationResult(
-                        SafeKeeper.StorageResultCode.FAILURE,
-                        "Cannot delete previously saved checkpoint file ["
-                                + f.getParentFile().getAbsolutePath() + "]");
-                return;
-            }
-        }
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(f);
-            fos.write(state);
-        } catch (FileNotFoundException e) {
-            callback.storageOperationResult(
-                    SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
-        } catch (IOException e) {
-            callback.storageOperationResult(
-                    SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (IOException e) {
-                logger.error(e);
-            }
-        }
-
+        threadPool.submit(new SaveTask(key, state, callback, storageRootPath));
     }
 
     @Override
     public byte[] fetchState(SafeKeeperId key) {
-        File file = safeKeeperID2File(key);
+        File file = safeKeeperID2File(key, storageRootPath);
         if (logger.isDebugEnabled()) {
             logger.debug("Fetching " + file.getAbsolutePath() + "for : " + key);
         }
@@ -165,7 +117,8 @@ public class DefaultFileSystemStateStorage implements StateStorage {
     }
 
     // files kept as : root/<partitionId>/<prototypeId>/encodedKeyWithFullInfo
-    private File safeKeeperID2File(SafeKeeperId key) {
+    private static File safeKeeperID2File(SafeKeeperId key,
+            String storageRootPath) {
 
         return new File(storageRootPath
                 + File.separator
@@ -175,7 +128,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                         .getBytes()));
     }
 
-    private SafeKeeperId file2SafeKeeperID(File file) {
+    private static SafeKeeperId file2SafeKeeperID(File file) {
         SafeKeeperId id = null;
         id = new SafeKeeperId(new String(Base64.decodeBase64(file.getName())));
         return id;
@@ -216,6 +169,80 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 }
             }
         }
+    }
+
+    private static class SaveTask implements Runnable {
+        SafeKeeperId key;
+        byte[] state;
+        StorageCallback callback;
+        private String storageRootPath;
+
+        public SaveTask(SafeKeeperId key, byte[] state,
+                StorageCallback callback, String storageRootPath) {
+            super();
+            this.key = key;
+            this.state = state;
+            this.callback = callback;
+            this.storageRootPath = storageRootPath;
+        }
+
+        public void run() {
+            File f = safeKeeperID2File(key, storageRootPath);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Checkpointing [" + key + "] into file: ["
+                        + f.getAbsolutePath() + "]");
+            }
+            if (!f.exists()) {
+                if (!f.getParentFile().exists()) {
+                    // parent file has prototype id
+                    if (!f.getParentFile().mkdir()) {
+                        callback.storageOperationResult(
+                                SafeKeeper.StorageResultCode.FAILURE,
+                                "Cannot create directory for storing PE for prototype: "
+                                        + f.getParentFile().getAbsolutePath());
+                        return;
+                    }
+                }
+                // TODO handle IO exception
+                try {
+                    f.createNewFile();
+                } catch (IOException e) {
+                    callback.storageOperationResult(
+                            SafeKeeper.StorageResultCode.FAILURE,
+                            e.getMessage());
+                    return;
+                }
+            } else {
+                if (!f.delete()) {
+                    callback.storageOperationResult(
+                            SafeKeeper.StorageResultCode.FAILURE,
+                            "Cannot delete previously saved checkpoint file ["
+                                    + f.getParentFile().getAbsolutePath() + "]");
+                    return;
+                }
+            }
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(f);
+                fos.write(state);
+            } catch (FileNotFoundException e) {
+                callback.storageOperationResult(
+                        SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+            } catch (IOException e) {
+                callback.storageOperationResult(
+                        SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+            } finally {
+                try {
+                    if (fos != null) {
+                        fos.close();
+                    }
+                } catch (IOException e) {
+                    logger.error(e);
+                }
+            }
+
+        }
+
     }
 
 }
