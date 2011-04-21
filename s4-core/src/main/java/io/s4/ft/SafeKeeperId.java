@@ -26,9 +26,9 @@ public class SafeKeeperId {
         Matcher matcher = STRING_REPRESENTATION_PATTERN.matcher(keyAsString);
         try {
             matcher.find();
-            prototypeId = "".equals(matcher.group(1)) ? null : matcher.group(2);
-            className = "".equals(matcher.group(2)) ? null : matcher.group(3);
-            key = "".equals(matcher.group(3)) ? null : matcher.group(4);
+            prototypeId = "".equals(matcher.group(1)) ? null : matcher.group(1);
+            className = "".equals(matcher.group(2)) ? null : matcher.group(2);
+            key = "".equals(matcher.group(3)) ? null : matcher.group(3);
         } catch (IndexOutOfBoundsException e) {
             // FIXME logger
             System.err.println(e);

@@ -40,16 +40,64 @@ public class SafeKeeper {
     private String partitionId;
     // monitor field injection through a latch
     private CountDownLatch signalReady = new CountDownLatch(3);
+    private CountDownLatch signalKeysLoaded = new CountDownLatch(1);
 
     public SafeKeeper() {
     }
 
     public void init() {
         
+        Thread keysLoaderThread = new Thread(new KeysLoader(this));
+        keysLoaderThread.start();
+        
         if (eagerRecovery) {
             eagerFetchingThread = new Thread(new EagerSerializedStateFetcher(
                     this), "EagerSerializedStateLoader");
             eagerFetchingThread.start();
+        }
+        
+    }
+    
+    private static class KeysLoader implements Runnable {
+        SafeKeeper safeKeeper;
+        
+        public KeysLoader(SafeKeeper safeKeeper) {
+            this.safeKeeper = safeKeeper;
+        }
+        
+        public void run() {
+            try {
+                safeKeeper.getReadySignal().await();
+            } catch (InterruptedException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            Set<SafeKeeperId> storedKeys = safeKeeper.getStateStorage().fetchStoredKeys();
+            int nodeCount = safeKeeper.getLoopbackDispatcher().getEventEmitter()
+                    .getNodeCount();
+            // required wait until nodes are available
+            // NOTE: this only works for a static config
+            while (nodeCount == 0) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                nodeCount = safeKeeper.getLoopbackDispatcher().getEventEmitter()
+                        .getNodeCount();
+            }
+
+            for (SafeKeeperId key : storedKeys) {
+                // validate ids through hash function
+                if (Integer.valueOf(safeKeeper.getPartitionId()).equals(
+                        (safeKeeper.getHasher().hash(key.getKey()) % nodeCount))) {
+                    safeKeeper.getKeysToRecover().add(key);
+                }
+            }
+            safeKeeper.getKeysToRecover().addAll(storedKeys);
+            safeKeeper.signalKeysLoaded.countDown();
+
         }
     }
 
@@ -58,13 +106,19 @@ public class SafeKeeper {
     }
 
     public byte[] fetchSerializedState(SafeKeeperId key) {
-        byte[] result = null;
-        if (serializedStateCache.containsKey(key)) {
-            result = serializedStateCache.remove(key);
-        } else {
-            result = stateStorage.fetchState(key);
+        try {
+            signalKeysLoaded.await();
+        } catch (InterruptedException ignored) {
         }
-        keysToRecover.remove(key);
+        byte[] result = null;
+        if(keysToRecover.contains(key)) {
+            if (serializedStateCache.containsKey(key)) {
+                result = serializedStateCache.remove(key);
+            } else {
+                result = stateStorage.fetchState(key);
+            }
+            keysToRecover.remove(key);
+        }
         return result;
     }
 

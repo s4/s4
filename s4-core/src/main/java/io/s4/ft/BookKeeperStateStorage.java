@@ -17,6 +17,7 @@
 package io.s4.ft;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
@@ -32,10 +33,14 @@ import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.BookKeeper.DigestType;
 import org.apache.bookkeeper.client.LedgerEntry;
 import org.apache.bookkeeper.client.LedgerHandle;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.AsyncCallback.ChildrenCallback;
 import org.apache.zookeeper.AsyncCallback.DataCallback;
+import org.apache.zookeeper.AsyncCallback.StatCallback;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.Stat;
 
 /**
@@ -50,12 +55,14 @@ CreateCallback,
 OpenCallback,
 //DeleteCallback,
 AddCallback,
-ReadCallback {
+ReadCallback, StatCallback {
     private static Logger logger = Logger.getLogger(BookKeeperStateStorage.class);
 
     private String zkServers;
     private BookKeeper bk;
     static final String PREFIX = "/s4/checkpoints";
+    private int ensembleSize;
+    private int quorumSize;
     
     /*
      * Context object for saving checkpoints.
@@ -140,6 +147,7 @@ ReadCallback {
      */
     public void init() throws Throwable{
         this.bk = new BookKeeper(zkServers);
+        logger.info("Initialized BookKeeper storage backend");
     }
     
     /**
@@ -149,12 +157,15 @@ ReadCallback {
     @Override
     public void saveState(SafeKeeperId key, byte[] state,
             StorageCallback callback) {
-        
+        if (logger.isDebugEnabled()) {
+            logger.debug("checkpointing: " + key);
+        }
+        System.out.println("WRITING KEY " + safeKeeperId2BKEntryPath(key));
         SaveCtx sctx = new SaveCtx(key, state, callback);
         /*
          * Creates a new ledger to store the checkpoint
          */
-        bk.asyncCreateLedger(4, 2, 
+        bk.asyncCreateLedger(ensembleSize,quorumSize, 
                 DigestType.CRC32, 
                 "flaviowashere".getBytes(), 
                 (AsyncCallback.CreateCallback) this, 
@@ -167,7 +178,7 @@ ReadCallback {
     public byte[] fetchState(SafeKeeperId key) {
         SmallBarrier sb = new SmallBarrier();
         FetchCtx fctx = new FetchCtx(key, sb);
-        asyncFetchState(key, fctx);
+         asyncFetchState(key, fctx);
         /*
          * Wait until it receives a response for the read call 
          * or fails.
@@ -197,30 +208,16 @@ ReadCallback {
         /*
          * Determines ledger id for this key. 
          */
-        bk.getZkHandle().getData(PREFIX + key.toString(), null, this, fctx);
+        bk.getZkHandle().getData(safeKeeperId2BKEntryPath(key), null, this, fctx);
     }
 
-    public byte[] syncFetchState(SafeKeeperId key) {
-        try {
-            return bk.getZkHandle()
-                    .getData(PREFIX + key.toString(), null,
- null);
-        } catch (KeeperException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        }
-    }
-        
     @Override
     public Set<SafeKeeperId> fetchStoredKeys() {
         SmallBarrier sb = new SmallBarrier();
         FetchKeysCtx ctx = new FetchKeysCtx(sb);
-        
+        if (logger.isDebugEnabled()) {
+            logger.debug("fetching stored keys");
+        }
         /*
          * Asynchronous call to fetch keys.
          */
@@ -239,7 +236,11 @@ ReadCallback {
          * Returns an empty set if list is empty
          */
         
-        return ctx.keys;
+        if (ctx.keys == null) {
+            return new HashSet<SafeKeeperId>(0);
+        } else {
+            return ctx.keys;
+        }
     }
     
     /**
@@ -328,22 +329,44 @@ ReadCallback {
              */
             ByteBuffer bb = ByteBuffer.allocate(8);
             bb.putLong(lh.getId());
-            bk.getZkHandle().setData(PREFIX + sctx.key.toString(), 
-                    bb.array(), 
-                    -1, 
-                    (StatCallback) this, 
-                    (Object) null);
-            if(sctx.cb != null){
-                sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.SUCCESS, BKException.getMessage(rc));
+            try {
+                if (null!=bk.getZkHandle().exists(safeKeeperId2BKEntryPath(sctx.key), null)) {
+                    bk.getZkHandle().setData(safeKeeperId2BKEntryPath(sctx.key), 
+                            bb.array(), 
+                            -1, 
+                            (StatCallback) this, 
+                            (Object) null);
+                } else {
+                    // TODO asynchronous?
+                    bk.getZkHandle().create(safeKeeperId2BKEntryPath(sctx.key), bb.array(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                }
+                if(sctx.cb != null){
+                    sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.SUCCESS, BKException.getMessage(rc));
+                }
+            } catch (KeeperException e) {
+                logger.error("Could not write checkpoint " + sctx.key, e);
+                if(sctx.cb != null){
+                    sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                }
+            } catch (InterruptedException e) {
+                logger.error("Could not write checkpoint " + sctx.key, e);
+                if(sctx.cb != null){
+                    sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                }
             }
             
         } else {
-            logger.error("Failed to write state to BookKeeper: " + rc);
+            logger.error("Failed to write state to BookKeeper: " + sctx.key + " : " + rc);
             if(sctx.cb != null){
                 sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, BKException.getMessage(rc));
             }
         }
     }
+    
+    @Override
+    public void processResult(int rc, String path, Object ctx, Stat stat) {
+    }
+
     
     /**
      * ZooKeeper data callback.
@@ -384,16 +407,15 @@ ReadCallback {
     public void processResult(int rc, String path, Object ctx,
             List<String> children){
         FetchKeysCtx fkCtx = (FetchKeysCtx) ctx;
-        
         if(KeeperException.Code.get(rc) == KeeperException.Code.OK){
             /*
              * Add keys to set.
              */
-            Set<SafeKeeperId> set = new HashSet<SafeKeeperId>();
-            for(String s : children){
-                fkCtx.keys.add(new SafeKeeperId(s));        
+            Set<SafeKeeperId> fetchedKeys = new HashSet<SafeKeeperId>();
+            for(String child : children){
+                fetchedKeys.add(bKEntryPath2SafeKeeperId(child));        
             }
-            fkCtx.keys = set;
+            fkCtx.keys = fetchedKeys;
         } else {
             logger.error("Failed to get keys from ZooKeeper: " + rc);
         }
@@ -406,4 +428,33 @@ ReadCallback {
     public void setZkServers(String zkServers) {
         this.zkServers = zkServers;
     }
+    
+    
+    public String safeKeeperId2BKEntryPath(SafeKeeperId safeKeeperId) {
+        return PREFIX+"/"+Base64.encodeBase64URLSafeString(safeKeeperId.getStringRepresentation()
+                .getBytes());
+    }
+    
+    public SafeKeeperId bKEntryPath2SafeKeeperId(String suffix) {
+        return new SafeKeeperId(PREFIX+"/"+new String(Base64.decodeBase64(suffix)));
+    }
+
+    public int getEnsembleSize() {
+        return ensembleSize;
+    }
+
+    public void setEnsembleSize(int ensembleSize) {
+        this.ensembleSize = ensembleSize;
+    }
+
+    public int getQuorumSize() {
+        return quorumSize;
+    }
+
+    public void setQuorumSize(int quorumSize) {
+        this.quorumSize = quorumSize;
+    }
+    
+    
+
 }

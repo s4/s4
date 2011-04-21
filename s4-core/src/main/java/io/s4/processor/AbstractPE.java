@@ -517,11 +517,12 @@ public abstract class AbstractPE implements ProcessingElement {
     abstract public void output();
 
     protected void checkpoint() {
-
+        
         byte[] serializedState = serializeState();
         // NOTE: assumes pe id is keyvalue from the PE...
         saveState(getSafeKeeperId(), serializedState);
-
+        // remove dirty flag
+        checkpointable=false;
     }
 
     private void saveState(SafeKeeperId key, byte[] serializedState) {
@@ -595,7 +596,7 @@ public abstract class AbstractPE implements ProcessingElement {
         } else {
             Field[] fields = oldState.getClass().getDeclaredFields();
             for (Field field : fields) {
-                if (!Modifier.isTransient(field.getModifiers())) {
+                if (!Modifier.isTransient(field.getModifiers()) && !Modifier.isStatic(field.getModifiers())) {
                     if (!Modifier.isPublic(field.getModifiers())) {
                         field.setAccessible(true);
                     }

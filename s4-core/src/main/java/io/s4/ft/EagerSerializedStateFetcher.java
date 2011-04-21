@@ -27,39 +27,14 @@ public class EagerSerializedStateFetcher implements Runnable {
 
     @Override
     public void run() {
-        // FIXME log
-        System.out.println("STARTING EAGER FETCHING THREAD");
         try {
             sk.getReadySignal().await();
         } catch (InterruptedException e1) {
         }
-        Set<SafeKeeperId> storedKeys = sk.getStateStorage().fetchStoredKeys();
-        int nodeCount = sk.getLoopbackDispatcher().getEventEmitter()
-                .getNodeCount();
-        // required wait until nodes are available
-        while (nodeCount == 0) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            nodeCount = sk.getLoopbackDispatcher().getEventEmitter()
-                    .getNodeCount();
-        }
-
-        for (SafeKeeperId key : storedKeys) {
-            // validate ids through hash function
-            if (Integer.valueOf(sk.getPartitionId()).equals(
-                    (sk.getHasher().hash(key.getKey()) % nodeCount))) {
-                sk.getKeysToRecover().add(key);
-            }
-        }
-        sk.getKeysToRecover().addAll(storedKeys);
 
         long startTime = System.currentTimeMillis();
         int tokenCount = TOKEN_COUNT;
-        for (SafeKeeperId safeKeeperId : storedKeys) {
+        for (SafeKeeperId safeKeeperId : sk.getKeysToRecover()) {
 
             if (tokenCount == 0) {
                 if ((System.currentTimeMillis() - startTime) < (TOKEN_COUNT * TOKEN_TIME_MS)) {

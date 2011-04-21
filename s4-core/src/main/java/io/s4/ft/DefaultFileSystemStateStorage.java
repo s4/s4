@@ -163,9 +163,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
             if (!defaultStorageDir.exists()) {
                 if (!(defaultStorageDir.mkdirs())) {
                     logger.error("Storage directory not specified, and cannot create default storage directory : "
-                            + defaultStorageDir.getAbsolutePath());
-                    // TODO exit?
-                    System.exit(-1);
+                            + defaultStorageDir.getAbsolutePath() + "\n Checkpointing and recovery will be disabled.");
                 }
             }
         }
