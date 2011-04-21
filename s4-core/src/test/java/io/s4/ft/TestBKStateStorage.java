@@ -15,129 +15,63 @@ import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.BookKeeper.DigestType;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.log4j.Logger;
-import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.server.NIOServerCnxn;
-import org.apache.zookeeper.server.ZooKeeperServer;
+import org.apache.zookeeper.server.NIOServerCnxn.Factory;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 
 public class TestBKStateStorage {
 
     static final Logger LOG = Logger.getLogger(TestBKStateStorage.class);
-    
+
     private static final String PAYLOAD = "payload";
-    private BookKeeperStateStorage bkstore; 
-    // ZooKeeper related variables
-    ZooKeeperServer zks;
-    ZooKeeper zkc; // zookeeper client
-    NIOServerCnxn.Factory serverFactory;
-    File ZkTmpDir;
+    private BookKeeperStateStorage bkstore;
 
     // BookKeeper
     List<File> tmpDirs = new ArrayList<File>();
     List<BookieServer> bs = new ArrayList<BookieServer>();
-    Integer initialPort = 5000;
     int numBookies = 3;
     BookKeeper bkc;
-    
+
+    private static Factory zkServerFactory;
+
     @Parameters
-    public static Collection<Object[]> configs(){
-        return Arrays.asList(new Object[][]{ {DigestType.MAC }, {DigestType.CRC32}});
+    public static Collection<Object[]> configs() {
+        return Arrays.asList(new Object[][] { { DigestType.MAC },
+                { DigestType.CRC32 } });
     }
 
-
     @Before
-    public void setUp() throws Throwable {
-        try {
-        // create a ZooKeeper server(dataDir, dataLogDir, port)
-        LOG.debug("Running ZK server");
-        // ServerStats.registerAsConcrete();
-
-        ZkTmpDir = File.createTempFile("zookeeper", "test");
-        ZkTmpDir.delete();
-        ZkTmpDir.mkdir();
-
-            serverFactory = TestUtils.startZookeeperServer();
-
-
-        // create a zookeeper client
-        LOG.debug("Instantiate ZK Client");
-            zkc = TestUtils.createZkClient();
-
-        // initialize the zk client with values
-        zkc.create("/ledgers", new byte[0], Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-        zkc.create("/ledgers/available", new byte[0], Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-
-        // Create Bookie Servers (B1, B2, B3)
-        for (int i = 0; i < numBookies; i++) {
-            File f = File.createTempFile("bookie", "test");
-            tmpDirs.add(f);
-            f.delete();
-            f.mkdir();
-
-                BookieServer server = new BookieServer(initialPort + i,
-                        "localhost:" + TestUtils.ZK_PORT, f,
-                        new File[] { f });
-            server.start();
-            bs.add(server);
-        }
-        zkc.close();
-            bkc = new BookKeeper("localhost:" + TestUtils.ZK_PORT);
-        } catch(Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+    public void prepare() throws Throwable {
+        TestUtils.cleanupTmpDirs();
+        zkServerFactory = TestUtils.startZookeeperServer();
+        final ZooKeeper zk = TestUtils.createZkClient();
+        TestUtils.initializeBKBookiesAndLedgers(zk);
         
-        this.bkstore = new BookKeeperStateStorage();
+
+        bkstore = new BookKeeperStateStorage();
         bkstore.setZkServers("localhost:"
                 +
                 String.valueOf(TestUtils.ZK_PORT));
+        bkstore.setEnsembleSize(1);
+        bkstore.setQuorumSize(1);
         bkstore.init();
+        Thread.sleep(2000);
+        zk.close();
     }
 
     @After
-    public void tearDown() throws Exception {
-        LOG.info("TearDown");
+    public void cleanup() throws Exception {
+        TestUtils.stopBKBookies();
+        TestUtils.stopZookeeperServer(zkServerFactory);
+        TestUtils.cleanupTmpDirs();
 
-        if (bkc != null) {
-            bkc.halt();;
-        }
-        
-        for (BookieServer server : bs) {
-            server.shutdown();
-        }
-
-        for (File f : tmpDirs) {
-            cleanUpDir(f);
-        }
-
-        // shutdown ZK server
-        TestUtils.stopZookeeperServer(serverFactory);
-        // ServerStats.unregister();
-        cleanUpDir(ZkTmpDir);
-        
-
-    }
-
-    /* Clean up a directory recursively */
-    protected boolean cleanUpDir(File dir) {
-        if (dir.isDirectory()) {
-            LOG.info("Cleaning up " + dir.getName());
-            String[] children = dir.list();
-            for (String string : children) {
-                boolean success = cleanUpDir(new File(dir, string));
-                if (!success)
-                    return false;
-            }
-        }
-        // The directory is now empty so delete it
-        return dir.delete();
     }
 
     /* User for testing purposes, void */
@@ -145,28 +79,32 @@ public class TestBKStateStorage {
         public void process(WatchedEvent event) {
         }
     }
-    
+
     @Test
     public void testFetchState() throws IOException, InterruptedException {
         SafeKeeperId key = new SafeKeeperId("prototype", "classname", "key");
         bkstore.saveState(key, PAYLOAD.getBytes(), null);
+        Thread.sleep(1000);
         byte[] result = bkstore.fetchState(key);
         String recovered = new String(result);
         assertEquals(PAYLOAD, recovered);
     }
 
     @Test
-    public void testFetchStoredKeys() {
+    public void testFetchStoredKeys() throws InterruptedException {
         Set<SafeKeeperId> fixture = new HashSet<SafeKeeperId>();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++) {
             fixture.add(new SafeKeeperId("prototype", "classname", "key" + i));
-        for (SafeKeeperId skid : fixture)
+        }
+        for (SafeKeeperId skid : fixture) {
             bkstore.saveState(skid, PAYLOAD.getBytes(), null);
+        }
+        Thread.sleep(4000);
 
         // retrieve the keys
         Set<SafeKeeperId> result = bkstore.fetchStoredKeys();
         assertEquals(fixture.size(), result.size());
         assertEquals(fixture, result);
     }
-    
+
 }

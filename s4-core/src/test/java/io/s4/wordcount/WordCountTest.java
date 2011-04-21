@@ -40,7 +40,7 @@ public class WordCountTest extends S4TestCase {
         TestUtils.cleanupTmpDirs();
         // note: this should run automatically but does not...
         S4TestCase.initS4Parameters();
-        initializeS4App(getClass());
+        initializeS4App(getClass(), "s4_core_conf.xml");
         zookeeperServerConnectionFactory = TestUtils.startZookeeperServer();
         final ZooKeeper zk = TestUtils.createZkClient();
 

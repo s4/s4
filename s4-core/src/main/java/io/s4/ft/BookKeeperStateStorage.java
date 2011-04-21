@@ -160,7 +160,6 @@ ReadCallback, StatCallback {
         if (logger.isDebugEnabled()) {
             logger.debug("checkpointing: " + key);
         }
-        System.out.println("WRITING KEY " + safeKeeperId2BKEntryPath(key));
         SaveCtx sctx = new SaveCtx(key, state, callback);
         /*
          * Creates a new ledger to store the checkpoint

@@ -26,7 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 
-public class S4TestCase extends TestCase {
+public class S4TestCase {
 
     String configType = "typical";
     long seedTime = 0;
@@ -60,8 +60,8 @@ public class S4TestCase extends TestCase {
         }
     }
 
-
-    public void initConfigPaths(Class testClass) throws IOException {
+    public void initConfigPaths(Class testClass, String s4CoreConfFileName)
+            throws IOException {
         if (!configPathsInitialized) {
             initS4Parameters();
             String testDir = testClass.getPackage().getName()
@@ -87,15 +87,18 @@ public class S4TestCase extends TestCase {
             coreConfigUrls.add(configPath);
 
             // load core config xml
-            configPath = configBase + "s4_core_conf.xml";
-            File configFile = new File(configPath);
-            if (!configFile.exists()) {
-                System.err.printf("S4 core config file %s does not exist\n",
-                        configPath);
-                System.exit(1);
+            if (s4CoreConfFileName != null) {
+                // may be null for adapter
+                configPath = configBase + s4CoreConfFileName;
+                File configFile = new File(configPath);
+                if (!configFile.exists()) {
+                    System.err.printf(
+                            "S4 core config file %s does not exist\n",
+                            configPath);
+                    System.exit(1);
+                }
+                coreConfigUrls.add(configPath);
             }
-
-            coreConfigUrls.add(configPath);
             String[] coreConfigFiles = new String[coreConfigUrls.size()];
             coreConfigUrls.toArray(coreConfigFiles);
 
@@ -108,8 +111,9 @@ public class S4TestCase extends TestCase {
         }
     }
 
-    public void initializeS4App(Class testClass) throws Exception {
-        initConfigPaths(testClass);
+    public void initializeS4App(Class testClass, String s4CoreConfFileName)
+            throws Exception {
+        initConfigPaths(testClass, s4CoreConfFileName);
         ApplicationContext coreContext = null;
 
         coreContext = new FileSystemXmlApplicationContext(coreConfigFileUrls,
@@ -177,7 +181,7 @@ public class S4TestCase extends TestCase {
     }
 
     public void initializeAdapter() throws IOException {
-        initConfigPaths(getClass());
+        initConfigPaths(getClass(), null);
         // load adapter config xml
 
         // load adapter config xml

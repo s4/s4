@@ -28,7 +28,7 @@
 		<property name="outputFrequencyByEventCount" value="1" />
 		<property name="outputStreamName" value="WordsCount" />
 		<property name="dispatcher" ref="wordsCountDispatcher" />
-		<property name="checkpointingFrequencyByEventCount" value="1" />
+        <property name="checkpointingFrequencyByEventCount" value="1" />       
 	</bean>
 
 	<bean id="wordClassifier" class="io.s4.wordcount.WordClassifier">

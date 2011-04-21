@@ -13,12 +13,10 @@ public class S4App extends S4TestCase {
      */
     public static void main(String[] args) throws Exception {
         Class testClass = Class.forName(args[0]);
+        String s4CoreConfFile = args[1];
         S4App app = new S4App();
         initS4Parameters();
-        app.initializeS4App(testClass);
-        // write PID to file
-        TestUtils.writeStringToFile(ManagementFactory.getRuntimeMXBean().getName(),
-                new File(testClass.getName() + ".pid"));
+        app.initializeS4App(testClass, s4CoreConfFile);
 
     }
 

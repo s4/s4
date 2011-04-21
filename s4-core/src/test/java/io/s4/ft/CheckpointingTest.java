@@ -4,6 +4,7 @@ import io.s4.serialize.KryoSerDeser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
@@ -11,66 +12,59 @@ import java.util.concurrent.CountDownLatch;
 import junit.framework.Assert;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.server.NIOServerCnxn.Factory;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.esotericsoftware.reflectasm.FieldAccess;
 
 public class CheckpointingTest extends S4TestCase {
 
+    private Factory zookeeperServerConnectionFactory = null;
+
+    @Before
+    public void prepare() throws Exception {
+        zookeeperServerConnectionFactory = TestUtils.startZookeeperServer();
+        final ZooKeeper zk = TestUtils.createZkClient();
+        try {
+            // FIXME can't figure out where this is retained
+            zk.delete("/value1Set", -1);
+        } catch (Exception ignored) {
+        }
+        try {
+            // FIXME can't figure out where this is retained
+            zk.delete("/value2Set", -1);
+        } catch (Exception ignored) {
+        }
+        try {
+            // FIXME can't figure out where this is retained
+            zk.delete("/checkpointed", -1);
+        } catch (Exception ignored) {
+        }
+
+        // 0. cleanup storage dir
+
+        if (S4TestCase.DEFAULT_STORAGE_DIR.exists()) {
+            TestUtils.deleteDirectoryContents(S4TestCase.DEFAULT_STORAGE_DIR);
+        }
+        S4TestCase.DEFAULT_STORAGE_DIR.mkdirs();
+        zk.close();
+    }
+
+    @After
+    public void cleanup() throws Exception {
+        TestUtils.stopZookeeperServer(zookeeperServerConnectionFactory);
+    }
+
     @Test(timeout = 5000)
     public void testCheckpointStorage() throws Exception {
-        Factory zookeeperServerConnectionFactory = null;
-        try {
-
-            zookeeperServerConnectionFactory = TestUtils
-                    .startZookeeperServer();
             final ZooKeeper zk = TestUtils.createZkClient();
-            try {
-                // FIXME can't figure out where this is retained
-                zk.delete("/value1Set", -1);
-            } catch (Exception ignored) {
-            }
-            try {
-                // FIXME can't figure out where this is retained
-                zk.delete("/value2Set", -1);
-            } catch (Exception ignored) {
-            }
-            try {
-                // FIXME can't figure out where this is retained
-                zk.delete("/checkpointed", -1);
-            } catch (Exception ignored) {
-            }
-
-            try {
-                // FIXME can't figure out where this is retained
-                zk.delete("/ledgers/available", -1);
-            } catch (Exception ignored) {
-            }
-
-            try {
-                // FIXME can't figure out where this is retained
-                zk.delete("/ledgers", -1);
-            } catch (Exception ignored) {
-            }
-
-            zk.create("/ledgers", new byte[0], Ids.OPEN_ACL_UNSAFE,
-                    CreateMode.PERSISTENT);
-            zk.create("/ledgers/available", new byte[0],
-                    Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-
-            // 0. cleanup storage dir
-
-            if (S4TestCase.DEFAULT_STORAGE_DIR.exists()) {
-                TestUtils.deleteDirectoryContents(S4TestCase.DEFAULT_STORAGE_DIR);
-            }
-            S4TestCase.DEFAULT_STORAGE_DIR.mkdirs();
 
             // 1. instantiate S4 app
-            initializeS4App(getClass());
+            initializeS4App(getClass(), "s4_core_conf_fs_backend.xml");
 
             // 2. generate a simple event that creates and changes the state of
             // the
@@ -99,6 +93,9 @@ public class CheckpointingTest extends S4TestCase {
                     "Stream1", 0);
             signalCheckpointed.await();
 
+            // NOTE: the backend has asynchronous save operations
+            Thread.sleep(1000);
+
             SafeKeeperId safeKeeperId = pe.getSafeKeeperId();
             File expected = new File(System.getProperty("user.dir")
                     + File.separator
@@ -124,10 +121,6 @@ public class CheckpointingTest extends S4TestCase {
             Assert.assertTrue(Arrays.equals(refBytes,
                     TestUtils.readFileAsByteArray(expected)));
 
-
-        } finally {
-            TestUtils.stopZookeeperServer(zookeeperServerConnectionFactory);
-        }
     }
 
 }
