@@ -234,6 +234,8 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
 
                 if (eventWrapper.getStreamName().endsWith("_checkpointing")
                         || eventWrapper.getStreamName().endsWith("_recovery")) {
+                    // in that case, we don't need to iterate over all prototypes and advises: 
+                    // the target PE is specified in the event
                     handleCheckpointingOrRecovery(eventWrapper);
                 } else {
 
@@ -277,7 +279,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
                                         eventWrapper, null);
                                 continue;
                             }
-
+                            
                             for (CompoundKeyInfo compoundKeyInfo : eventWrapper
                                     .getCompoundKeys()) {
                                 if (eventAdvice.getKey().equals(
@@ -321,16 +323,24 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
                     + "] can only handle checkpointing events. Received event is not a checkpointing event; it will be ignored.");
             return;
         }
-        // 1. event is targeted towards pe prototype whose name is given by the
+        // 1. event is targeted towards PE prototype whose name is given by the
         // name of the stream
         // 2. PE id is given by the event
         for (int i = 0; i < prototypeWrappers.size(); i++) {
             if (checkpointingEvent.getSafeKeeperId().getPrototypeId()
                     .equals(prototypeWrappers.get(i).getId())) {
-                invokePE(
-                        prototypeWrappers.get(i).getPE(
-                                checkpointingEvent.getSafeKeeperId().getKey()),
-                        eventWrapper, null);
+                
+                // check that PE is subscribed to checkpointing stream
+                List<EventAdvice> advices = adviceLists.get(i);
+                for (EventAdvice eventAdvice : advices) {
+                    if (eventAdvice.getEventName().equals(eventWrapper.getStreamName())){
+                        invokePE(
+                                prototypeWrappers.get(i).getPE(
+                                        checkpointingEvent.getSafeKeeperId().getKey()),
+                                        eventWrapper, null);
+                        break;
+                    }
+                }
             }
         }
         

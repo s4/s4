@@ -17,7 +17,6 @@
 package io.s4.ft;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;

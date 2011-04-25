@@ -416,6 +416,7 @@ public abstract class AbstractPE implements ProcessingElement {
             int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
         this.checkpointingFrequencyType = FrequencyType.TIMEBOUNDARY;
+        supplementAdviceForCheckpointingAndRecovery();
         initFrequency(PeriodicInvokerType.CHECKPOINTING);
     }
 
@@ -438,6 +439,7 @@ public abstract class AbstractPE implements ProcessingElement {
     // TODO factor with output mechanism
     public void setCheckpointingFrequencyOffset(int checkpointingFrequencyOffset) {
         this.checkpointingFrequencyOffset = checkpointingFrequencyOffset;
+        supplementAdviceForCheckpointingAndRecovery();
     }
 
     public void setKeys(String[] keys) {
@@ -445,6 +447,7 @@ public abstract class AbstractPE implements ProcessingElement {
             StringTokenizer st = new StringTokenizer(key);
             eventAdviceList.add(new EventAdvice(st.nextToken(), st.nextToken()));
         }
+        supplementAdviceForCheckpointingAndRecovery();
     }
 
     private void initFrequency(PeriodicInvokerType type) {
@@ -616,6 +619,14 @@ public abstract class AbstractPE implements ProcessingElement {
                 }
             }
             restoreFieldsForClass(currentInOldStateClassHierarchy.getSuperclass(), oldState);
+        }
+    }
+    
+    private void supplementAdviceForCheckpointingAndRecovery() {
+        // don't do anything until both conditions are true                                                                        
+        Logger.getLogger("s4").info("Maybe adding for " + this.getId() + ": " + checkpointingFrequency + " and " + eventAdviceList.size());
+        if (checkpointingFrequency > 0 && eventAdviceList.size() > 0) {
+            eventAdviceList.add(new EventAdvice(this.getId() +"_checkpointing", "key"));
         }
     }
 

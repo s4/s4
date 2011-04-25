@@ -95,7 +95,6 @@ public class SafeKeeper {
                     safeKeeper.getKeysToRecover().add(key);
                 }
             }
-            safeKeeper.getKeysToRecover().addAll(storedKeys);
             safeKeeper.signalKeysLoaded.countDown();
 
         }
