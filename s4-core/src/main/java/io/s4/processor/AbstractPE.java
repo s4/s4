@@ -374,6 +374,7 @@ public abstract class AbstractPE implements ProcessingElement {
     public void setCheckpointingFrequencyByEventCount(int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
         this.checkpointingFrequencyType = FrequencyType.EVENTCOUNT;
+        supplementAdviceForCheckpointingAndRecovery();
     }
 
     /**

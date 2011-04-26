@@ -17,6 +17,8 @@
         <value>Stream1 key</value>
       </list>
     </property>
+    <!-- we set the frequency to 1000 so that it checkpointing does NOT get triggered automatically! -->
+    <property name="checkpointingFrequencyByEventCount" value="1000" />  
   </bean>
 
 

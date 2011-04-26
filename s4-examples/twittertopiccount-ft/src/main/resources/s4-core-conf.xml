@@ -161,12 +161,15 @@
         <property name="loggerName" value="s4" />
     </bean>
 
-    <bean id="loopbackPartitioner" class="io.s4.dispatcher.partitioner.LoopbackPartitioner" />
+    <bean id="loopbackPartitioner" class="io.s4.dispatcher.partitioner.LoopbackPartitioner">
+        <property name="peContainer" ref="peContainer"/>
+    </bean>
 
     <bean id="safeKeeper" class="io.s4.ft.SafeKeeper" init-method="init">
         <property name="stateStorage" ref="fsStateStorage" />
         <property name="loopbackDispatcher" ref="loopbackDispatcher" />
         <property name="serializer" ref="serDeser"/>
+        <property name="hasher" ref="hasher"/>
     </bean>
 
     <bean id="fsStateStorage" class="io.s4.ft.DefaultFileSystemStateStorage" init-method="checkStorageDir">

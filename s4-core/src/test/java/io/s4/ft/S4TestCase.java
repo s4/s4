@@ -131,7 +131,7 @@ public class S4TestCase {
         PEContainer peContainer = (PEContainer) context.getBean("peContainer");
 
         Watcher w = (Watcher) context.getBean("watcher");
-        w.setConfigFilename(configBase + "s4_core_conf.xml");
+        w.setConfigFilename(configBase + s4CoreConfFileName);
 
         // load extension modules
         // String[] configFileNames = getModuleConfigFiles(extsHome, prop);

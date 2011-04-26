@@ -59,7 +59,7 @@ public class CheckpointingTest extends S4TestCase {
         TestUtils.stopZookeeperServer(zookeeperServerConnectionFactory);
     }
 
-    @Test(timeout = 5000)
+    @Test
     public void testCheckpointStorage() throws Exception {
             final ZooKeeper zk = TestUtils.createZkClient();
 
@@ -88,7 +88,7 @@ public class CheckpointingTest extends S4TestCase {
             Assert.assertEquals("message1", pe.getValue1());
             Assert.assertEquals("", pe.getValue2());
 
-            // 3. generate a checkpoint event
+            // 3. generate a checkpoint event 
             gen.injectValueEvent(new KeyValue("initiateCheckpoint", "blah"),
                     "Stream1", 0);
             signalCheckpointed.await();

@@ -130,8 +130,8 @@ public class FTWordCountTest extends S4TestCase {
             zk.create("/continue_" + i, new byte[0], Ids.OPEN_ACL_UNSAFE,
                     CreateMode.EPHEMERAL);
         }
-        signalTextProcessed.await(20, TimeUnit.SECONDS);
-        File results = new File(System.getProperty("java.io.tmpdir")
+        signalTextProcessed.await();
+        File results = new File(S4TestCase.DEFAULT_TEST_OUTPUT_DIR
                 + File.separator + "wordcount");
         String s = TestUtils.readFile(results);
         Assert.assertEquals("be=2;da=2;doobie=4;not=1;or=1;to=2;", s);

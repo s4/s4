@@ -1,6 +1,7 @@
 package io.s4.wordcount;
 
 import io.s4.ft.KeyValue;
+import io.s4.ft.S4TestCase;
 import io.s4.ft.TestUtils;
 import io.s4.processor.AbstractPE;
 
@@ -23,7 +24,7 @@ import org.apache.zookeeper.ZooKeeper;
 public class WordClassifier extends AbstractPE implements Watcher {
 
     TreeMap<String, Integer> counts = new TreeMap();
-    int counter;
+    private int counter;
     transient private ZooKeeper zk;
     private String id;
     public final static String ROUTING_KEY = "classifier";
@@ -58,7 +59,7 @@ public class WordClassifier extends AbstractPE implements Watcher {
         }
         ++counter;
         if (counter == WordCountTest.TOTAL_WORDS) {
-            File results = new File(System.getProperty("java.io.tmpdir")
+            File results = new File(S4TestCase.DEFAULT_TEST_OUTPUT_DIR
                     + File.separator + "wordcount");
             if (results.exists()) {
                 if (!results.delete()) {

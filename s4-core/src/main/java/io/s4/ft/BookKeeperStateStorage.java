@@ -60,8 +60,8 @@ ReadCallback, StatCallback {
     private String zkServers;
     private BookKeeper bk;
     static final String PREFIX = "/s4/checkpoints";
-    private int ensembleSize;
-    private int quorumSize;
+    private int ensembleSize = 4;
+    private int quorumSize = 2;
     
     /*
      * Context object for saving checkpoints.

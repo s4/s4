@@ -60,7 +60,7 @@ public class WordCountTest extends S4TestCase {
         gen.injectValueEvent(new KeyValue("sentence", SENTENCE_2), "Sentences",
                 0);
         signalTextProcessed.await();
-        File results = new File(System.getProperty("java.io.tmpdir")
+        File results = new File(S4TestCase.DEFAULT_TEST_OUTPUT_DIR
                 + File.separator + "wordcount");
         String s = TestUtils.readFile(results);
         Assert.assertEquals("be=2;da=2;doobie=4;not=1;or=1;to=2;", s);

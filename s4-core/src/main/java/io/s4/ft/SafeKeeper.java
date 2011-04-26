@@ -76,7 +76,7 @@ public class SafeKeeper {
             int nodeCount = safeKeeper.getLoopbackDispatcher().getEventEmitter()
                     .getNodeCount();
             // required wait until nodes are available
-            // NOTE: this only works for a static config
+            // NOTE: this only works for a config with a static number of nodes
             while (nodeCount == 0) {
                 try {
                     Thread.sleep(500);
@@ -90,8 +90,8 @@ public class SafeKeeper {
 
             for (SafeKeeperId key : storedKeys) {
                 // validate ids through hash function
-                if (Integer.valueOf(safeKeeper.getPartitionId()).equals(
-                        (safeKeeper.getHasher().hash(key.getKey()) % nodeCount))) {
+                if (Long.valueOf(safeKeeper.getPartitionId()).equals(Long.valueOf(
+                        (safeKeeper.getHasher().hash(key.getKey()) % nodeCount)))) {
                     safeKeeper.getKeysToRecover().add(key);
                 }
             }

@@ -45,7 +45,7 @@ public class RecoveryTest extends S4TestCase {
         TestUtils.killS4App(forkedS4App);
     }
 
-    @Test(timeout = 10000)
+    @Test
     public void testCheckpointRestorationThroughApplicationEvent()
             throws Exception {
         final ZooKeeper zk = TestUtils.createZkClient();
