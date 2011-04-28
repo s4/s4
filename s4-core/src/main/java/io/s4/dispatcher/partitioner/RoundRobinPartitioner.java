@@ -16,13 +16,29 @@
 package io.s4.dispatcher.partitioner;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class RoundRobinPartitioner implements Partitioner {
     private int counter = 0;
+    private Set<String> streamNameSet;
+
+    public void setStreamNames(String[] streamNames) {
+        streamNameSet = new HashSet<String>(streamNames.length);
+        for (String eventType : streamNames) {
+            streamNameSet.add(eventType);
+        }
+    }
 
     @Override
-    public List<CompoundKeyInfo> partition(String streamName, Object event, int partitionCount) {
+    public List<CompoundKeyInfo> partition(String streamName, Object event,
+            int partitionCount) {
+
+        if (streamName != null && streamNameSet != null
+                && !streamNameSet.contains(streamName)) {
+            return null;
+        }
 
         CompoundKeyInfo partitionInfo = new CompoundKeyInfo();
         int partitionId = 0;
