@@ -10,6 +10,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -18,11 +21,13 @@ public class DefaultFileSystemStateStorage implements StateStorage {
 
     private static Logger logger = Logger.getLogger(DefaultFileSystemStateStorage.class);
     private String storageRootPath;
-    // NOTE: we may use a ThreadPoolExecutor for fine tuning
-    ExecutorService threadPool;
+    ThreadPoolExecutor threadPool;
+    int maxNumberOfWriteThreads = 1;
+    int writeThreadKeepAliveSeconds=120;
 
     public DefaultFileSystemStateStorage() {
-        threadPool = Executors.newCachedThreadPool();
+        threadPool = new ThreadPoolExecutor(0, maxNumberOfWriteThreads, writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>());
     }
 
     @Override
@@ -148,6 +153,22 @@ public class DefaultFileSystemStateStorage implements StateStorage {
             }
 
         }
+    }
+
+    public int getMaxNumberOfWriteThreads() {
+        return maxNumberOfWriteThreads;
+    }
+
+    public void setMaxNumberOfWriteThreads(int maxNumberOfWriteThreads) {
+        this.maxNumberOfWriteThreads = maxNumberOfWriteThreads;
+    }
+
+    public int getWriteThreadKeepAliveSeconds() {
+        return writeThreadKeepAliveSeconds;
+    }
+
+    public void setWriteThreadKeepAliveSeconds(int writeThreadKeepAliveSeconds) {
+        this.writeThreadKeepAliveSeconds = writeThreadKeepAliveSeconds;
     }
 
     public void checkStorageDir() {
