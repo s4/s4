@@ -39,7 +39,7 @@ public class TestRedisStateStorage {
 
     @Test
     public void testFetchState() throws IOException, InterruptedException {
-        SafeKeeperId key = new SafeKeeperId("prototype", "classname", "key");
+        SafeKeeperId key = new SafeKeeperId("prototype", "key");
         storage.saveState(key, PAYLOAD.getBytes(), null);
         byte[] result = storage.fetchState(key);
         String recovered = new String(result);
@@ -50,7 +50,7 @@ public class TestRedisStateStorage {
     public void testFetchStoredKeys() {
         Set<SafeKeeperId> fixture = new HashSet<SafeKeeperId>();
         for (int i = 0; i < 10; i++)
-            fixture.add(new SafeKeeperId("prototype", "classname", "key" + i));
+            fixture.add(new SafeKeeperId("prototype", "key" + i));
         for (SafeKeeperId skid : fixture)
             storage.saveState(skid, PAYLOAD.getBytes(), null);
 

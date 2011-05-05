@@ -87,7 +87,6 @@ public class StatefulTestPE extends AbstractPE implements Watcher {
     }
 
     protected void checkpoint() {
-        System.out.println("checkpointing");
         super.checkpoint();
         try {
             zk.create("/checkpointed", new byte[0], Ids.OPEN_ACL_UNSAFE,

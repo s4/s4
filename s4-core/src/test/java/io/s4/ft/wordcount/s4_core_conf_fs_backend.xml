@@ -184,7 +184,7 @@
         <property name="hasher" ref="hasher"/>
     </bean>
 
-    <bean id="fsStateStorage" class="io.s4.ft.DefaultFileSystemStateStorage" init-method="checkStorageDir">
+    <bean id="fsStateStorage" class="io.s4.ft.DefaultFileSystemStateStorage" init-method="init">
         <!-- if not specified, default is <current_dir>/tmp/storage 
         <property name="storageRootPath" value="${storage_root_path}" /> -->
     </bean>

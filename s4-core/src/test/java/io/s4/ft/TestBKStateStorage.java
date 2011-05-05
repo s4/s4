@@ -82,7 +82,7 @@ public class TestBKStateStorage {
 
     @Test
     public void testFetchState() throws IOException, InterruptedException {
-        SafeKeeperId key = new SafeKeeperId("prototype", "classname", "key");
+        SafeKeeperId key = new SafeKeeperId("prototype", "key");
         bkstore.saveState(key, PAYLOAD.getBytes(), null);
         Thread.sleep(1000);
         byte[] result = bkstore.fetchState(key);
@@ -94,7 +94,7 @@ public class TestBKStateStorage {
     public void testFetchStoredKeys() throws InterruptedException {
         Set<SafeKeeperId> fixture = new HashSet<SafeKeeperId>();
         for (int i = 0; i < 10; i++) {
-            fixture.add(new SafeKeeperId("prototype", "classname", "key" + i));
+            fixture.add(new SafeKeeperId("prototype", "key" + i));
         }
         for (SafeKeeperId skid : fixture) {
             bkstore.saveState(skid, PAYLOAD.getBytes(), null);

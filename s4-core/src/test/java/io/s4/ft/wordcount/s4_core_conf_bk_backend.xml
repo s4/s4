@@ -185,8 +185,6 @@
     </bean>
     
     <bean id="bkStateStorage" class="io.s4.ft.BookKeeperStateStorage" init-method="init">
-        <!-- if not specified, default is <current_dir>/tmp/storage 
-        <property name="storageRootPath" value="${storage_root_path}" /> -->
         <property name="zkServers" value="localhost:21810"/>
         <property name="ensembleSize" value="3"/>
         <property name="quorumSize" value="2"/>

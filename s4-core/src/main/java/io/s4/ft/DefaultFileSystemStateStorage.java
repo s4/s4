@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
@@ -22,12 +23,17 @@ public class DefaultFileSystemStateStorage implements StateStorage {
     private static Logger logger = Logger.getLogger(DefaultFileSystemStateStorage.class);
     private String storageRootPath;
     ThreadPoolExecutor threadPool;
-    int maxNumberOfWriteThreads = 1;
+    int maxWriteThreads = 1;
     int writeThreadKeepAliveSeconds=120;
+    int maxOutstandingWriteRequests=1000;
 
     public DefaultFileSystemStateStorage() {
-        threadPool = new ThreadPoolExecutor(0, maxNumberOfWriteThreads, writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>());
+    }
+    
+    public void init() {
+        checkStorageDir();
+        threadPool = new ThreadPoolExecutor(0, maxWriteThreads, writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<Runnable>(maxOutstandingWriteRequests));
     }
 
     @Override
@@ -155,20 +161,28 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         }
     }
 
-    public int getMaxNumberOfWriteThreads() {
-        return maxNumberOfWriteThreads;
-    }
-
-    public void setMaxNumberOfWriteThreads(int maxNumberOfWriteThreads) {
-        this.maxNumberOfWriteThreads = maxNumberOfWriteThreads;
-    }
-
     public int getWriteThreadKeepAliveSeconds() {
         return writeThreadKeepAliveSeconds;
     }
 
     public void setWriteThreadKeepAliveSeconds(int writeThreadKeepAliveSeconds) {
         this.writeThreadKeepAliveSeconds = writeThreadKeepAliveSeconds;
+    }
+
+    public int getMaxWriteThreads() {
+        return maxWriteThreads;
+    }
+
+    public void setMaxWriteThreads(int maxWriteThreads) {
+        this.maxWriteThreads = maxWriteThreads;
+    }
+
+    public int getMaxOutstandingWriteRequests() {
+        return maxOutstandingWriteRequests;
+    }
+
+    public void setMaxOutstandingWriteRequests(int maxOutstandingWriteRequests) {
+        this.maxOutstandingWriteRequests = maxOutstandingWriteRequests;
     }
 
     public void checkStorageDir() {

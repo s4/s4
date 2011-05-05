@@ -83,8 +83,7 @@ public class CheckpointingTest extends S4TestCase {
 
             signalValue1Set.await();
             StatefulTestPE pe = (StatefulTestPE) S4TestCase.registeredPEs
-                    .get(new SafeKeeperId("statefulPE", StatefulTestPE.class
-                            .getName(), "value"));
+                    .get(new SafeKeeperId("statefulPE", "value"));
             Assert.assertEquals("message1", pe.getValue1());
             Assert.assertEquals("", pe.getValue2());
 

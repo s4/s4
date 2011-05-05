@@ -548,8 +548,7 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public SafeKeeperId getSafeKeeperId() {
-        return new SafeKeeperId(getId(), getClass().getName(),
-                getKeyValueString());
+        return new SafeKeeperId(getId(), getKeyValueString());
     }
 
     public void setSafeKeeper(SafeKeeper safeKeeper) {
@@ -575,7 +574,6 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public final void initiateCheckpoint() {
-        // TODO delegate everything to safekeeper?
         // enqueue checkpointing event
         if (safeKeeper != null) {
             safeKeeper.generateCheckpoint(this);

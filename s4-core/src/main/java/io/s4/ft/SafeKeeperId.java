@@ -1,46 +1,68 @@
 package io.s4.ft;
 
+import io.s4.processor.ProcessingElement;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * <p>
+ * Identifier of PEs. It is used to identify checkpointed PEs in the storage
+ * backend.
+ * </p>
+ * <p>
+ * The storage backend is responsible for converting this identifier to whatever
+ * internal representation is most suitable for it.
+ * </p>
+ * <p>
+ * This class provides methods for getting a compact String representation of
+ * the identifier and for creating an identifier from a String representation.
+ * </p>
+ * 
+ * 
+ * 
+ * 
+ */
 public class SafeKeeperId {
 
     private String prototypeId;
-    private String className;
-    private String key;
+    private String keyed;
 
     private static final Pattern STRING_REPRESENTATION_PATTERN = Pattern
-            .compile("\\[(\\S*)\\];\\[(\\S*)\\];\\[(\\S*)\\]");
+            .compile("\\[(\\S*)\\];\\[(\\S*)\\]");
 
     public SafeKeeperId() {
     }
 
-    public SafeKeeperId(String prototypeID, String className, String key) {
+    /**
+     * 
+     * @param prototypeID
+     *            id of the PE as returned by {@link ProcessingElement#getId()
+     *            getId()} method
+     * @param keyed
+     *            keyed attribute(s)
+     */
+    public SafeKeeperId(String prototypeID, String keyed) {
         super();
         this.prototypeId = prototypeID;
-        this.className = className;
-        this.key = key;
+        this.keyed = keyed;
     }
 
     public SafeKeeperId(String keyAsString) {
         Matcher matcher = STRING_REPRESENTATION_PATTERN.matcher(keyAsString);
+
         try {
             matcher.find();
             prototypeId = "".equals(matcher.group(1)) ? null : matcher.group(1);
-            className = "".equals(matcher.group(2)) ? null : matcher.group(2);
-            key = "".equals(matcher.group(3)) ? null : matcher.group(3);
+            keyed = "".equals(matcher.group(2)) ? null : matcher.group(2);
         } catch (IndexOutOfBoundsException e) {
-            // FIXME logger
-            System.err.println(e);
+
         }
+
     }
 
     public String getKey() {
-        return key;
-    }
-
-    public String getClassName() {
-        return className;
+        return keyed;
     }
 
     public String getPrototypeId() {
@@ -48,13 +70,12 @@ public class SafeKeeperId {
     }
 
     public String toString() {
-        return "[PROTO_ID];[CLASS];[KEY] --> " + getStringRepresentation();
+        return "[PROTO_ID];[KEYED] --> " + getStringRepresentation();
     }
 
     public String getStringRepresentation() {
         return "[" + (prototypeId == null ? "" : prototypeId) + "];["
-                + (className == null ? "" : className) + "];["
-                + (key == null ? "" : key) + "]";
+                + (keyed == null ? "" : keyed) + "]";
     }
 
     @Override
@@ -72,15 +93,10 @@ public class SafeKeeperId {
         }
 
         SafeKeeperId other = (SafeKeeperId) obj;
-        if (className == null) {
-            if (other.className != null)
+        if (keyed == null) {
+            if (other.keyed != null)
                 return false;
-        } else if (!className.equals(other.className))
-            return false;
-        if (key == null) {
-            if (other.key != null)
-                return false;
-        } else if (!key.equals(other.key))
+        } else if (!keyed.equals(other.keyed))
             return false;
         if (prototypeId == null) {
             if (other.prototypeId != null)
