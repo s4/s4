@@ -18,6 +18,10 @@ package io.s4.ft;
 
 import java.util.Set;
 
+/**
+ * Not implemented yet...
+ *
+ */
 public class MemcachedStateStorage implements StateStorage {
 
     @Override

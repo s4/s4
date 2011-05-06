@@ -19,9 +19,6 @@ import java.util.regex.Pattern;
  * the identifier and for creating an identifier from a String representation.
  * </p>
  * 
- * 
- * 
- * 
  */
 public class SafeKeeperId {
 

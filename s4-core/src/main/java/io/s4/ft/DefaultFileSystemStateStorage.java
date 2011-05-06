@@ -9,30 +9,49 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+/**
+ * <p>
+ * Implementation of a file system backend storage to persist checkpoints.
+ * </p>
+ * <p>
+ * The file system may be the default local file system when running on a single
+ * machine, but should be a distributed file system such as NFS when running on
+ * a cluster.
+ * </p>
+ * <p>
+ * Checkpoints are stored in individual files (1 file = 1 safeKeeperId) in
+ * directories according to the following structure:
+ * <code>(storageRootpath)/peId/safeKeeperIdxx</code>
+ * </p>
+ * 
+ */
 public class DefaultFileSystemStateStorage implements StateStorage {
 
-    private static Logger logger = Logger.getLogger(DefaultFileSystemStateStorage.class);
+    private static Logger logger = Logger
+            .getLogger(DefaultFileSystemStateStorage.class);
     private String storageRootPath;
     ThreadPoolExecutor threadPool;
     int maxWriteThreads = 1;
-    int writeThreadKeepAliveSeconds=120;
-    int maxOutstandingWriteRequests=1000;
+    int writeThreadKeepAliveSeconds = 120;
+    int maxOutstandingWriteRequests = 1000;
 
     public DefaultFileSystemStateStorage() {
     }
-    
+
+    /**
+     * <p>
+     * Must be called by the dependency injection framework.<p/>
+     */
     public void init() {
         checkStorageDir();
-        threadPool = new ThreadPoolExecutor(0, maxWriteThreads, writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
+        threadPool = new ThreadPoolExecutor(0, maxWriteThreads,
+                writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(maxOutstandingWriteRequests));
     }
 
@@ -135,8 +154,8 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 + File.separator
                 + key.getPrototypeId()
                 + File.separator
-                + Base64.encodeBase64URLSafeString(key.getStringRepresentation()
-                        .getBytes()));
+                + Base64.encodeBase64URLSafeString(key
+                        .getStringRepresentation().getBytes()));
     }
 
     private static SafeKeeperId file2SafeKeeperID(File file) {
@@ -198,12 +217,18 @@ public class DefaultFileSystemStateStorage implements StateStorage {
             if (!defaultStorageDir.exists()) {
                 if (!(defaultStorageDir.mkdirs())) {
                     logger.error("Storage directory not specified, and cannot create default storage directory : "
-                            + defaultStorageDir.getAbsolutePath() + "\n Checkpointing and recovery will be disabled.");
+                            + defaultStorageDir.getAbsolutePath()
+                            + "\n Checkpointing and recovery will be disabled.");
                 }
             }
         }
     }
 
+    /**
+     * 
+     * Writing to storage is an asynchronous operation specified in this class.
+     *
+     */
     private static class SaveTask implements Runnable {
         SafeKeeperId key;
         byte[] state;

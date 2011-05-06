@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.AsyncCallback.AddCallback;
 import org.apache.bookkeeper.client.AsyncCallback.CreateCallback;
@@ -43,9 +45,20 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.Stat;
 
 /**
- * This class implements a BookKeeper backend to persist checkpoints. 
+ * <p>
+ * This class implements a BookKeeper backend to persist checkpoints.
+ * </p>
+ * <p>
+ * BookKeeper is a distributed logging service
+ * </p>
+ * <p> 
+ * See {@link http://zookeeper.apache.org/bookkeeper. BookKeeper Apache's page} for more information on BookKeeper.
+ * </p>
+ * <p>
+ * BookKeeper must be configured as an external service. References to this external service are injected
+ * into this backend from the core configuration.
+ * </p>
  */
-
 public class BookKeeperStateStorage 
 implements StateStorage, 
 DataCallback, 
@@ -369,11 +382,7 @@ ReadCallback, StatCallback {
     /**
      * ZooKeeper data callback.
      * 
-     * @param rc
-     * @param path
-     * @param ctx
-     * @param data
-     * @param stat
+     * See {@link DataCallback#processResult(int, String, Object, byte[], Stat)}
      */
     public void processResult(int rc, String path, Object ctx, byte data[],
             Stat stat){
@@ -397,10 +406,7 @@ ReadCallback, StatCallback {
     /**
      * ZooKeeper get children callback.
      * 
-     * @param rc
-     * @param path
-     * @param ctx
-     * @param children
+     * See {@link ChildrenCallback#processResult(int, String, Object, List)}
      */
     public void processResult(int rc, String path, Object ctx,
             List<String> children){

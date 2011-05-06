@@ -1,6 +1,10 @@
 package io.s4.ft;
 
-// TODO this needs some kind of routing information, provided by safeKeeperId?
+/**
+ * 
+ * Event that triggers a checkpoint.
+ *
+ */
 public class InitiateCheckpointingEvent extends CheckpointingEvent {
 
     public InitiateCheckpointingEvent() {

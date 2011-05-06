@@ -1,10 +1,15 @@
 package io.s4.ft;
 
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
 
+/**
+ * 
+ * This class defines an activity for eagerly fetching stored checkpoints and loading them into a cache.
+ * The implementation of this class is not finalized and it may be removed in the future.
+ *
+ */
 public class EagerSerializedStateFetcher implements Runnable {
 
     private static final int TOKEN_COUNT = Integer.valueOf(System.getProperty(

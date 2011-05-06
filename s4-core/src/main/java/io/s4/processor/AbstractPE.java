@@ -218,7 +218,7 @@ public abstract class AbstractPE implements ProcessingElement {
         }
 
         if (outputFrequencyType == FrequencyType.EVENTCOUNT
-                && outputFrequency > 0) {
+                && outputFrequency > 0 && !isCheckpointingEvent) {
             eventCount++;
             if (eventCount % outputFrequency == 0) {
                 try {
@@ -361,7 +361,7 @@ public abstract class AbstractPE implements ProcessingElement {
      * <code>processEvent</code>).
      * 
      * @param outputFrequency
-     *            the number of events passed to <code>processEvent</code>
+     *            the number of application events passed to <code>processEvent</code>
      *            before output is called.
      **/
     public void setOutputFrequencyByEventCount(int outputFrequency) {
@@ -370,7 +370,14 @@ public abstract class AbstractPE implements ProcessingElement {
         initFrequency(PeriodicInvokerType.OUTPUT);
     }
 
-    // TODO factor with output mechanism
+    /**
+     * Sets the frequency strategy to "by event count". Uses the same mechanism than 
+     * {@link #setOutputFrequencyByEventCount(int)}
+     * 
+     * @param checkpointingFrequency 
+     *            the number of application events passed to <code>processEvent</code>
+     *            before output is called (ignoring checkpointing events).
+     */
     public void setCheckpointingFrequencyByEventCount(int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
         this.checkpointingFrequencyType = FrequencyType.EVENTCOUNT;
@@ -412,7 +419,13 @@ public abstract class AbstractPE implements ProcessingElement {
         initFrequency(PeriodicInvokerType.OUTPUT);
     }
 
-    // TODO factor with output mechanism
+
+    /**
+     * Sets the frequency of checkpointing. It uses the same mechanism than {@link #setOutputFrequencyByTimeBoundary(int)}
+     * 
+     * @param checkpointingFrequency
+     *            the time boundary in seconds
+     */
     public void setCheckpointingFrequencyByTimeBoundary(
             int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
@@ -437,7 +450,12 @@ public abstract class AbstractPE implements ProcessingElement {
         this.outputFrequencyOffset = outputFrequencyOffset;
     }
 
-    // TODO factor with output mechanism
+    /**
+     * Set the offset from the time boundary at which calls to checkpoint should be performed.
+     * It uses the same mechanism than {@link AbstractPE#setOutputFrequencyOffset(int)}
+     * 
+     * @param checkpointingFrequencyOffset checkpointing frequency offset in seconds
+     */
     public void setCheckpointingFrequencyOffset(int checkpointingFrequencyOffset) {
         this.checkpointingFrequencyOffset = checkpointingFrequencyOffset;
         supplementAdviceForCheckpointingAndRecovery();
@@ -621,6 +639,9 @@ public abstract class AbstractPE implements ProcessingElement {
         }
     }
     
+    /**
+     * Subscribes this PE to the checkpointing stream
+     */
     private void supplementAdviceForCheckpointingAndRecovery() {
         // don't do anything until both conditions are true                                                                        
         Logger.getLogger("s4").info("Maybe adding for " + this.getId() + ": " + checkpointingFrequency + " and " + eventAdviceList.size());

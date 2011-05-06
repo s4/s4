@@ -5,6 +5,18 @@ import java.util.Set;
 
 import redis.clients.jedis.Jedis;
 
+/**
+ * <p>
+ * This class implements a storage backend based on Redis. Redis is a key-value store.
+ * </p>
+ * <p>
+ * See {@link http://redis.io/} for more information.
+ * </p>
+ * <p>
+ * Redis must be running as an external service. References to this external
+ * services must be injected during the initialization of the S4 platform.
+ * </p>
+ */
 public class RedisStateStorage implements StateStorage {
     private Jedis jedis;
     private String redisHost;
@@ -34,9 +46,10 @@ public class RedisStateStorage implements StateStorage {
     public void clear() {
         jedis.flushAll();
     }
-    
+
     @Override
-    public void saveState(SafeKeeperId key, byte[] state, StorageCallback callback) {
+    public void saveState(SafeKeeperId key, byte[] state,
+            StorageCallback callback) {
         jedis.set(key.getStringRepresentation().getBytes(), state);
     }
 
