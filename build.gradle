@@ -55,7 +55,7 @@ allprojects {
         
         /* Add lib dir as a repo. Some jar files that are not available 
         in a public repo are distributed in the lib dir. */
-        flatDir name: 'libDir', dirs: "lib"
+        flatDir name: 'libDir', dirs: ["$projectDir/../lib", "$projectDir/lib", "$projectDir/../../lib"]
 
         mavenLocal()
         mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
@@ -88,7 +88,7 @@ spring:             'org.springframework:spring:2.5.6',
 scala_compiler:     'org.scala-lang:scala-compiler:2.8.1',
 scala_library:      'org.scala-lang:scala-library:2.8.1',
 jedis:              'redis.clients:jedis:1.5.2',
-/*bookkeeper:         'org.apache.bookkeeper:bookkeeper:3.3.3'*/
+bookkeeper:         'org.apache.bookkeeper:bookkeeper:3.3.3',
 netty:              'org.jboss.netty:netty:3.2.4.Final'
 ]
 

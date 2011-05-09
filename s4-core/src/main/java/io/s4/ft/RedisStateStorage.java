@@ -3,6 +3,8 @@ package io.s4.ft;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import redis.clients.jedis.Jedis;
 
 /**
@@ -47,6 +49,10 @@ public class RedisStateStorage implements StateStorage {
         jedis.flushAll();
     }
 
+    public void init() {
+        connect();
+    }
+    
     @Override
     public void saveState(SafeKeeperId key, byte[] state,
             StorageCallback callback) {

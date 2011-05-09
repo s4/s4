@@ -68,7 +68,7 @@ public class TestUtils {
         pb.toString();
         final Process process = pb.start();
         // TODO some synchro with s4 platform ready state
-        Thread.sleep(1500);
+        Thread.sleep(2500);
 
         // if (start.exitValue() != 0) {
         // System.out.println("here");

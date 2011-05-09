@@ -27,9 +27,11 @@ public class WordCountTest extends S4TestCase {
     public static final int SENTENCE_1_TOTAL_WORDS = SENTENCE_1.split(" ").length;
     public static final String SENTENCE_2 = "doobie doobie da";
     public static final int SENTENCE_2_TOTAL_WORDS = SENTENCE_2.split(" ").length;
+    public static final String SENTENCE_3 = "doobie";
+    public static final int SENTENCE_3_TOTAL_WORDS = SENTENCE_3.split(" ").length;
     public static final String FLAG = ";";
-    public static final int TOTAL_WORDS = SENTENCE_1_TOTAL_WORDS
-            + SENTENCE_2_TOTAL_WORDS;
+    public static int TOTAL_WORDS = SENTENCE_1_TOTAL_WORDS
+            + SENTENCE_2_TOTAL_WORDS + SENTENCE_3_TOTAL_WORDS;
     private static Factory zookeeperServerConnectionFactory;
 
     
@@ -62,11 +64,13 @@ public class WordCountTest extends S4TestCase {
                     "Sentences", 0);
         gen.injectValueEvent(new KeyValue("sentence", SENTENCE_2), "Sentences",
                 0);
+        gen.injectValueEvent(new KeyValue("sentence", SENTENCE_3), "Sentences",
+                0);
         signalTextProcessed.await();
         File results = new File(S4TestCase.DEFAULT_TEST_OUTPUT_DIR
                 + File.separator + "wordcount");
         String s = TestUtils.readFile(results);
-        Assert.assertEquals("be=2;da=2;doobie=4;not=1;or=1;to=2;", s);
+        Assert.assertEquals("be=2;da=2;doobie=5;not=1;or=1;to=2;", s);
         
     }
 

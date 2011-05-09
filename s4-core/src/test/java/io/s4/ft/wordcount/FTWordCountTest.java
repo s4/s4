@@ -3,6 +3,7 @@ package io.s4.ft.wordcount;
 import io.s4.ft.EventGenerator;
 import io.s4.ft.KeyValue;
 import io.s4.ft.S4TestCase;
+import io.s4.ft.TestRedisStateStorage;
 import io.s4.ft.TestUtils;
 import io.s4.wordcount.WordCountTest;
 
@@ -44,6 +45,7 @@ public class FTWordCountTest extends S4TestCase {
     private static Factory zookeeperServerConnectionFactory;
     private static final String FILESYSTEM_BACKEND_CONF = "s4_core_conf_fs_backend.xml";
     private static final String BOOKKEEPER_BACKEND_CONF = "s4_core_conf_bk_backend.xml";
+    private static final String REDIS_BACKEND_CONF = "s4_core_conf_redis_backend.xml";
     private Process forkedS4App = null;
 
     @Test
@@ -53,7 +55,18 @@ public class FTWordCountTest extends S4TestCase {
 
     @Test
     public void bookKeeperBackend() throws Exception {
+        final ZooKeeper zk = TestUtils.createZkClient();
+        TestUtils.initializeBKBookiesAndLedgers(zk);
+        Thread.sleep(6000);
         doTestCheckpointingAndRecovery(BOOKKEEPER_BACKEND_CONF);
+    }
+    
+    @Test
+    public void testRedisBackend() throws Exception {
+        TestRedisStateStorage.runRedis();
+        TestRedisStateStorage.clearRedis();
+        doTestCheckpointingAndRecovery(REDIS_BACKEND_CONF);
+        TestRedisStateStorage.stopRedis();
     }
 
     @Before
@@ -71,14 +84,13 @@ public class FTWordCountTest extends S4TestCase {
         }
     }
 
+    // we send 1 sentence, wait for all words to be processed, then crash the
+    // app
+    // we do that for 3 sentences, in order to make sure that recovery does not
+    // introduce side effects.
     public void doTestCheckpointingAndRecovery(String backendConf)
             throws Exception {
         final ZooKeeper zk = TestUtils.createZkClient();
-
-        // note: this should run automatically but does not...
-        if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
-            TestUtils.initializeBKBookiesAndLedgers(zk);
-        }
 
         forkedS4App = TestUtils.forkS4App(getClass().getName(), backendConf);
 
@@ -97,31 +109,30 @@ public class FTWordCountTest extends S4TestCase {
             zk.create("/continue_" + i, new byte[0], Ids.OPEN_ACL_UNSAFE,
                     CreateMode.EPHEMERAL);
         }
-        CountDownLatch signalSentence1Counted = new CountDownLatch(1);
+        CountDownLatch signalSentence1Processed = new CountDownLatch(1);
         TestUtils.watchAndSignalCreation("/classifierIteration_"
-                + WordCountTest.SENTENCE_1_TOTAL_WORDS, signalSentence1Counted,
-                zk);
+                + WordCountTest.SENTENCE_1_TOTAL_WORDS,
+                signalSentence1Processed, zk);
         gen.injectValueEvent(
                 new KeyValue("sentence", WordCountTest.SENTENCE_1),
                 "Sentences", 0);
-        signalSentence1Counted.await();
-        // wait for asynchronous save operations to complete
-        // NOTE: we should rather add synchros... 
-        Thread.sleep(2000);
+        signalSentence1Processed.await();
+        Thread.sleep(1000);
         if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
             // NOTE: we should rather add synchros...
             Thread.sleep(2000);
         }
+        
+        
+        // crash the app
         forkedS4App.destroy();
 
+        // recovering and making sure checkpointing still works
         forkedS4App = TestUtils.forkS4App(getClass().getName(), backendConf);
         if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
             // NOTE: we should rather add synchros...
             Thread.sleep(2000);
         }
-        gen.injectValueEvent(
-                new KeyValue("sentence", WordCountTest.SENTENCE_2),
-                "Sentences", 0);
 
         // add authorizations for continuing processing. Without these, the
         // WordClassifier processed keeps waiting
@@ -130,11 +141,45 @@ public class FTWordCountTest extends S4TestCase {
             zk.create("/continue_" + i, new byte[0], Ids.OPEN_ACL_UNSAFE,
                     CreateMode.EPHEMERAL);
         }
+
+        CountDownLatch sentence2Processed = new CountDownLatch(1);
+        TestUtils
+                .watchAndSignalCreation(
+                        "/classifierIteration_"
+                                + (WordCountTest.SENTENCE_1_TOTAL_WORDS + WordCountTest.SENTENCE_2_TOTAL_WORDS),
+                        sentence2Processed, zk);
+
+        gen.injectValueEvent(
+                new KeyValue("sentence", WordCountTest.SENTENCE_2),
+                "Sentences", 0);
+
+        sentence2Processed.await();
+        Thread.sleep(1000);
+
+        // crash the app
+        forkedS4App.destroy();
+        forkedS4App = TestUtils.forkS4App(getClass().getName(), backendConf);
+
+        if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
+            // NOTE: we should rather add synchros...
+            Thread.sleep(2000);
+        }
+        // add authorizations for continuing processing. Without these, the
+        // WordClassifier processed keeps waiting
+        for (int i = WordCountTest.SENTENCE_1_TOTAL_WORDS
+                + WordCountTest.SENTENCE_2_TOTAL_WORDS + 1; i <= WordCountTest.TOTAL_WORDS; i++) {
+            zk.create("/continue_" + i, new byte[0], Ids.OPEN_ACL_UNSAFE,
+                    CreateMode.EPHEMERAL);
+        }
+        gen.injectValueEvent(
+                new KeyValue("sentence", WordCountTest.SENTENCE_3),
+                "Sentences", 0);
         signalTextProcessed.await();
         File results = new File(S4TestCase.DEFAULT_TEST_OUTPUT_DIR
                 + File.separator + "wordcount");
         String s = TestUtils.readFile(results);
-        Assert.assertEquals("be=2;da=2;doobie=4;not=1;or=1;to=2;", s);
+        Assert.assertEquals("be=2;da=2;doobie=5;not=1;or=1;to=2;", s);
+
     }
 
 }

@@ -34,6 +34,19 @@ public class TestRedisStateStorage {
         pb.directory(new File(System.getProperty("user.dir")));
         pb.redirectErrorStream();
         redisDaemon = pb.start();
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                redisDaemon.getInputStream()));
+        String s;
+        int maxLinesBeforeOK=  4;
+        for (int i = 0; i < maxLinesBeforeOK; i++) {
+            if ((s=br.readLine())!=null) {
+                if (s.contains("The server is now ready to accept connections on port 6379")) {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
 
         // redisDaemon = Runtime.getRuntime().exec(cmdline);
         // BufferedReader br = new BufferedReader(new
@@ -67,11 +80,16 @@ public class TestRedisStateStorage {
 
     @Before
     public void setUp() throws Exception {
-        storage = new RedisStateStorage();
+        storage = clearRedis();
+    }
+
+    public static RedisStateStorage clearRedis() {
+        RedisStateStorage storage = new RedisStateStorage();
         storage.setRedisHost("localhost");
         storage.setRedisPort(6379);
         storage.connect();
         storage.clear();
+        return storage;
     }
 
     @Test
