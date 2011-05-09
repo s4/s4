@@ -2,9 +2,16 @@ package io.s4.ft;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import junit.framework.Assert;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -20,12 +27,42 @@ public class TestRedisStateStorage {
     @BeforeClass
     public static void runRedis() throws IOException {
         // String cmdline = "pwd";
-        String cmdline = "./src/test/resources/redis-server";
-        redisDaemon = Runtime.getRuntime().exec(cmdline);
-        // BufferedReader br = new BufferedReader(new InputStreamReader(redisDaemon.getInputStream()));
+        List<String> cmdList = new ArrayList<String>();
+
+        cmdList.add(findCompiledRedisForPlatform());
+        ProcessBuilder pb = new ProcessBuilder(cmdList);
+        pb.directory(new File(System.getProperty("user.dir")));
+        pb.redirectErrorStream();
+        redisDaemon = pb.start();
+
+        // redisDaemon = Runtime.getRuntime().exec(cmdline);
+        // BufferedReader br = new BufferedReader(new
+        // InputStreamReader(redisDaemon.getInputStream()));
         // String s;
         // while ((s = br.readLine()) != null)
         // System.out.println(s);
+    }
+
+    private static String findCompiledRedisForPlatform() {
+        // TODO add compiled versions for other platforms/architectures
+        String osName = System.getProperty("os.name");
+        String osArch = System.getProperty("os.arch");
+        if (osName.equalsIgnoreCase("Mac OS X")) {
+            if (osArch.equalsIgnoreCase("x86_64")) {
+                return "src/test/resources/macosx/redis-server-64bits";
+            }
+        }
+        if (osName.equalsIgnoreCase("Linux")) {
+            if (osArch.equalsIgnoreCase("i386")) {
+                return "src/test/resources/linux/redis-server-32bits";
+            }
+        }
+        if (!new File(System.getProperty("user.dir")
+                + "/src/test/resources/redis-server").exists()) {
+            Assert.fail("Could not find a redis server executable for your platform. Please place an executable redis server version compiled for your platform in s4-core/src/test/resources, named 'redis-server'");
+        }
+        return "src/test/resources/redis-server";
+
     }
 
     @Before
@@ -65,6 +102,7 @@ public class TestRedisStateStorage {
         redisDaemon.destroy();
         int exitcode = redisDaemon.waitFor();
         if (exitcode != 0)
-            System.out.println("Redis exited with non zero exit code: " + exitcode);
+            System.out.println("Redis exited with non zero exit code: "
+                    + exitcode);
     }
 }
