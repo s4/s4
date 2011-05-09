@@ -42,11 +42,9 @@ public class SafeKeeper {
     private Set<SafeKeeperId> keysToRecover = Collections
             .newSetFromMap(new ConcurrentHashMap<SafeKeeperId, Boolean>(16,
                     0.75f, 2));
-    private Thread eagerFetchingThread;
     private StateStorage stateStorage;
     private Dispatcher loopbackDispatcher;
     private SerializerDeserializer serializer;
-    private boolean eagerRecovery = false;
     private Hasher hasher;
     private String partitionId;
     // monitor field injection through a latch
@@ -69,13 +67,7 @@ public class SafeKeeper {
 
         Thread keysLoaderThread = new Thread(new KeysLoader(this));
         keysLoaderThread.start();
-
-        if (eagerRecovery) {
-            eagerFetchingThread = new Thread(new EagerSerializedStateFetcher(
-                    this), "EagerSerializedStateLoader");
-            eagerFetchingThread.start();
-        }
-
+        
     }
 
     /**
