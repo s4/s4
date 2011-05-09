@@ -14,12 +14,11 @@ public class RecoveryTest extends S4TestCase {
 
     public static long ZOOKEEPER_PORT = 21810;
     private Process forkedS4App = null;
-    private Factory zookeeperServerConnectionFactory = null;
+    private static Factory zookeeperServerConnectionFactory = null;
 
     @Before
     public void prepare() throws Exception {
         TestUtils.cleanupTmpDirs();
-        S4TestCase.initS4Parameters();
         zookeeperServerConnectionFactory = TestUtils.startZookeeperServer();
         final ZooKeeper zk = TestUtils.createZkClient();
         try {
@@ -53,7 +52,7 @@ public class RecoveryTest extends S4TestCase {
         forkedS4App = TestUtils.forkS4App(getClass().getName(),
                 "s4_core_conf_fs_backend.xml");
         // TODO synchro
-        Thread.sleep(2000);
+        Thread.sleep(4000);
 
         CountDownLatch signalValue1Set = new CountDownLatch(1);
         TestUtils.watchAndSignalCreation("/value1Set", signalValue1Set, zk);
@@ -112,20 +111,6 @@ public class RecoveryTest extends S4TestCase {
         Assert.assertEquals("value1=message1 ; value2=message2",
                 TestUtils.readFile(StatefulTestPE.DATA_FILE));
 
-    }
-
-    // @Test
-    public void testCheckpointRestorationThroughEagerFetching() {
-        // 1. instantiate a checkpointable PE
-
-        // 2. generate a simple event that changes the state of the PE
-
-        // 3. generate a checkpoint event
-
-        // 4. restart
-
-        // 5. verify that, after some time (for instance), PE instance is
-        // available and restored to a correct state
     }
 
 }

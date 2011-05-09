@@ -26,8 +26,14 @@ dependencies {
     compile( libraries.commons_cli )
     compile( libraries.commons_jexl )
     compile( libraries.commons_codec )
-    /*compile( libraries.bookkeeper )*/
+    compile( libraries.bookkeeper )
     compile( libraries.jedis )
     compile( libraries.netty )
     compile project(':s4-comm')
 }
+
+test { 
+	jvmArgs '-Dlog4j.configuration=/Users/matthieu/dev/s4/s4-core/src/test/resources/log4j.xml'
+	forkEvery=1
+} 
+

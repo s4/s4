@@ -23,48 +23,29 @@ import com.esotericsoftware.reflectasm.FieldAccess;
 
 public class CheckpointingTest extends S4TestCase {
 
-    private Factory zookeeperServerConnectionFactory = null;
+    private static Factory zookeeperServerConnectionFactory = null;
+    private S4App app;
 
     @Before
     public void prepare() throws Exception {
         zookeeperServerConnectionFactory = TestUtils.startZookeeperServer();
-        final ZooKeeper zk = TestUtils.createZkClient();
-        try {
-            // FIXME can't figure out where this is retained
-            zk.delete("/value1Set", -1);
-        } catch (Exception ignored) {
-        }
-        try {
-            // FIXME can't figure out where this is retained
-            zk.delete("/value2Set", -1);
-        } catch (Exception ignored) {
-        }
-        try {
-            // FIXME can't figure out where this is retained
-            zk.delete("/checkpointed", -1);
-        } catch (Exception ignored) {
-        }
-
-        // 0. cleanup storage dir
-
-        if (S4TestCase.DEFAULT_STORAGE_DIR.exists()) {
-            TestUtils.deleteDirectoryContents(S4TestCase.DEFAULT_STORAGE_DIR);
-        }
-        S4TestCase.DEFAULT_STORAGE_DIR.mkdirs();
-        zk.close();
+        app = new S4App(getClass(), "s4_core_conf_fs_backend.xml");
+        app.initializeS4App();
     }
 
     @After
     public void cleanup() throws Exception {
         TestUtils.stopZookeeperServer(zookeeperServerConnectionFactory);
+        if (app!=null) {
+            app.destroy();
+        }
     }
 
     @Test
     public void testCheckpointStorage() throws Exception {
             final ZooKeeper zk = TestUtils.createZkClient();
 
-            // 1. instantiate S4 app
-            initializeS4App(getClass(), "s4_core_conf_fs_backend.xml");
+            
 
             // 2. generate a simple event that creates and changes the state of
             // the
@@ -120,6 +101,8 @@ public class CheckpointingTest extends S4TestCase {
             Assert.assertTrue(Arrays.equals(refBytes,
                     TestUtils.readFileAsByteArray(expected)));
 
+            app.destroy();
+            
     }
 
 }

@@ -2,12 +2,15 @@ package io.s4.ft;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -27,6 +30,14 @@ import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.server.NIOServerCnxn;
 import org.apache.zookeeper.server.ZooKeeperServer;
 
+/**
+ * Contains static methods that can be used in tests for things such as:
+ * - files utilities: strings <-> files conversion, directory recursive delete etc...
+ * - starting local instances for zookeeper and bookkeeper
+ * - distributed latches through zookeeper
+ * - etc...
+ *
+ */
 public class TestUtils {
 
     public static final int ZK_PORT = 21810;
@@ -40,7 +51,7 @@ public class TestUtils {
         cmdList.add(System.getProperty("java.class.path"));
         cmdList.add("-Dcommlayer_mode=static");
         cmdList.add("-Dcommlayer.mode=static");
-        cmdList.add("-Dlock_dir=" + S4TestCase.lockDirPath);
+        cmdList.add("-Dlock_dir=" + S4App.lockDirPath);
         cmdList.add("-Dlog4j.configuration=file://"
                 + System.getProperty("user.dir")
                 + "/src/test/resources/log4j.xml");
@@ -177,6 +188,9 @@ public class TestUtils {
             Assert.assertTrue("waiting for server down",
                     waitForServerDown("localhost", ZK_PORT, 3000));
         }
+        
+        
+        
         // List<String> cmdList = new ArrayList<String>();
         // cmdList.add(System.getProperty("user.dir")
         // + "/src/test/scripts/killJavaProcessForPort.sh");

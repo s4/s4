@@ -2,6 +2,7 @@ package io.s4.wordcount;
 
 import io.s4.ft.EventGenerator;
 import io.s4.ft.KeyValue;
+import io.s4.ft.S4App;
 import io.s4.ft.S4TestCase;
 import io.s4.ft.TestUtils;
 
@@ -12,10 +13,12 @@ import java.util.concurrent.CountDownLatch;
 import junit.framework.Assert;
 
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.server.NIOServerCnxn.Factory;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -29,19 +32,19 @@ public class WordCountTest extends S4TestCase {
             + SENTENCE_2_TOTAL_WORDS;
     private static Factory zookeeperServerConnectionFactory;
 
-    @BeforeClass
-    public static void cleanupTmpDirs() {
-        // FIXME why isn't this called automatically???
+    
+    @Before
+    public void prepare() throws IOException, InterruptedException, KeeperException {
         TestUtils.cleanupTmpDirs();
+        zookeeperServerConnectionFactory = TestUtils.startZookeeperServer();
+
     }
 
     @Test
     public void testSimple() throws Exception {
-        TestUtils.cleanupTmpDirs();
-        // note: this should run automatically but does not...
-        S4TestCase.initS4Parameters();
-        initializeS4App(getClass(), "s4_core_conf.xml");
-        zookeeperServerConnectionFactory = TestUtils.startZookeeperServer();
+        
+        S4App app = new S4App(getClass(), "s4_core_conf.xml");
+        app.initializeS4App();
         final ZooKeeper zk = TestUtils.createZkClient();
 
         CountDownLatch signalTextProcessed = new CountDownLatch(1);
