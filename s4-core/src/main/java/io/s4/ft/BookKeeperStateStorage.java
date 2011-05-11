@@ -22,11 +22,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.AsyncCallback.AddCallback;
 import org.apache.bookkeeper.client.AsyncCallback.CreateCallback;
+import org.apache.bookkeeper.client.AsyncCallback.DeleteCallback;
 import org.apache.bookkeeper.client.AsyncCallback.OpenCallback;
 import org.apache.bookkeeper.client.AsyncCallback.ReadCallback;
 import org.apache.bookkeeper.client.BKException;
@@ -41,6 +40,7 @@ import org.apache.zookeeper.AsyncCallback.DataCallback;
 import org.apache.zookeeper.AsyncCallback.StatCallback;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.Stat;
 
@@ -67,7 +67,7 @@ CreateCallback,
 OpenCallback,
 //DeleteCallback,
 AddCallback,
-ReadCallback, StatCallback {
+ReadCallback, StatCallback, DeleteCallback, org.apache.zookeeper.AsyncCallback.StringCallback {
     private static Logger logger = Logger.getLogger(BookKeeperStateStorage.class);
 
     private String zkServers;
@@ -116,6 +116,16 @@ ReadCallback, StatCallback {
         FetchKeysCtx(SmallBarrier sb){
             this.sb = sb;
             this.keys = null;
+        }
+    }
+    
+    class LedgerIdMappingCtx {
+        long ledgerId;
+        SafeKeeperId safeKeeperId;
+        
+        LedgerIdMappingCtx(long ledgerId, SafeKeeperId safeKeeperId) {
+            this.ledgerId = ledgerId;
+            this.safeKeeperId = safeKeeperId;
         }
     }
     
@@ -279,6 +289,10 @@ ReadCallback, StatCallback {
         
         if(rc == BKException.Code.OK){
             lh.asyncAddEntry(sctx.state, this, sctx);
+            if(logger.isDebugEnabled()) {
+                logger.debug("created ledger entry ["+lh.getId() +"] for key ["+sctx.key+"]");
+            }
+            
         } else {
             logger.error("Failed to create a ledger to store checkpoint: " + rc);
             /*
@@ -341,15 +355,19 @@ ReadCallback, StatCallback {
             ByteBuffer bb = ByteBuffer.allocate(8);
             bb.putLong(lh.getId());
             try {
-                if (null!=bk.getZkHandle().exists(safeKeeperId2BKEntryPath(sctx.key), null)) {
+                try {
+                    byte[] oldData =bk.getZkHandle().getData(safeKeeperId2BKEntryPath(sctx.key), null, null); 
+                    
                     bk.getZkHandle().setData(safeKeeperId2BKEntryPath(sctx.key), 
                             bb.array(), 
                             -1, 
                             (StatCallback) this, 
-                            (Object) null);
-                } else {
-                    // TODO asynchronous?
-                    bk.getZkHandle().create(safeKeeperId2BKEntryPath(sctx.key), bb.array(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                            new LedgerIdMappingCtx(lh.getId(), sctx.key));
+                    // remove old ledger
+                    long oldLedgerId = ByteBuffer.wrap(oldData).getLong();
+                    bk.asyncDeleteLedger(oldLedgerId, this, new LedgerIdMappingCtx(oldLedgerId, sctx.key));
+                } catch (NoNodeException nne) {
+                    bk.getZkHandle().create(safeKeeperId2BKEntryPath(sctx.key), bb.array(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT, this, sctx);
                 }
                 if(sctx.cb != null){
                     sctx.cb.storageOperationResult(SafeKeeper.StorageResultCode.SUCCESS, BKException.getMessage(rc));
@@ -376,6 +394,11 @@ ReadCallback, StatCallback {
     
     @Override
     public void processResult(int rc, String path, Object ctx, Stat stat) {
+        if(logger.isDebugEnabled()) {
+            LedgerIdMappingCtx mapping = (LedgerIdMappingCtx)ctx;
+            logger.debug("checkpoint replacement: created ledger ["+mapping.ledgerId +"] for key ["+mapping.safeKeeperId+"]");
+        }
+
     }
 
     
@@ -428,6 +451,33 @@ ReadCallback, StatCallback {
             fkCtx.sb.cross();
         } 
     }
+    
+    /**
+     * Callback from {@link org.apache.zookeeper.AsyncCallback.StringCallback}
+     */
+    @Override
+    public void processResult(int rc, String path, Object ctx, String name) {
+        if (logger.isDebugEnabled()) {
+            SaveCtx sctx = (SaveCtx)ctx;
+            logger.debug("Added ledger mapping for safeKeeperId [" + sctx.key+"]");
+        }
+        
+    }
+
+    
+
+    /**
+     * Callback from {@link AsyncCallback.DeleteCallback}
+     */
+    @Override
+    public void deleteComplete(int arg0, Object arg1) {
+        if(logger.isDebugEnabled()) {
+            LedgerIdMappingCtx ctx = (LedgerIdMappingCtx)arg1;
+            logger.debug("Deleted ledger with id ["+ctx.ledgerId+"] " +
+                    "for safeKeeperId ["+ctx.safeKeeperId);
+        }
+    }
+
 
     public void setZkServers(String zkServers) {
         this.zkServers = zkServers;
@@ -458,6 +508,8 @@ ReadCallback, StatCallback {
     public void setQuorumSize(int quorumSize) {
         this.quorumSize = quorumSize;
     }
+
+
     
     
 
