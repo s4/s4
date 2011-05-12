@@ -42,7 +42,7 @@ public class TwitterFeedListener implements EventProducer, Runnable {
     private long blankCount = 0;
     private String streamName;
 
-    private LinkedBlockingQueue<String> messageQueue = new LinkedBlockingQueue<String>();
+    protected LinkedBlockingQueue<String> messageQueue = new LinkedBlockingQueue<String>();
     private Set<io.s4.listener.EventHandler> handlers = new HashSet<io.s4.listener.EventHandler>();
 
     public void setUserid(String userid) {
