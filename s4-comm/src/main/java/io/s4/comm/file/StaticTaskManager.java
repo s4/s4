@@ -25,6 +25,7 @@ import io.s4.comm.util.ConfigParser.Cluster.ClusterType;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.nio.channels.FileLock;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -161,6 +162,21 @@ public class StaticTaskManager implements TaskManager {
             return lockFileName;
         }
     }
+    
+    private boolean isAddressValid(InetAddress inetAddress) {
+        boolean result = false;
+        try {
+            if (InetAddress.getLocalHost().equals(inetAddress)) {
+                result = true;
+            } else {
+                result = NetworkInterface.getByInetAddress(inetAddress) != null;
+            }
+        } catch (Exception e) {
+            logger.warn(e.getMessage(), e);
+            result = false;
+        }
+        return result;
+    }
 
     private boolean canTakeupProcess(Map<String, String> processConfig) {
         String host = processConfig.get("process.host");
@@ -168,10 +184,9 @@ public class StaticTaskManager implements TaskManager {
             InetAddress inetAddress = InetAddress.getByName(host);
             logger.info("Host Name: "
                     + InetAddress.getLocalHost().getCanonicalHostName());
-            if (!host.equals("localhost")) {
-                if (!InetAddress.getLocalHost().equals(inetAddress)) {
-                    return false;
-                }
+            if (!isAddressValid(inetAddress)) {
+                logger.error(host + " is not a valid address for this machine. Check the configuration.");
+                return false;
             }
         } catch (Exception e) {
             logger.error("Invalid host:" + host);
