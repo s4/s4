@@ -57,9 +57,18 @@ allprojects {
         in a public repo are distributed in the lib dir. */
         flatDir name: 'libDir', dirs: "lib"
 
+        /* a local cache for retrieved artifacts */
         mavenLocal()
+
+        /* things that aren't in Maven central */
         mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
-		mavenCentral()
+
+        /* the final resort - if you have a corporate repository server, set the URL
+           in ~/.gradle/gradle.properties */
+        if ( project.hasProperty('internalRepositoryUrl') )
+            mavenRepo urls: project.internalRepositoryUrl
+        else
+            mavenCentral()
     }
 }
 
