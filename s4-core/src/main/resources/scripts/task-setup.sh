@@ -1,4 +1,9 @@
-#!/bin/sh
+#!/bin/bash
+
+osx=false
+case "`uname`" in
+Darwin*) osx=true;;
+esac
 
 if $osx; then
     READLINK="stat"    
