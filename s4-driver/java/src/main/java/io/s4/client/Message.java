@@ -84,7 +84,7 @@ public class Message {
         json.put("stream", this.stream);
         json.put("class", this.clazz);
         if (this.keyNames != null) {
-            json.put("keyNames", this.keyNames);
+            json.put("keys", this.keyNames);
         }
 
         json.put("object", this.object);
