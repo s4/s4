@@ -255,7 +255,7 @@ public class MainApp {
                 System.out.println("Adding processing element with bean name "
                         + processingElementBeanName + ", id "
                         + ((ProcessingElement) bean).getId());
-                peContainer.addProcessor((ProcessingElement) bean);
+                peContainer.addProcessor((ProcessingElement) bean, processingElementBeanName);
             }
         }  
     }

@@ -30,8 +30,14 @@ public class PrototypeWrapper {
     private ProcessingElement prototype;
     Persister lookupTable;
 
+    public String id;
+    
     public String getId() {
-        return prototype.getId();
+        return this.id!=null?id:prototype.getId();
+    }
+    
+    public void setId(String id){
+    	this.id = id;
     }
 
     public PrototypeWrapper(ProcessingElement prototype, Clock s4Clock) {

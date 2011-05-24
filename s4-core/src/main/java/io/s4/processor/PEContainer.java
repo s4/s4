@@ -74,9 +74,10 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
         this.trackByKey = trackByKey;
     }
 
-    public void addProcessor(ProcessingElement processor) {
+    public void addProcessor(ProcessingElement processor, String beanId) {
         System.out.println("adding pe: " + processor);
         PrototypeWrapper pw = new PrototypeWrapper(processor, s4Clock);
+        pw.setId(beanId);
         prototypeWrappers.add(pw);
         adviceLists.add(pw.advise());
     }
@@ -85,7 +86,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
         // prototypeWrappers = new ArrayList<PrototypeWrapper>();
 
         for (int i = 0; i < processors.length; i++) {
-            addProcessor(processors[i]);
+            addProcessor(processors[i], null);
         }
     }
 
