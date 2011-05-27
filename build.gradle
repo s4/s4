@@ -52,14 +52,13 @@ allprojects {
     archivesBaseName = 's4'
     
     repositories {
-        
+        mavenCentral()
+        mavenLocal()
+        mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
+
         /* Add lib dir as a repo. Some jar files that are not available 
         in a public repo are distributed in the lib dir. */
         flatDir name: 'libDir', dirs: "lib"
-
-        mavenLocal()
-        mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
-		mavenCentral()
     }
 }
 
@@ -70,6 +69,7 @@ lift_json:          'net.liftweb:lift-json_2.8.1:2.2',
 gson:               'com.google.code.gson:gson:1.6',
 zk:                 'org.apache.zookeeper:zookeeper:3.3.1',
 log4j:              'log4j:log4j:1.2.15',
+junit:              'junit:junit:3.8.1',
 flexjson:           'net.sf.flexjson:flexjson:2.1',
 bcel:               'org.apache.bcel:bcel:5.2',
 jakarta_regexp:     'jakarta-regexp:jakarta-regexp:1.4',
@@ -146,40 +146,37 @@ binDistImage = copySpec {
     /* Include all the resources. */
     from project(':s4-core').sourceSets.main.resources 
 
-	into ("s4-core/lib") {
-		from project("s4-core").configurations.runtime
-        from project("s4-core").configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
-    }
-	into ("s4-driver/lib/java") {
-		from project("s4-driver").configurations.runtime
-        from project("s4-driver").configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+	[project('s4-core'), project('s4-driver')].collect { project ->
+		into (project.name + "/lib") {
+			from project.configurations.runtime
+	        from project.configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+	    }
     }
 }
 
+//println project(':s4-core').configurations.runtime.asPath
+//println project(':s4-core').configurations.archives.asPath
+//println project(':s4-core').configurations.default.asPath
+
+
 allDistImage = copySpec {
     with binDistImage
-
-	base = "${project(":").projectDir}/s4-driver"
-	into ("s4-driver/lib/perl") {		
-		from "$base/perl"
-	}
-	into ("s4-driver/lib/python") {		
-		from "$base/python"
-	}
-	into ("testinput") {
-		from "${project(":").projectDir}/s4-examples/testinput"
-    }
-	
 	subprojects.findAll {proj -> 
 		into('src') {
             from proj.sourceSets.main.allJava
         }
-		switch(proj.name) {	
+		switch(proj.name) {
+			case "s4-core":
+				break
+				
+			case "s4-driver":
+				break
+				
 			case "s4-example-driver":
 				into("s4-driver") {
 					from proj.sourceSets.main.resources
 				}
-				into ("s4-driver/lib/java") {
+				into ("s4-driver/lib") {
 					from proj.configurations.runtime
 					from proj.configurations.archives.allArtifactFiles
 				}
@@ -197,7 +194,16 @@ allDistImage = copySpec {
 					from proj.sourceSets.main.resources
 				}
 				break
+			
+			default :
+				println("default")
+			
 		}
+		//if(project.name != 's4-core') {
+		//	into(project.name) {
+		//		from project.sourceSets.main.resources 
+		//	}
+		//}
 	}
     into('javadoc') {
         from "$buildDir/javadoc"
@@ -235,9 +241,9 @@ task allTgz( type: Tar, dependsOn: s4Javadoc) {
 }
 
 /* Generates the gradlew scripts.
-http://www.gradle.org/1.0-milestone-1/docs/userguide/gradle_wrapper.html */ 
+http://www.gradle.org/1.0-milestone-3/docs/userguide/gradle_wrapper.html */ 
 task wrapper(type: Wrapper) { 
-    gradleVersion = '1.0-milestone-1' 
+    gradleVersion = '1.0-milestone-3' 
 }
 
 class Version {
