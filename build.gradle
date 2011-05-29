@@ -58,7 +58,7 @@ allprojects {
 
         /* Add lib dir as a repo. Some jar files that are not available 
         in a public repo are distributed in the lib dir. */
-        flatDir name: 'libDir', dirs: "lib"
+        flatDir name: 'libDir', dirs: "$rootDir/lib"
     }
 }
 
@@ -100,6 +100,11 @@ subprojects {
     //defaultTasks 'build'
 
     group = 'io.s4'
+    
+    /* Remove this once this bug is fixed: http://issues.gradle.org/browse/GRADLE-1157 */
+    eclipseClasspath {
+       downloadSources = false; // required for eclipseClasspath to work
+	}
 
     /* Common dependencies applied to all subprojects. */
     dependencies { 

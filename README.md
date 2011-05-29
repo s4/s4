@@ -66,6 +66,7 @@ git clone https://github.com/s4/s4.git
 gradlew allImage
 
 # Change permissions
+# (Until this Gradle bug is fixed: http://issues.gradle.org/browse/GRADLE-796)
 chmod u+x ./build/s4-image/scripts/*
 
 # Copy S4 application to deployment dir (s4-apps)
@@ -84,4 +85,13 @@ $EDITOR build/s4-image/s4-apps/s4-example-twittertopiccount/adapter-conf.xml
 cat /tmp/top_n_hashtags
 </pre>
 
+Developing with Eclipse
+-----------------------
+
+The command `gradle eclipse` will create an eclipse project that you can import from the Eclipse IDE.
+
+There is now a [Gradle plugin for the Eclipse IDE](http://static.springsource.org/sts/docs/2.7.0.M1/reference/html/gradle/index.html). 
+To install Gradle without installing the full Spring development environment follow the
+[instructions](http://static.springsource.org/sts/docs/2.7.0.M1/reference/html/gradle/installation.html) under the heading 
+"Installing from update site". There is also a discussion in the [Gradle mailing list](http://gradle.1045684.n5.nabble.com/ANN-Gradle-Eclipse-Plugin-td4387658.html).
 
