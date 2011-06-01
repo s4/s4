@@ -187,6 +187,16 @@ allDistImage = copySpec {
 				}
 				break
 			
+			case "s4-tools-loadgenerator":
+				into("s4-tools-loadgenerator") {
+					from proj.sourceSets.main.resources
+				}
+				into ("s4-tools-loadgenerator/lib") {
+					from proj.configurations.runtime
+					from proj.configurations.archives.allArtifactFiles
+				}
+				break
+			
 			case ~/(s4\-example).*/:
 				into ("s4-example-apps/" + proj.name + "/lib") {
 					from(
