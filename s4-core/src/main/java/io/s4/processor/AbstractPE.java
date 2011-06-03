@@ -59,7 +59,7 @@ public abstract class AbstractPE implements ProcessingElement {
         }
     }
 
-    private Clock s4Clock;
+    private Clock clock;
     private int outputFrequency = 1;
     private FrequencyType outputFrequencyType = FrequencyType.EVENTCOUNT;
     private int outputFrequencyOffset = 0;
@@ -76,6 +76,7 @@ public abstract class AbstractPE implements ProcessingElement {
     private long pauseTimeInMillis;
     private boolean logPauses = false;
     private String initMethod = null;
+    private String id;
     
     public void setSaveKeyRecord(boolean saveKeyRecord) {
         this.saveKeyRecord = saveKeyRecord;
@@ -93,9 +94,17 @@ public abstract class AbstractPE implements ProcessingElement {
         this.logPauses = logPauses;
     }
 
-    public void setS4Clock(Clock s4Clock) {
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setClock(Clock clock) {
         synchronized (this) {
-            this.s4Clock = s4Clock;
+            this.clock = clock;
             this.notify();
         }
     }
@@ -113,8 +122,8 @@ public abstract class AbstractPE implements ProcessingElement {
        return this.initMethod;
     }
     
-    public Clock getS4Clock() {
-        return s4Clock;
+    public Clock getClock() {
+        return clock;
     }
 
     private OverloadDispatcher overloadDispatcher;
@@ -169,7 +178,7 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public long getCurrentTime() {
-        return s4Clock.getCurrentTime();
+        return clock.getCurrentTime();
     }
 
     /**
@@ -412,7 +421,7 @@ public abstract class AbstractPE implements ProcessingElement {
     class OutputInvoker implements Runnable {
         public void run() {
             synchronized (AbstractPE.this) {
-                while (s4Clock == null) {
+                while (clock == null) {
                     try {
                         AbstractPE.this.wait();
                     } catch (InterruptedException ie) {
@@ -427,7 +436,7 @@ public abstract class AbstractPE implements ProcessingElement {
                 long currentBoundary = (currentTime / frequencyInMillis)
                         * frequencyInMillis;
                 long nextBoundary = currentBoundary + frequencyInMillis;
-                currentTime = s4Clock.waitForTime(nextBoundary
+                currentTime = clock.waitForTime(nextBoundary
                         + (outputFrequencyOffset * 1000));
                 if (lookupTable != null) {
                     Set peKeys = lookupTable.keySet();

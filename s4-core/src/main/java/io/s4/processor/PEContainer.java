@@ -47,7 +47,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
     BlockingQueue<EventWrapper> workQueue;
     private List<PrototypeWrapper> prototypeWrappers = new ArrayList<PrototypeWrapper>();
     private Monitor monitor;
-    private Clock s4Clock;
+    private Clock clock;
     private int maxQueueSize = 1000;
     private boolean trackByKey;
     private Map<String, Integer> countByEventType = Collections.synchronizedMap(new HashMap<String, Integer>());
@@ -62,12 +62,12 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
         this.monitor = monitor;
     }
 
-    public void setS4Clock(Clock s4Clock) {
-        this.s4Clock = s4Clock;
+    public void setClock(Clock s4Clock) {
+        this.clock = s4Clock;
     }
 
-    public Clock getS4Clock() {
-        return s4Clock;
+    public Clock getClock() {
+        return clock;
     }
 
     public void setTrackByKey(boolean trackByKey) {
@@ -76,7 +76,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
 
     public void addProcessor(ProcessingElement processor) {
         System.out.println("adding pe: " + processor);
-        PrototypeWrapper pw = new PrototypeWrapper(processor, s4Clock);
+        PrototypeWrapper pw = new PrototypeWrapper(processor, clock);
         prototypeWrappers.add(pw);
         adviceLists.add(pw.advise());
     }
@@ -179,8 +179,8 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
             EventWrapper eventWrapper = null;
             try {
                 eventWrapper = workQueue.take();
-                if (s4Clock instanceof EventClock) {
-                    EventClock eventClock = (EventClock) s4Clock;
+                if (clock instanceof EventClock) {
+                    EventClock eventClock = (EventClock) clock;
                     eventClock.update(eventWrapper);
                     // To what time to update the clock
                 }

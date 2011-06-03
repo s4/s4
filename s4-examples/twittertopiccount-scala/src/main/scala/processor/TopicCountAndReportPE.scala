@@ -24,7 +24,6 @@ import io.s4.processor.AbstractPE
 import io.s4.example.twittertopiccount.event._
 
 class TopicCountAndReportPE extends AbstractPE {
-  @BeanProperty var id: String = _ 
   @BeanProperty var dispatcher: EventDispatcher = _ 
   @BeanProperty var outputStreamName: String = _ 
   @BeanProperty var threshold: Int = _

@@ -35,18 +35,9 @@ public class JoinPE extends AbstractPE {
     private Map<String, Object> eventsToJoin;
     private EventDispatcher dispatcher;
     private Monitor monitor;
-    private String id = "JoinPE";
     private String outputStreamName;
     private String outputClassName;
     private Class<?> outputClass;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public void setDispatcher(EventDispatcher dispatcher) {
         this.dispatcher = dispatcher;

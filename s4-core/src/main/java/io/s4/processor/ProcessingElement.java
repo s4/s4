@@ -16,6 +16,7 @@
 package io.s4.processor;
 
 import io.s4.dispatcher.partitioner.CompoundKeyInfo;
+import io.s4.util.clock.Clock;
 
 import java.util.List;
 
@@ -29,6 +30,12 @@ public interface ProcessingElement extends Cloneable {
     public Object clone();
 
     public String getId();
+    
+    public void setId(String id);
+    
+    public Clock getClock();
+    
+    public void setClock(Clock clock);
     
     public String getInitMethod();
 }

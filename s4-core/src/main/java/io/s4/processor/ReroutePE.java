@@ -30,16 +30,7 @@ public class ReroutePE extends AbstractPE {
     private EventDispatcher dispatcher;
     private Transformer[] transformers = new Transformer[0];
     // private List<EventAdvice> keys;
-    private String id = "ReroutePE";
     private String outputStreamName;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public void setDispatcher(EventDispatcher dispatcher) {
         this.dispatcher = dispatcher;

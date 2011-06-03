@@ -13,11 +13,6 @@ public class MockPE extends AbstractPE {
     
     public void processEvent(Object obj) {
     }
-    
-    @Override
-    public String getId() {
-        return null;
-    }
 
     @Override
     public void output() {
