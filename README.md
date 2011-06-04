@@ -76,7 +76,7 @@ cp -rp build/s4-image/s4-example-apps/s4-example-twittertopiccount build/s4-imag
 $EDITOR build/s4-image/s4-apps/s4-example-twittertopiccount/adapter-conf.xml 
 
 # Start server with s4-example-twittertopiccount app
-./build/s4-image/scripts/s4-start.sh &
+./build/s4-image/scripts/start-s4.sh &
 
 # Start adapter
  ./build/s4-image/scripts/run-adapter.sh -x -u build/s4-image/s4-apps/s4-example-twittertopiccount/lib/s4-example-twittertopiccount-0.3-SNAPSHOT.jar -d build/s4-image/s4-apps/s4-example-twittertopiccount/adapter-conf.xml &

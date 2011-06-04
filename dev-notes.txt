@@ -26,7 +26,7 @@ chmod u+x $IMAGE_BASE/s4-driver/scripts/*
 cp -fr $IMAGE_BASE/s4-example-apps/s4-example-speech02 $IMAGE_BASE/s4-apps
 
 # Start S4 server in standalone mode.
-$IMAGE_BASE/scripts/s4-start.sh -r client-adapter &
+$IMAGE_BASE/scripts/start-s4.sh -r client-adapter &
 
 # Start client adapter.
 $IMAGE_BASE/scripts/run-client-adapter.sh -s client-adapter -g s4 \
