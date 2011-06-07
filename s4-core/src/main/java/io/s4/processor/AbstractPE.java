@@ -44,7 +44,7 @@ import org.apache.log4j.Logger;
  * {@link AbstractPE#setOutputFrequencyByEventCount} and
  * {@link AbstractPE#setOutputFrequencyByTimeBoundary}.
  */
-public abstract class AbstractPE implements ProcessingElement {
+public abstract class AbstractPE implements Cloneable {
     public static enum FrequencyType {
         TIMEBOUNDARY("timeboundary"), EVENTCOUNT("eventcount");
 
@@ -75,7 +75,6 @@ public abstract class AbstractPE implements ProcessingElement {
     private int outputsBeforePause = -1;
     private long pauseTimeInMillis;
     private boolean logPauses = false;
-    private String initMethod = null;
     private String id;
     
     public void setSaveKeyRecord(boolean saveKeyRecord) {
@@ -110,18 +109,14 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     /**
-     * The name of a method to be used as an initializer.  The method will be
-     * called after the object is cloned from the prototype PE.
+     * This method will be called after the object is cloned from the
+     * prototype PE. The concrete PE class should override this if
+     * it has any special set-up requirements.
      */
-    public void setInitMethod(String initMethod)
-    {
-       this.initMethod = initMethod;
+    public void initInstance() {
+       // default implementation does nothing.
     }
-    
-    public String getInitMethod() {
-       return this.initMethod;
-    }
-    
+        
     public Clock getClock() {
         return clock;
     }

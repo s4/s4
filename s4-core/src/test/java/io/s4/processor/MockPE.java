@@ -7,7 +7,7 @@ public class MockPE extends AbstractPE {
 
     private int initializeCount = 0;
     
-    public void testInitialize() {
+    public void initInstance() {
         initializeCount++;
     }
     

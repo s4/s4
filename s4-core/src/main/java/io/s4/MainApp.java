@@ -15,8 +15,8 @@
  */
 package io.s4;
 
+import io.s4.processor.AbstractPE;
 import io.s4.processor.PEContainer;
-import io.s4.processor.ProcessingElement;
 import io.s4.util.S4Util;
 import io.s4.util.Watcher;
 import io.s4.util.clock.Clock;
@@ -236,9 +236,9 @@ public class MainApp {
                                                           context);
             // attach any beans that implement ProcessingElement to the PE
             // Container
-            String[] processingElementBeanNames = context.getBeanNamesForType(ProcessingElement.class);
+            String[] processingElementBeanNames = context.getBeanNamesForType(AbstractPE.class);
             for (String processingElementBeanName : processingElementBeanNames) {
-                ProcessingElement bean = (ProcessingElement) context.getBean(processingElementBeanName);
+                AbstractPE bean = (AbstractPE) context.getBean(processingElementBeanName);
                 bean.setClock(clock);
                 
                 // if the application did not specify an id, use the Spring bean name
@@ -247,8 +247,8 @@ public class MainApp {
                 }
                 System.out.println("Adding processing element with bean name "
                         + processingElementBeanName + ", id "
-                        + ((ProcessingElement) bean).getId());
-                peContainer.addProcessor((ProcessingElement) bean);
+                        + ((AbstractPE) bean).getId());
+                peContainer.addProcessor((AbstractPE) bean);
             }
         }  
     }

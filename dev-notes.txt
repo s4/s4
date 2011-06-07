@@ -14,30 +14,30 @@ cd s4
 gradlew clean allImage
 
 # Create some environment variables. 
-export IMAGE_BASE=`pwd`'/build/s4-image'
-export PYTHONPATH=${IMAGE_BASE}/s4-driver/lib/python
-export PERLLIB=${IMAGE_BASE}/s4-driver/lib/perl
+export S4_IMAGE=`pwd`'/build/s4-image'
+export PYTHONPATH=${S4_IMAGE}/s4-driver/lib/python
+export PERLLIB=${S4_IMAGE}/s4-driver/lib/perl
 
 # Change script permissions.
-chmod u+x $IMAGE_BASE/scripts/*
-chmod u+x $IMAGE_BASE/s4-driver/scripts/*
+chmod u+x $S4_IMAGE/scripts/*
+chmod u+x $S4_IMAGE/s4-driver/scripts/*
 
 # Copy speech02 app to apps deployment directory.
-cp -fr $IMAGE_BASE/s4-example-apps/s4-example-speech02 $IMAGE_BASE/s4-apps
+cp -fr $S4_IMAGE/s4-example-apps/s4-example-speech02 $S4_IMAGE/s4-apps
 
 # Start S4 server in standalone mode.
-$IMAGE_BASE/scripts/start-s4.sh -r client-adapter &
+$S4_IMAGE/scripts/start-s4.sh -r client-adapter &
 
 # Start client adapter.
-$IMAGE_BASE/scripts/run-client-adapter.sh -s client-adapter -g s4 \
--x -d $IMAGE_BASE/s4-core/conf/default/client-stub-conf.xml &
+$S4_IMAGE/scripts/run-client-adapter.sh -s client-adapter -g s4 \
+-x -d $S4_IMAGE/s4-core/conf/default/client-stub-conf.xml &
 
 # Inject events.
-perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSpeech \
-io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
+perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSpeech \
+io.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
 
-perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSentence \
-io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
+perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSentence \
+io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 
 
 ## Injecting Events with a Java Client
@@ -45,11 +45,11 @@ io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
 # Follow same steps as before to start S4 server and client adapter.
 
 # Inject events.
-$IMAGE_BASE/s4-driver/scripts/inject.sh localhost 2334 RawSpeech \
-io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
+$S4_IMAGE/s4-driver/scripts/inject.sh localhost 2334 RawSpeech \
+io.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
 
-$IMAGE_BASE/s4-driver/scripts/inject.sh localhost 2334 RawSentence \
-io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
+$S4_IMAGE/s4-driver/scripts/inject.sh localhost 2334 RawSentence \
+io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 
 
 ## Receiving Events
@@ -58,7 +58,7 @@ io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
 
 # Start a reader client.
 
-perl $IMAGE_BASE/s4-driver/scripts/read.pl  \
+perl $S4_IMAGE/s4-driver/scripts/read.pl  \
   '{ 
       readMode => "select",
       readInclude => ["SentenceJoined"]
@@ -67,28 +67,28 @@ perl $IMAGE_BASE/s4-driver/scripts/read.pl  \
 # In a different window, inject messages like in the previous section.
 
 # Remember to initialize the environment variables in the new shell.
-export IMAGE_BASE=`pwd`'/build/s4-image'
-export PYTHONPATH=${IMAGE_BASE}/s4-driver/lib/python
-export PERLLIB=${IMAGE_BASE}/s4-driver/lib/perl
+export S4_IMAGE=`pwd`'/build/s4-image'
+export PYTHONPATH=${S4_IMAGE}/s4-driver/lib/python
+export PERLLIB=${S4_IMAGE}/s4-driver/lib/perl
 
 # Inject events.
-perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSpeech \
-io.s4.example.speech01.Speech < $IMAGE_BASE/testinput/speech.in 
+perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSpeech \
+io.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
 
-perl  $IMAGE_BASE/s4-driver/scripts/inject.pl RawSentence \
-io.s4.example.speech01.Sentence < $IMAGE_BASE/testinput/sentence.in
+perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSentence \
+io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 
 
 ## Request-Response
 
 # Example 1: query the prototype of the joiner (SentenceJoinPE) 
 # in the speech02 application.
-python $IMAGE_BASE/s4-driver/scripts/request.py '#sentenceJoinPE' \
-'io.s4.message.PrototypeRequest' < $IMAGE_BASE/testinput/proto-query 
+python $S4_IMAGE/s4-driver/scripts/request.py '#sentenceJoinPE' \
+'io.s4.message.PrototypeRequest' < $S4_IMAGE/testinput/proto-query 
 
 # Example 2: request to a single PE from 
- python $IMAGE_BASE/s4-driver/scripts/request.py '#sentenceJoinPE' \
-'io.s4.message.SinglePERequest' < $IMAGE_BASE/testinput/pe-query 
+ python $S4_IMAGE/s4-driver/scripts/request.py '#sentenceJoinPE' \
+'io.s4.message.SinglePERequest' < $S4_IMAGE/testinput/pe-query 
 
 -------
 
