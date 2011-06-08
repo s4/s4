@@ -68,13 +68,6 @@ if [ "x$LOCK_DIR" == "x" ] ; then
     LOCK_DIR="${CORE_HOME}/lock"
 fi
 
-echo "core home is ${CORE_HOME}"
-echo "load generator home is ${LOAD_GENERATOR_HOME}"
-echo "Adapter adress ${ADAPTER_ADDRESS}"
-echo "Rate ${RATE}"
-echo "Display interval ${DISPLAY_INTERVAL}"
-echo "Schema list ${SCHEMA_FILE_LIST}"
-
 JAVA_LOC=""
 if [ "x$JAVA_HOME" != "x" ] ; then
   JAVA_LOC=${JAVA_HOME}"/bin/"
@@ -85,9 +78,9 @@ if [ "x$LOCK_DIR" != "x" ] ; then
   JAVA_OPTS="$JAVA_OPTS -Dlock_dir=$LOCK_DIR "
 fi
 
-echo "java location is ${JAVA_LOC}"
-echo -n "JAVA VERSION="
-echo `${JAVA_LOC}java -version`
+#echo "java location is ${JAVA_LOC}"
+#echo -n "JAVA VERSION="
+#echo `${JAVA_LOC}java -version`
 #---------------------------------------------
 #ADDING CORE JARS TO CLASSPATH
 #---------------------------------------------
@@ -96,5 +89,5 @@ CLASSPATH=`find $CORE_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p
 CLASSPATH=$CLASSPATH$CP_SEP`find $LOAD_GENERATOR_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 
 CMD="${JAVA_LOC}java $JAVA_OPTS -classpath $CLASSPATH io.s4.tools.loadgenerator.LoadGenerator -a ${ADAPTER_ADDRESS} -r${RATE} -d ${DISPLAY_INTERVAL} $INPUT_FILE"
-echo "Running ${CMD}"
+#echo "Running ${CMD}"
 $CMD

@@ -24,6 +24,7 @@ include 's4-example-twittertopiccount-scala'
 include 's4-example-speech01'
 include 's4-example-speech01-scala'
 include 's4-example-speech02'
+include 's4-example-testinput'
 include 's4-tools-loadgenerator'
 
 /* Set dirs for projects whose name doesn't follow the dir structure. */
@@ -35,4 +36,5 @@ project(':s4-example-twittertopiccount-scala').projectDir = new File(settingsDir
 project(':s4-example-speech01').projectDir = new File(settingsDir, 's4-examples/speech01')
 project(':s4-example-speech01-scala').projectDir = new File(settingsDir, 's4-examples/speech01-scala')
 project(':s4-example-speech02').projectDir = new File(settingsDir, 's4-examples/speech02')
+project(':s4-example-testinput').projectDir = new File(settingsDir, 's4-examples/testinput')
 project(':s4-tools-loadgenerator').projectDir = new File(settingsDir, 's4-tools/loadgenerator')

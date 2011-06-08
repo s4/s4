@@ -197,6 +197,13 @@ allDistImage = copySpec {
 				}
 				break
 			
+			case "s4-example-testinput":
+			        print "Got here"
+				into("s4-example-testinput") {
+					from proj.sourceSets.main.resources
+				}
+				break
+			
 			case ~/(s4\-example).*/:
 				into ("s4-example-apps/" + proj.name + "/lib") {
 					from(
