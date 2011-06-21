@@ -1,13 +1,20 @@
 package io.s4.dispatcher.partitioner;
 
+import io.s4.emitter.CommLayerEmitter;
+import io.s4.emitter.EventEmitter;
+import io.s4.listener.EventListener;
 import io.s4.processor.PEContainer;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A partitioner that assigns events to the current partition, as given by the comm layer.
+ * 
+ */
 public class LoopbackPartitioner implements Partitioner, VariableKeyPartitioner {
 
-    private PEContainer peContainer;
+    CommLayerEmitter emitter;
 
     @Override
     public List<CompoundKeyInfo> partition(String streamName,
@@ -18,7 +25,7 @@ public class LoopbackPartitioner implements Partitioner, VariableKeyPartitioner 
         StringBuilder compoundKeyBuilder = new StringBuilder();
         // This partitioning ignores the values of the keyed attributes;
         // it partitions to the current partition id of the pe container
-        partitionInfo.setPartitionId(peContainer.getPartitionId());
+        partitionInfo.setPartitionId(emitter.getListener().getId());
         for (List<String> keyNames : compoundKeyNames) {
             for (String keyName : keyNames) {
                 compoundKeyBuilder.append(keyName);
@@ -36,12 +43,12 @@ public class LoopbackPartitioner implements Partitioner, VariableKeyPartitioner 
                 partitionCount);
     }
 
-    public void setPeContainer(PEContainer peContainer) {
-        this.peContainer = peContainer;
+    /**
+     * A reference on the emitter allows getting the current partition id from the comm layer 
+     * @param emitter comm layer emitter
+     */
+    public void setEventEmitter(CommLayerEmitter emitter) {
+        this.emitter = emitter;
     }
-
-    public PEContainer getPeContainer() {
-        return peContainer;
-    }
-
+    
 }

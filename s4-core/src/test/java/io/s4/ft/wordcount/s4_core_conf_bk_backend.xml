@@ -174,7 +174,7 @@
     </bean>
 
     <bean id="loopbackPartitioner" class="io.s4.dispatcher.partitioner.LoopbackPartitioner">
-        <property name="peContainer" ref="peContainer"/>
+        <property name="eventEmitter" ref="commLayerEmitter"/>
     </bean>
 
     <bean id="safeKeeper" class="io.s4.ft.SafeKeeper" init-method="init">

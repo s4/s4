@@ -54,7 +54,6 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
     private boolean trackByKey;
     private Map<String, Integer> countByEventType = Collections.synchronizedMap(new HashMap<String, Integer>());
 	private SafeKeeper safeKeeper;
-    private int partitionId;
 
     private ControlEventProcessor controlEventProcessor = null;
 
@@ -100,17 +99,6 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
 
     public void setControlEventProcessor(ControlEventProcessor cep) {
         this.controlEventProcessor = cep;
-    }
-
-    public void setPartitionId(int partitionId) {
-        this.partitionId = partitionId;
-        if (safeKeeper != null) {
-            safeKeeper.setPartitionId(String.valueOf(partitionId));
-        }
-    }
-
-    public int getPartitionId() {
-        return this.partitionId;
     }
 
     public PEContainer() {

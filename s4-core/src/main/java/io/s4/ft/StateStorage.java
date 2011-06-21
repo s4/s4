@@ -22,16 +22,21 @@ public interface StateStorage {
      *            callback for receiving notifications of storage operations.
      *            This callback is configurable
      */
-    public void saveState(SafeKeeperId key, byte[] state,
-            StorageCallback callback);
+    public void saveState(SafeKeeperId key, byte[] state, StorageCallback callback);
 
     /**
-     * <i>Synchronous</i> call to fetch stored checkpoint data
+     * <p>
+     * <i>Synchronous</i> call to fetch stored checkpoint data.
+     * </p>
+     * <p>
+     * Must return null if storage does not contain this key.
+     * </p>
      * 
      * @param key
      *            safeKeeperId for this checkpoint
      * 
-     * @return stored checkpoint data
+     * @return stored checkpoint data, or null if the storage does not contain
+     *         data for the given key
      */
     public byte[] fetchState(SafeKeeperId key);
 
@@ -41,6 +46,5 @@ public interface StateStorage {
      * @return all stored safeKeeper Ids.
      */
     public Set<SafeKeeperId> fetchStoredKeys();
-
 
 }

@@ -81,6 +81,10 @@ public class CommLayerEmitter implements EventEmitter, Runnable {
     public void setListener(CommLayerListener listener) {
         this.listener = listener;
     }
+    
+    public CommLayerListener getListener() {
+        return this.listener;
+    }
 
     public void init() {
 

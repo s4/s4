@@ -423,6 +423,9 @@ ReadCallback, StatCallback, DeleteCallback, org.apache.zookeeper.AsyncCallback.S
                     (Object) fctx);
         } else {
             logger.error("Failed to open ledger for reading: " + rc);
+            if (fctx.sb!=null) {
+                fctx.sb.cross();
+            }
         }
     }
     

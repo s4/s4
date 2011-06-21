@@ -39,7 +39,6 @@ public class EventListener implements EventHandler {
 
     public void setPeContainer(PEContainer peContainer) {
         this.eventProcessor = peContainer;
-        ((PEContainer) this.eventProcessor).setPartitionId(partitionId);
     }
 
     public void setEventProcessor(AsynchronousEventProcessor eventProcessor) {
