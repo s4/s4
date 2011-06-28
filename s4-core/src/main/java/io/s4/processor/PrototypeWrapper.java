@@ -27,14 +27,14 @@ import org.apache.log4j.Logger;
 public class PrototypeWrapper {
 
     private static Logger logger = Logger.getLogger(PrototypeWrapper.class);
-    private ProcessingElement prototype;
+    private AbstractPE prototype;
     Persister lookupTable;
 
     public String getId() {
         return prototype.getId();
     }
 
-    public PrototypeWrapper(ProcessingElement prototype, Clock s4Clock) {
+    public PrototypeWrapper(AbstractPE prototype, Clock s4Clock) {
         this.prototype = prototype;
         lookupTable = new ConMapPersister(s4Clock);
         System.out.println("Using ConMapPersister ..");
@@ -66,18 +66,13 @@ public class PrototypeWrapper {
      *            key value
      * @return PE corresponding to keyValue.
      */
-    public ProcessingElement getPE(String keyValue) {
-        ProcessingElement pe = null;
+    public AbstractPE getPE(String keyValue) {
+        AbstractPE pe = null;
         try {
-            pe = (ProcessingElement) lookupTable.get(keyValue);
+            pe = (AbstractPE) lookupTable.get(keyValue);
             if (pe == null) {
-                pe = (ProcessingElement) prototype.clone();
-                //invoke the initialization method if it has been specified
-                if (pe.getInitMethod() != null) {
-                   Method initMethod = pe.getClass().getMethod(pe.getInitMethod(), new Class[0]);
-                   initMethod.invoke(pe, (new Object[0]));
-                }
-
+                pe = (AbstractPE) prototype.clone();
+                pe.initInstance();
             }
             // update the last update time on the entry
             lookupTable.set(keyValue, pe, prototype.getTtl());
@@ -98,11 +93,11 @@ public class PrototypeWrapper {
      * @return PE corresponding to keyValue, if such a PE exists. Null
      *         otherwise.
      */
-    public ProcessingElement lookupPE(String keyValue) {
-        ProcessingElement pe = null;
+    public AbstractPE lookupPE(String keyValue) {
+        AbstractPE pe = null;
 
         try {
-            pe = (ProcessingElement) lookupTable.get(keyValue);
+            pe = (AbstractPE) lookupTable.get(keyValue);
 
         } catch (Exception e) {
             logger.error("exception when looking up pe for key:" + keyValue, e);

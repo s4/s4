@@ -13,22 +13,10 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.processor;
-
-import io.s4.dispatcher.partitioner.CompoundKeyInfo;
-
-import java.util.List;
-
-public interface ProcessingElement extends Cloneable {
-    void execute(String streamName, CompoundKeyInfo compoundKeyInfo, Object event);
-
-    List<EventAdvice> advise();
-
-    public int getTtl();
-
-    public Object clone();
-
-    public String getId();
-    
-    public String getInitMethod();
+dependencies {
+    compile( libraries.json )
+    compile( libraries.commons_cli )
+    compile project(':s4-driver')
+    compile project(':s4-core')
 }
+

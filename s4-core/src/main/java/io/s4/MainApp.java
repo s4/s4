@@ -15,8 +15,8 @@
  */
 package io.s4;
 
+import io.s4.processor.AbstractPE;
 import io.s4.processor.PEContainer;
-import io.s4.processor.ProcessingElement;
 import io.s4.util.S4Util;
 import io.s4.util.Watcher;
 import io.s4.util.clock.Clock;
@@ -201,9 +201,9 @@ public class MainApp {
         coreContext = new FileSystemXmlApplicationContext(coreConfigFileUrls, coreContext);
         ApplicationContext context = coreContext;        
         
-        Clock s4Clock = (Clock) context.getBean("clock");
-        if (s4Clock instanceof EventClock && seedTime > 0) {
-            EventClock s4EventClock = (EventClock)s4Clock;
+        Clock clock = (Clock) context.getBean("clock");
+        if (clock instanceof EventClock && seedTime > 0) {
+            EventClock s4EventClock = (EventClock)clock;
             s4EventClock.updateTime(seedTime);
             System.out.println("Intializing event clock time with seed time " + s4EventClock.getCurrentTime());
         }
@@ -236,26 +236,19 @@ public class MainApp {
                                                           context);
             // attach any beans that implement ProcessingElement to the PE
             // Container
-            String[] processingElementBeanNames = context.getBeanNamesForType(ProcessingElement.class);
+            String[] processingElementBeanNames = context.getBeanNamesForType(AbstractPE.class);
             for (String processingElementBeanName : processingElementBeanNames) {
-                Object bean = context.getBean(processingElementBeanName);
-                try {
-                    Method getS4ClockMethod = bean.getClass().getMethod("getS4Clock");
-    
-                    if (getS4ClockMethod.getReturnType().equals(Clock.class)) {
-                        if (getS4ClockMethod.invoke(bean) == null) {
-                            Method setS4ClockMethod = bean.getClass().getMethod("setS4Clock", Clock.class);
-                            setS4ClockMethod.invoke(bean, coreContext.getBean("clock"));
-                        }
-                    }
-                }
-                catch (NoSuchMethodException mnfe) {
-                    // acceptable
+                AbstractPE bean = (AbstractPE) context.getBean(processingElementBeanName);
+                bean.setClock(clock);
+                
+                // if the application did not specify an id, use the Spring bean name
+                if (bean.getId() == null) {
+                    bean.setId(processingElementBeanName);
                 }
                 System.out.println("Adding processing element with bean name "
                         + processingElementBeanName + ", id "
-                        + ((ProcessingElement) bean).getId());
-                peContainer.addProcessor((ProcessingElement) bean);
+                        + ((AbstractPE) bean).getId());
+                peContainer.addProcessor((AbstractPE) bean);
             }
         }  
     }
