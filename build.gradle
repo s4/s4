@@ -178,7 +178,6 @@ allDistImage = copySpec {
 			        into ("${proj.name}/lib/python") {
 				   from ("${proj.name}/python/")
 				}
-				break				
 			        into ("${proj.name}/lib/perl") {
 				   from ("${proj.name}/perl/")
 				}
