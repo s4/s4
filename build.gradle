@@ -149,8 +149,8 @@ dependencies {
 
 binDistImage = copySpec {
     /* Include all the resources. */
-    from project(':s4-core').sourceSets.main.resources 
-
+    from project(':s4-core').sourceSets.main.resources
+    
 	[project('s4-core'), project('s4-driver')].collect { project ->
 		into (project.name + "/lib") {
 			from project.configurations.runtime
@@ -172,11 +172,17 @@ allDistImage = copySpec {
         }
 		switch(proj.name) {
 			case "s4-core":
-				break
+		   	   break
 				
 			case "s4-driver":
-				break
-				
+			        into ("${proj.name}/lib/python") {
+				   from ("${proj.name}/python/")
+				}
+				break				
+			        into ("${proj.name}/lib/perl") {
+				   from ("${proj.name}/perl/")
+				}
+				break				
 			case "s4-example-driver":
 				into("s4-driver") {
 					from proj.sourceSets.main.resources
@@ -242,6 +248,14 @@ task allImage(type: Copy, dependsOn: s4Javadoc) {
 	description = "Create complete image"
 	destinationDir = file("$buildDir/s4-image")
     with allDistImage
+}
+
+
+allImage << {
+      // we need this because copyTask's fileMode property is not honored
+      ant.chmod(dir: "$buildDir/s4-image/scripts", perm: "u+x", includes: "*")
+      ant.chmod(dir: "$buildDir/s4-image/s4-tools-loadgenerator/scripts", perm: "u+x", includes: "*")
+      ant.chmod(dir: "$buildDir/s4-image/s4-driver/scripts", perm: "u+x", includes: "*")
 }
 
 task binTgz( type: Tar) {
