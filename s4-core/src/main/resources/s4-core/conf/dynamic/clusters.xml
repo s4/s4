@@ -7,12 +7,6 @@
       <taskId>s4node-0</taskId>
     </node>  
   </cluster>
-  <cluster name="s4" type="adapter" mode="unicast">
-    <node>
-      <machine>localhost</machine>
-      <taskId>adapter-0</taskId>
-    </node>
-  </cluster>
   <cluster name="client-adapter" type="s4" mode="unicast">
     <node>
       <partition>0</partition>
