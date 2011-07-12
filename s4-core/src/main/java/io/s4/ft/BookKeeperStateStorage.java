@@ -68,7 +68,7 @@ OpenCallback,
 //DeleteCallback,
 AddCallback,
 ReadCallback, StatCallback, DeleteCallback, org.apache.zookeeper.AsyncCallback.StringCallback {
-    private static Logger logger = Logger.getLogger(BookKeeperStateStorage.class);
+    private static Logger logger = Logger.getLogger("s4-ft");
 
     private String zkServers;
     private BookKeeper bk;
@@ -183,6 +183,12 @@ ReadCallback, StatCallback, DeleteCallback, org.apache.zookeeper.AsyncCallback.S
             logger.debug("checkpointing: " + key);
         }
         SaveCtx sctx = new SaveCtx(key, state, callback);
+        
+        // TODO
+        // if ledger exist for this prototype, use it, else fetch it from zookeeper, else create it
+        // then write entry to ledger
+        // then add entry id to index ledger
+        
         /*
          * Creates a new ledger to store the checkpoint
          */
@@ -333,7 +339,7 @@ ReadCallback, StatCallback, DeleteCallback, org.apache.zookeeper.AsyncCallback.S
             fctx.state = seq.nextElement().getEntry();
             
         } else {
-            logger.error("Reading checkpoint failed.");
+            logger.error("Reading checkpoint failed : " + rc);
         }
         
         if(fctx.sb != null){

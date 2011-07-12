@@ -84,8 +84,6 @@ public abstract class AbstractPE implements ProcessingElement {
         }
     }
 
-    transient private static Logger LOG = Logger.getLogger(AbstractPE.class);
-
     transient private Clock s4Clock;
     // FIXME replaces monitor wait on AbstractPE, for triggering possible extra
     // thread when checkpointing activated
@@ -624,11 +622,11 @@ public abstract class AbstractPE implements ProcessingElement {
                         // TODO use reflectasm
                         field.set(this, field.get(oldState));
                     } catch (IllegalArgumentException e) {
-                        LOG.error("Cannot recover old state for this PE ["
+                        Logger.getLogger("s4-ft").error("Cannot recover old state for this PE ["
                                 + this + "]", e);
                         return;
                     } catch (IllegalAccessException e) {
-                        LOG.error("Cannot recover old state for this PE ["
+                        Logger.getLogger("s4-ft").error("Cannot recover old state for this PE ["
                                 + this + "]", e);
                         return;
                     }

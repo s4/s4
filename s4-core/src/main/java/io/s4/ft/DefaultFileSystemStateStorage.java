@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -33,8 +34,7 @@ import org.apache.log4j.Logger;
  */
 public class DefaultFileSystemStateStorage implements StateStorage {
 
-    private static Logger logger = Logger
-            .getLogger(DefaultFileSystemStateStorage.class);
+    private static Logger logger = Logger.getLogger("s4-ft");
     private String storageRootPath;
     ThreadPoolExecutor threadPool;
     int maxWriteThreads = 1;
@@ -46,19 +46,24 @@ public class DefaultFileSystemStateStorage implements StateStorage {
 
     /**
      * <p>
-     * Must be called by the dependency injection framework.<p/>
+     * Must be called by the dependency injection framework.
+     * <p/>
      */
     public void init() {
         checkStorageDir();
-        threadPool = new ThreadPoolExecutor(0, maxWriteThreads,
-                writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
+        threadPool = new ThreadPoolExecutor(0, maxWriteThreads, writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(maxOutstandingWriteRequests));
     }
 
     @Override
-    public void saveState(SafeKeeperId key, byte[] state,
-            StorageCallback callback) {
-        threadPool.submit(new SaveTask(key, state, callback, storageRootPath));
+    public void saveState(SafeKeeperId key, byte[] state, StorageCallback callback) {
+        try {
+            threadPool.submit(new SaveTask(key, state, callback, storageRootPath));
+        } catch (RejectedExecutionException e) {
+            logger.error("Could not submit task to persist checkpoint. Remaining capacity for task queue is ["
+                    + threadPool.getQueue().remainingCapacity() + "] ; number of elements is ["
+                    + threadPool.getQueue().size() + "] ; maximum capacity is [" + maxOutstandingWriteRequests + "]");
+        }
     }
 
     @Override
@@ -82,23 +87,19 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                  * array.
                  */
                 if (length > Integer.MAX_VALUE) {
-                    throw new IOException("Error file is too large: "
-                            + file.getName() + " " + length + " bytes");
+                    throw new IOException("Error file is too large: " + file.getName() + " " + length + " bytes");
                 }
 
                 byte[] buffer = new byte[(int) length];
                 int offSet = 0;
                 int numRead = 0;
 
-                while (offSet < buffer.length
-                        && (numRead = in.read(buffer, offSet, buffer.length
-                                - offSet)) >= 0) {
+                while (offSet < buffer.length && (numRead = in.read(buffer, offSet, buffer.length - offSet)) >= 0) {
                     offSet += numRead;
                 }
 
                 if (offSet < buffer.length) {
-                    throw new IOException("Error, could not read entire file: "
-                            + file.getName() + " " + offSet + "/"
+                    throw new IOException("Error, could not read entire file: " + file.getName() + " " + offSet + "/"
                             + buffer.length + " bytes read");
                 }
 
@@ -147,15 +148,10 @@ public class DefaultFileSystemStateStorage implements StateStorage {
     }
 
     // files kept as : root/<partitionId>/<prototypeId>/encodedKeyWithFullInfo
-    private static File safeKeeperID2File(SafeKeeperId key,
-            String storageRootPath) {
+    private static File safeKeeperID2File(SafeKeeperId key, String storageRootPath) {
 
-        return new File(storageRootPath
-                + File.separator
-                + key.getPrototypeId()
-                + File.separator
-                + Base64.encodeBase64URLSafeString(key
-                        .getStringRepresentation().getBytes()));
+        return new File(storageRootPath + File.separator + key.getPrototypeId() + File.separator
+                + Base64.encodeBase64URLSafeString(key.getStringRepresentation().getBytes()));
     }
 
     private static SafeKeeperId file2SafeKeeperID(File file) {
@@ -173,8 +169,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         File rootPathFile = new File(storageRootPath);
         if (!rootPathFile.exists()) {
             if (!rootPathFile.mkdirs()) {
-                logger.error("could not create root storage directory : "
-                        + storageRootPath);
+                logger.error("could not create root storage directory : " + storageRootPath);
             }
 
         }
@@ -207,18 +202,16 @@ public class DefaultFileSystemStateStorage implements StateStorage {
     public void checkStorageDir() {
         if (storageRootPath == null) {
 
-            File defaultStorageDir = new File(System.getProperty("user.dir")
-                    + File.separator + "tmp" + File.separator + "storage");
+            File defaultStorageDir = new File(System.getProperty("user.dir") + File.separator + "tmp" + File.separator
+                    + "storage");
             storageRootPath = defaultStorageDir.getAbsolutePath();
             if (logger.isInfoEnabled()) {
-                logger.info("Unspecified storage dir; using default dir: "
-                        + defaultStorageDir.getAbsolutePath());
+                logger.info("Unspecified storage dir; using default dir: " + defaultStorageDir.getAbsolutePath());
             }
             if (!defaultStorageDir.exists()) {
                 if (!(defaultStorageDir.mkdirs())) {
                     logger.error("Storage directory not specified, and cannot create default storage directory : "
-                            + defaultStorageDir.getAbsolutePath()
-                            + "\n Checkpointing and recovery will be disabled.");
+                            + defaultStorageDir.getAbsolutePath() + "\n Checkpointing and recovery will be disabled.");
                 }
             }
         }
@@ -227,7 +220,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
     /**
      * 
      * Writing to storage is an asynchronous operation specified in this class.
-     *
+     * 
      */
     private static class SaveTask implements Runnable {
         SafeKeeperId key;
@@ -235,8 +228,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         StorageCallback callback;
         private String storageRootPath;
 
-        public SaveTask(SafeKeeperId key, byte[] state,
-                StorageCallback callback, String storageRootPath) {
+        public SaveTask(SafeKeeperId key, byte[] state, StorageCallback callback, String storageRootPath) {
             super();
             this.key = key;
             this.state = state;
@@ -247,15 +239,13 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         public void run() {
             File f = safeKeeperID2File(key, storageRootPath);
             if (logger.isDebugEnabled()) {
-                logger.debug("Checkpointing [" + key + "] into file: ["
-                        + f.getAbsolutePath() + "]");
+                logger.debug("Checkpointing [" + key + "] into file: [" + f.getAbsolutePath() + "]");
             }
             if (!f.exists()) {
                 if (!f.getParentFile().exists()) {
                     // parent file has prototype id
                     if (!f.getParentFile().mkdir()) {
-                        callback.storageOperationResult(
-                                SafeKeeper.StorageResultCode.FAILURE,
+                        callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE,
                                 "Cannot create directory for storing PE for prototype: "
                                         + f.getParentFile().getAbsolutePath());
                         return;
@@ -265,17 +255,14 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 try {
                     f.createNewFile();
                 } catch (IOException e) {
-                    callback.storageOperationResult(
-                            SafeKeeper.StorageResultCode.FAILURE,
-                            e.getMessage());
+                    callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
                     return;
                 }
             } else {
                 if (!f.delete()) {
-                    callback.storageOperationResult(
-                            SafeKeeper.StorageResultCode.FAILURE,
-                            "Cannot delete previously saved checkpoint file ["
-                                    + f.getParentFile().getAbsolutePath() + "]");
+                    callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE,
+                            "Cannot delete previously saved checkpoint file [" + f.getParentFile().getAbsolutePath()
+                                    + "]");
                     return;
                 }
             }
@@ -284,11 +271,9 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 fos = new FileOutputStream(f);
                 fos.write(state);
             } catch (FileNotFoundException e) {
-                callback.storageOperationResult(
-                        SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
             } catch (IOException e) {
-                callback.storageOperationResult(
-                        SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
             } finally {
                 try {
                     if (fos != null) {
