@@ -65,21 +65,31 @@ git clone https://github.com/s4/s4.git
 # Create image
 gradlew allImage
 
-# Change permissions
-# (Until this Gradle bug is fixed: http://issues.gradle.org/browse/GRADLE-796)
-chmod u+x ./build/s4-image/scripts/*
+# set the S4_IMAGE environmental variable
+cd build/s4-image/
+export S4_IMAGE=`pwd`
 
-# Copy S4 application to deployment dir (s4-apps)
-cp -rp build/s4-image/s4-example-apps/s4-example-twittertopiccount build/s4-image/s4-apps/
+# get the sample application
+git clone git://github.com/s4/twittertopiccount.git
 
-# Enter your twitter user/pass in config file
-$EDITOR build/s4-image/s4-apps/s4-example-twittertopiccount/adapter-conf.xml 
+# build the sample application
+./gradlew install
 
-# Start server with s4-example-twittertopiccount app
-./build/s4-image/scripts/start-s4.sh &
+# deploy the sample application into the S4 image (relies in the S4_IMAGE environmental variable)
+./gradlew deploy
 
-# Start adapter
- ./build/s4-image/scripts/run-adapter.sh -x -u build/s4-image/s4-apps/s4-example-twittertopiccount/lib/s4-example-twittertopiccount-0.3-SNAPSHOT.jar -d build/s4-image/s4-apps/s4-example-twittertopiccount/adapter-conf.xml &
+# set the TWIT_LISTENER environmental variable
+cd build/install/twitter_feed_listener
+export TWIT_LISTENER=`pwd`
+
+# Start server with twittertopiccount app
+$S4_IMAGE/scripts/start-s4.sh -r client-adapter &
+
+# start the client adapter
+$S4_IMAGE/scripts/run-client-adapter.sh -s client-adapter -g s4 -d $S4_IMAGE/s4-core/conf/default/client-stub-conf.xml &
+
+# run a client to send events into the S4 cluster. Replace <your-twitter-user> and <your-twitter-password> with your Twitter userid and password.
+$TWIT_LISTENER/bin/twitter_feed_listener <your-twitter-user> <your-twitter-password> &
 
 # Check output
 cat /tmp/top_n_hashtags
