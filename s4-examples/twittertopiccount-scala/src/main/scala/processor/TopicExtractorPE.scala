@@ -24,7 +24,6 @@ import io.s4.processor.AbstractPE
 import io.s4.example.twittertopiccount.event._
 
 class TopicExtractorPE extends AbstractPE {
-  @BeanProperty var id: String = _ 
   @BeanProperty var dispatcher: EventDispatcher = _ 
   @BeanProperty var outputStreamName: String = _ 
 

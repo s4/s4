@@ -142,6 +142,8 @@ TMP1=`mktemp -d $MKTEMP_ARGS`
 echo "Temp is $TMP1"
 echo "appName=${SENDER_CLUSTER_NAME}" > $TMP1/adapter.properties
 echo "listenerAppName=${LISTENER_CLUSTER_NAME}" >> $TMP1/adapter.properties
+echo "zk_address=${CLUSTER_MANAGER}" >> $TMP1/adapter.properties
+
 cat $TMP1/adapter.properties
 
 CLASSPATH=${CLASSPATH}${CP_SEP}${TMP1}

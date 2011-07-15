@@ -16,7 +16,6 @@ public class TestPrototypeWrapper
    @Test
    public void testCloneAndInitialize() {
        MockPE prototype = new MockPE();
-       prototype.setInitMethod("testInitialize");
        
         PrototypeWrapper prototypeWrapper = new PrototypeWrapper(prototype,
                 new WallClock());

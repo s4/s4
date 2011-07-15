@@ -12,10 +12,4 @@ public class SentenceReceiverPE extends AbstractPE {
     public void output() {
         // not called in this example
     }
-
-    @Override
-    public String getId() {
-        return this.getClass().getName();
-    }
-
 }

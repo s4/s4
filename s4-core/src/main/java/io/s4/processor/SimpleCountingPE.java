@@ -26,15 +26,6 @@ public class SimpleCountingPE extends AbstractPE {
     private int persistTime;
     private String keyPrefix = "s4:counter";
     private boolean dirty = false;
-    private String id = "SimpleCountingPE";
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public void setClearOnOutput(boolean clearOnOutput) {
         this.clearOnOutput = clearOnOutput;

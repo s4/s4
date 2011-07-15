@@ -32,7 +32,6 @@ import io.s4.processor.AbstractPE
 import io.s4.example.twittertopiccount.event._
 
 class TopNTopicPE extends AbstractPE {
-  @BeanProperty var id: String = _ 
   @BeanProperty var persistKey = "myapp:topNTopics"
   @BeanProperty var persister: Persister = _ 
   @BeanProperty var entryCount = 10

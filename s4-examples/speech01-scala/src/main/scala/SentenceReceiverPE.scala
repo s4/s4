@@ -23,6 +23,4 @@ class SentenceReceiverPE extends AbstractPE {
   def processEvent(sentence: Sentence): Unit= println("Sentence is '" + sentence.text + "', location '" + sentence.location + "'")
 
   def output(): Unit= {}
-    
-  def getId(): String= return this.getClass().getName()
 }

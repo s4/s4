@@ -57,7 +57,7 @@ import org.apache.log4j.Logger;
  * {@link AbstractPE#setOutputFrequencyByEventCount} and
  * {@link AbstractPE#setOutputFrequencyByTimeBoundary}.
  */
-public abstract class AbstractPE implements ProcessingElement {
+public abstract class AbstractPE implements Cloneable {
     public static enum FrequencyType {
         TIMEBOUNDARY("timeboundary"), EVENTCOUNT("eventcount");
 
@@ -72,6 +72,7 @@ public abstract class AbstractPE implements ProcessingElement {
         }
     }
 
+<<<<<<< HEAD
     public static enum PeriodicInvokerType {
         OUTPUT, CHECKPOINTING;
 
@@ -105,6 +106,25 @@ public abstract class AbstractPE implements ProcessingElement {
     transient private boolean logPauses = false;
     transient private String initMethod = null;
     transient protected SchemaContainer schemaContainer = new SchemaContainer();
+=======
+    private Clock clock;
+    private int outputFrequency = 1;
+    private FrequencyType outputFrequencyType = FrequencyType.EVENTCOUNT;
+    private int outputFrequencyOffset = 0;
+    private int eventCount = 0;
+    private int ttl = -1;
+    private Persister lookupTable;
+    private List<EventAdvice> eventAdviceList = new ArrayList<EventAdvice>();
+    private List<Object> keyValue;
+    private List<Object> keyRecord;
+    private String keyValueString;
+    private String streamName;
+    private boolean saveKeyRecord = false;
+    private int outputsBeforePause = -1;
+    private long pauseTimeInMillis;
+    private boolean logPauses = false;
+    private String id;
+>>>>>>> upstream/master
     
     transient private boolean recoveryAttempted = false;
     // true if state may have changed
@@ -149,14 +169,30 @@ public abstract class AbstractPE implements ProcessingElement {
         this.logPauses = logPauses;
     }
 
+<<<<<<< HEAD
     public void setS4Clock(Clock s4Clock) {
         this.s4Clock = s4Clock;
         if (this.s4Clock != null) {
             this.s4ClockSetSignal.countDown();
+=======
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setClock(Clock clock) {
+        synchronized (this) {
+            this.clock = clock;
+            this.notify();
+>>>>>>> upstream/master
         }
     }
 
     /**
+<<<<<<< HEAD
      * The name of a method to be used as an initializer. The method will be
      * called after the object is cloned from the prototype PE.
      */
@@ -170,6 +206,18 @@ public abstract class AbstractPE implements ProcessingElement {
 
     public Clock getS4Clock() {
         return s4Clock;
+=======
+     * This method will be called after the object is cloned from the
+     * prototype PE. The concrete PE class should override this if
+     * it has any special set-up requirements.
+     */
+    public void initInstance() {
+       // default implementation does nothing.
+    }
+        
+    public Clock getClock() {
+        return clock;
+>>>>>>> upstream/master
     }
 
     public AbstractPE() {
@@ -245,7 +293,7 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public long getCurrentTime() {
-        return s4Clock.getCurrentTime();
+        return clock.getCurrentTime();
     }
 
     /**
@@ -536,6 +584,7 @@ public abstract class AbstractPE implements ProcessingElement {
      **/
     abstract public void output();
 
+<<<<<<< HEAD
     protected void checkpoint() {
         
         byte[] serializedState = serializeState();
@@ -618,6 +667,12 @@ public abstract class AbstractPE implements ProcessingElement {
                     if (!Modifier.isPublic(field.getModifiers())) {
                         field.setAccessible(true);
                     }
+=======
+    class OutputInvoker implements Runnable {
+        public void run() {
+            synchronized (AbstractPE.this) {
+                while (clock == null) {
+>>>>>>> upstream/master
                     try {
                         // TODO use reflectasm
                         field.set(this, field.get(oldState));
@@ -701,9 +756,14 @@ public abstract class AbstractPE implements ProcessingElement {
                 long currentBoundary = (currentTime / frequencyInMillis)
                         * frequencyInMillis;
                 long nextBoundary = currentBoundary + frequencyInMillis;
+<<<<<<< HEAD
                 currentTime = s4Clock.waitForTime(nextBoundary
                         + (getFrequencyOffset() * 1000));
 
+=======
+                currentTime = clock.waitForTime(nextBoundary
+                        + (outputFrequencyOffset * 1000));
+>>>>>>> upstream/master
                 if (lookupTable != null) {
                     Set peKeys = lookupTable.keySet();
                     for (Iterator it = peKeys.iterator(); it.hasNext();) {

@@ -115,7 +115,7 @@ echo `${JAVA_LOC}java -version`
 
 CLASSPATH=`find $CORE_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 if [ $REDBUTTON_MODE == "true" ] ; then
-    CLASSPATH=${CLASSPATH}${CP_SEP}${CORE_HOME}/conf/redbutton
+    CLASSPATH=${CLASSPATH}${CP_SEP}${CORE_HOME}/conf/default
     JAVA_OPTS="$JAVA_OPTS -Dcommlayer.mode=static"
 fi
 
