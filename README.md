@@ -63,7 +63,7 @@ Running the Twitter Topic Count Example
 git clone https://github.com/s4/s4.git
 
 # Create image
-gradlew allImage
+./gradlew allImage
 
 # set the S4_IMAGE environmental variable
 cd build/s4-image/
