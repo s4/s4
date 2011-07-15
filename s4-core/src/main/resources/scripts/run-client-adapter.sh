@@ -69,10 +69,13 @@ if [ "x$CONF_TYPE" == "x" ] ; then
     CONF_TYPE="default"
 fi
 
-CONF_FILE=${CORE_HOME}"/conf/"${CONF_TYPE}"/adapter-conf.xml"
+CONF_FILE=${CORE_HOME}"/conf/"${CONF_TYPE}"/client-adapter-conf.xml"
 CONF_LOC=`dirname $CONF_FILE`
 LOG_LOC="${CORE_HOME}/logs"
 COMMLAYER_MODE=$(get_property "commlayer_mode")
+
+echo "configuration location is ${CONF_LOC}"
+echo "commlayer mode is ${COMMLAYER_MODE}"
 
 if [ "x$CLUSTER_MANAGER" == "x" ] ; then
     CLUSTER_MANAGER="localhost:2181"
@@ -141,10 +144,11 @@ fi
 
 TMP1=`mktemp -d $MKTEMP_ARGS`
 echo "Temp is $TMP1"
-echo "appName=${SENDER_CLUSTER_NAME}" > $TMP1/adapter.properties
-echo "listenerAppName=${LISTENER_CLUSTER_NAME}" >> $TMP1/adapter.properties
-echo "listener_max_queue_size=8000" >> $TMP1/adapter.properties
-cat $TMP1/adapter.properties
+echo "appName=${SENDER_CLUSTER_NAME}" > $TMP1/client-adapter.properties
+echo "listenerAppName=${LISTENER_CLUSTER_NAME}" >> $TMP1/client-adapter.properties
+echo "zk_address=${CLUSTER_MANAGER}" >> $TMP1/client-adapter.properties
+echo "listener_max_queue_size=8000" >> $TMP1/client-adapter.properties
+cat $TMP1/client-adapter.properties
 
 CLASSPATH=${CLASSPATH}${CP_SEP}${TMP1}
 

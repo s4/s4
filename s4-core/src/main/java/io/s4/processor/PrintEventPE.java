@@ -19,16 +19,6 @@ import org.apache.log4j.Logger;
 
 public class PrintEventPE extends AbstractPE {
 
-    private String id = "PrintEventPE";
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
     @Override
     public void output() {
         // TODO Auto-generated method stub

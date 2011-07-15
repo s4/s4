@@ -60,7 +60,7 @@ public class ControlEventProcessor {
 
             String keyVal = keyInfo.getCompoundValue();
 
-            ProcessingElement pe = p.lookupPE(keyVal);
+            AbstractPE pe = p.lookupPE(keyVal);
 
             Response response = ((SinglePERequest) event).evaluate(pe);
             String stream = response.getRInfo().getStream();

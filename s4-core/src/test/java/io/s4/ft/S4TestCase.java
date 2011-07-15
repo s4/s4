@@ -1,6 +1,6 @@
 package io.s4.ft;
 
-import io.s4.processor.ProcessingElement;
+import io.s4.processor.AbstractPE;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class S4TestCase {
             DEFAULT_TEST_OUTPUT_DIR.getAbsolutePath() + File.separator
                     + "storage");
     // use a static map to track PE instances
-    public static final Map<Object, ProcessingElement> registeredPEs = new Hashtable<Object, ProcessingElement>();
+    public static final Map<Object, AbstractPE> registeredPEs = new Hashtable<Object, AbstractPE>();
 
     
     @BeforeClass

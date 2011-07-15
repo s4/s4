@@ -1,7 +1,7 @@
 package io.s4.ft;
 
+import io.s4.processor.AbstractPE;
 import io.s4.processor.PEContainer;
-import io.s4.processor.ProcessingElement;
 import io.s4.util.Watcher;
 import io.s4.util.clock.Clock;
 import io.s4.util.clock.EventClock;
@@ -80,9 +80,9 @@ public class S4App {
                 coreContext);
         ApplicationContext context = coreContext;
 
-        Clock s4Clock = (Clock) context.getBean("clock");
-        if (s4Clock instanceof EventClock && seedTime > 0) {
-            EventClock s4EventClock = (EventClock) s4Clock;
+        Clock clock = (Clock) context.getBean("clock");
+        if (clock instanceof EventClock && seedTime > 0) {
+            EventClock s4EventClock = (EventClock) clock;
             s4EventClock.updateTime(seedTime);
             System.out.println("Intializing event clock time with seed time "
                     + s4EventClock.getCurrentTime());
@@ -112,17 +112,17 @@ public class S4App {
         // attach any beans that implement ProcessingElement to the PE
         // Container
         String[] processingElementBeanNames = context
-                .getBeanNamesForType(ProcessingElement.class);
+                .getBeanNamesForType(AbstractPE.class);
         for (String processingElementBeanName : processingElementBeanNames) {
             Object bean = context.getBean(processingElementBeanName);
             try {
                 Method getS4ClockMethod = bean.getClass().getMethod(
-                        "getS4Clock");
+                        "getClock");
 
                 if (getS4ClockMethod.getReturnType().equals(Clock.class)) {
                     if (getS4ClockMethod.invoke(bean) == null) {
                         Method setS4ClockMethod = bean.getClass().getMethod(
-                                "setS4Clock", Clock.class);
+                                "setClock", Clock.class);
                         setS4ClockMethod.invoke(bean,
                                 coreContext.getBean("clock"));
                     }
@@ -132,8 +132,8 @@ public class S4App {
             }
             System.out.println("Adding processing element with bean name "
                     + processingElementBeanName + ", id "
-                    + ((ProcessingElement) bean).getId());
-            peContainer.addProcessor((ProcessingElement) bean);
+                    + ((AbstractPE) bean).getId());
+            peContainer.addProcessor((AbstractPE) bean);
         }
 
         appContext = context;

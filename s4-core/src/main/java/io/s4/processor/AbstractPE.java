@@ -57,7 +57,7 @@ import org.apache.log4j.Logger;
  * {@link AbstractPE#setOutputFrequencyByEventCount} and
  * {@link AbstractPE#setOutputFrequencyByTimeBoundary}.
  */
-public abstract class AbstractPE implements ProcessingElement {
+public abstract class AbstractPE implements Cloneable {
     public static enum FrequencyType {
         TIMEBOUNDARY("timeboundary"), EVENTCOUNT("eventcount");
 
@@ -84,7 +84,7 @@ public abstract class AbstractPE implements ProcessingElement {
         }
     }
 
-    transient private Clock s4Clock;
+    transient private Clock clock;
     // FIXME replaces monitor wait on AbstractPE, for triggering possible extra
     // thread when checkpointing activated
     transient private CountDownLatch s4ClockSetSignal = new CountDownLatch(1);
@@ -103,6 +103,7 @@ public abstract class AbstractPE implements ProcessingElement {
     transient private int outputsBeforePause = -1;
     transient private long pauseTimeInMillis;
     transient private boolean logPauses = false;
+    private String id;
     transient private String initMethod = null;
     transient protected SchemaContainer schemaContainer = new SchemaContainer();
     
@@ -149,27 +150,32 @@ public abstract class AbstractPE implements ProcessingElement {
         this.logPauses = logPauses;
     }
 
-    public void setS4Clock(Clock s4Clock) {
-        this.s4Clock = s4Clock;
-        if (this.s4Clock != null) {
-            this.s4ClockSetSignal.countDown();
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setClock(Clock clock) {
+        synchronized (this) {
+            this.clock = clock;
+            this.notify();
         }
     }
 
     /**
-     * The name of a method to be used as an initializer. The method will be
-     * called after the object is cloned from the prototype PE.
+     * This method will be called after the object is cloned from the
+     * prototype PE. The concrete PE class should override this if
+     * it has any special set-up requirements.
      */
-    public void setInitMethod(String initMethod) {
-        this.initMethod = initMethod;
+    public void initInstance() {
+       // default implementation does nothing.
     }
-
-    public String getInitMethod() {
-        return this.initMethod;
-    }
-
-    public Clock getS4Clock() {
-        return s4Clock;
+        
+    public Clock getClock() {
+        return clock;
     }
 
     public AbstractPE() {
@@ -245,7 +251,7 @@ public abstract class AbstractPE implements ProcessingElement {
     }
 
     public long getCurrentTime() {
-        return s4Clock.getCurrentTime();
+        return clock.getCurrentTime();
     }
 
     /**
@@ -678,7 +684,7 @@ public abstract class AbstractPE implements ProcessingElement {
         }
 
         public void run() {
-            if (s4Clock == null) {
+            if (clock == null) {
                 try {
                     s4ClockSetSignal.await();
                 } catch (InterruptedException e) {
@@ -701,9 +707,8 @@ public abstract class AbstractPE implements ProcessingElement {
                 long currentBoundary = (currentTime / frequencyInMillis)
                         * frequencyInMillis;
                 long nextBoundary = currentBoundary + frequencyInMillis;
-                currentTime = s4Clock.waitForTime(nextBoundary
-                        + (getFrequencyOffset() * 1000));
-
+                currentTime = clock.waitForTime(nextBoundary
+                        + (outputFrequencyOffset * 1000));
                 if (lookupTable != null) {
                     Set peKeys = lookupTable.keySet();
                     for (Iterator it = peKeys.iterator(); it.hasNext();) {

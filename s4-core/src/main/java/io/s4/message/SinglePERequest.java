@@ -18,7 +18,7 @@ package io.s4.message;
 import io.s4.dispatcher.partitioner.CompoundKeyInfo;
 import io.s4.dispatcher.partitioner.Hasher;
 import io.s4.dispatcher.partitioner.KeyInfo;
-import io.s4.processor.ProcessingElement;
+import io.s4.processor.AbstractPE;
 import io.s4.util.MethodInvoker;
 
 import java.util.ArrayList;
@@ -83,7 +83,7 @@ public class SinglePERequest extends Request {
      * @param pe
      * @return Response object.
      */
-    public Response evaluate(ProcessingElement pe) {
+    public Response evaluate(AbstractPE pe) {
 
         HashMap<String, Object> results = new HashMap<String, Object>();
         HashMap<String, String> exceptions = new HashMap<String, String>();

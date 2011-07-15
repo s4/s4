@@ -1,7 +1,5 @@
 package io.s4.ft;
 
-import io.s4.processor.ProcessingElement;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
