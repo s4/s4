@@ -104,7 +104,6 @@ public abstract class AbstractPE implements Cloneable {
     transient private long pauseTimeInMillis;
     transient private boolean logPauses = false;
     private String id;
-    transient private String initMethod = null;
     transient protected SchemaContainer schemaContainer = new SchemaContainer();
     
     transient private boolean recoveryAttempted = false;
@@ -159,14 +158,14 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     public void setClock(Clock clock) {
-        synchronized (this) {
-            this.clock = clock;
-            this.notify();
+        if (this.clock != null) {
+            this.s4ClockSetSignal.countDown();
         }
     }
 
-    /**
-     * This method will be called after the object is cloned from the
+  
+
+     /** This method will be called after the object is cloned from the
      * prototype PE. The concrete PE class should override this if
      * it has any special set-up requirements.
      */
