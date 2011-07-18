@@ -44,7 +44,7 @@ public class ZkTaskManager extends DefaultWatcher implements TaskManager {
      * Constructor of TaskManager
      * 
      * @param address
-     * @param name
+     * @param ClusterName
      */
     public ZkTaskManager(String address, String ClusterName, ClusterType clusterType,
             CommEventCallback callbackHandler) {

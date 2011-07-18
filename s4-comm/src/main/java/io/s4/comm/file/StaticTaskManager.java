@@ -44,7 +44,7 @@ public class StaticTaskManager implements TaskManager {
      * Constructor of TaskManager
      * 
      * @param address
-     * @param name
+     * @param clusterName
      */
     public StaticTaskManager(String address, String clusterName,
             ClusterType clusterType, CommEventCallback callbackHandler) {

@@ -63,7 +63,7 @@ public class Driver {
      * Note: this does not create a connection to the adapter.
      * 
      * @see #init()
-     * @see #connect(ReadMode, WriteMode)
+     * @see #connect()
      * 
      * @param hostname
      *            Name of S4 client adapter host.
@@ -220,7 +220,7 @@ public class Driver {
      * is compatible with the protocol used by the adapter. This does not
      * actually establish a connection for sending and receiving events.
      * 
-     * @see #connect(ReadMode, WriteMode)
+     * @see #connect()
      * 
      * @return true if and only if the adapter issued a valid ID to this client,
      *         and the protocol is found to be compatible.

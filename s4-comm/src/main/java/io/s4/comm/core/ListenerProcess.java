@@ -39,7 +39,7 @@ public class ListenerProcess {
     /**
      * This will be a blocking call and will wait until it gets a task
      * 
-     * @return
+     * @return listener configuration
      */
     public Object acquireTaskAndCreateListener(Map<String, String> map) {
         TaskManager manager = CommServiceFactory.getTaskManager(zkaddress,

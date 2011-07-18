@@ -81,7 +81,7 @@ public class GenericSender {
      * This method will send the data to receivers in a round robin fashion
      * 
      * @param data
-     * @return
+     * @return true if data was successfully sent, false otherwise
      */
     @SuppressWarnings("unchecked")
     public boolean send(Object data) {
@@ -127,7 +127,7 @@ public class GenericSender {
      * 
      * @param partition
      * @param data
-     * @return
+     * @return true if data was successfully sent, false otherwise
      */
     @SuppressWarnings("unchecked")
     public boolean sendToPartition(int partition, Object data) {
@@ -164,9 +164,9 @@ public class GenericSender {
     /**
      * compute partition using hashcode and send to appropriate partition
      * 
-     * @param partition
+     * @param hashcode
      * @param data
-     * @return
+     * @return true if data was successfully sent, false otherwise
      */
     public boolean sendUsingHashCode(int hashcode, Object data) {
         int partition = (hashcode & Integer.MAX_VALUE) % listenerTaskCount;

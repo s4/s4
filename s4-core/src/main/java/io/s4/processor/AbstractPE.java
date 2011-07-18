@@ -35,9 +35,7 @@ import java.util.StringTokenizer;
 import org.apache.log4j.Logger;
 
 /**
- * This is the base class for processor classes. While it is possible to create
- * a processor class by implementing the {@link ProcessingElement} interface, we
- * suggest you instead extend this class.
+ * This is the base class for processor classes.
  * <p>
  * <code>AbstractProcessor</code> provides output frequency strategies that
  * allow you to configure the rate at which your processor produces output (see
@@ -135,8 +133,7 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     /**
-     * This implements the <code>execute</code> method declared in the
-     * {@link ProcessingElement} interface. You should not override this method.
+     * You should not override this method.
      * Instead, you need to implement the <code>processEvent</code> method.
      **/
     public void execute(String streamName, CompoundKeyInfo compoundKeyInfo,

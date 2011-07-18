@@ -93,7 +93,7 @@ public class SenderProcess {
      * This method will send the data to receivers in a round robin fashion
      * 
      * @param data
-     * @return
+     * @return true if data was successfully sent, false otherwise
      */
     public boolean send(Object data) {
         return genericSender.send(data);
@@ -104,7 +104,7 @@ public class SenderProcess {
      * 
      * @param partition
      * @param data
-     * @return
+     * @return true if data was successfully sent, false otherwise
      */
     public boolean sendToPartition(int partition, Object data) {
         return genericSender.sendToPartition(partition, data);
@@ -113,9 +113,9 @@ public class SenderProcess {
     /**
      * compute partition using hashcode and send to appropriate partition
      * 
-     * @param partition
+     * @param hashcode
      * @param data
-     * @return true on success, false on failure
+     * @return true if data was successfully sent, false otherwise
      */
 
     public boolean sendUsingHashCode(int hashcode, Object data) {

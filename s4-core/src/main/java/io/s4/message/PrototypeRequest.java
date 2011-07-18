@@ -63,7 +63,7 @@ public class PrototypeRequest extends Request {
     /**
      * Evaluate Request on a particular PE Prototype.
      * 
-     * @param pe
+     * @param pw
      *            prototype
      * @return Response object.
      */
