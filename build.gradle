@@ -288,6 +288,6 @@ class Version {
     String releaseType
  
     String toString() {
-        "$major.$minor-$releaseType${bugfix ?: ''}"
+        "$major.$minor${releaseType ? '-'+releaseType : ''}${bugfix ?: ''}"
     }
 }
