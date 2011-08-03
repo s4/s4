@@ -70,7 +70,7 @@ abstract public class Request {
          * Partition Id from which this request originated. This may be used to
          * return a response to the same partition.
          * 
-         * @return
+         * @return partition id
          */
         public int getPartition() {
             return partition;

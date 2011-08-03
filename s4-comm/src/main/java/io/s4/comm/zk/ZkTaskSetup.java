@@ -44,7 +44,7 @@ public class ZkTaskSetup extends DefaultWatcher {
      * Constructor of ZkTaskSetup
      * 
      * @param address
-     * @param name
+     * @param clusterName
      */
     public ZkTaskSetup(String address, String clusterName, ClusterType clusterType,
             CommEventCallback callbackHandler) {
@@ -62,7 +62,7 @@ public class ZkTaskSetup extends DefaultWatcher {
     /**
      * Creates task nodes.
      * 
-     * @param numTasks
+     * @param version
      * @param data
      */
     public void setUpTasks(String version, Object[] data) {

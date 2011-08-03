@@ -47,7 +47,7 @@ public class MulticastSender {
      * This method will send the data to receivers in a round robin fashion
      * 
      * @param data
-     * @return
+     * @return true if data was successfully sent, false otherwise
      */
     public boolean send(Object data) {
         try {
@@ -70,7 +70,7 @@ public class MulticastSender {
      * 
      * @param partition
      * @param data
-     * @return
+     * @return true if data was successfully sent, false otherwise
      */
     public boolean send(int partition, Object data) {
         return true;

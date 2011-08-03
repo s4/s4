@@ -61,8 +61,8 @@ public class ZkQueue extends DefaultWatcher {
     /**
      * Add element to the queue.
      * 
-     * @param i
-     * @return
+     * @param obj element to add
+     * @return true if add successful, false otherwise
      */
 
     public boolean produce(Object obj) throws KeeperException,
@@ -78,7 +78,7 @@ public class ZkQueue extends DefaultWatcher {
     /**
      * Remove first element from the queue.
      * 
-     * @return
+     * @return first element from the queue
      * @throws KeeperException
      * @throws InterruptedException
      */

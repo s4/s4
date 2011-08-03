@@ -118,7 +118,7 @@ public class ZkUtil extends DefaultWatcher {
 
         if (method != null) {
             ZkUtil zkUtil = new ZkUtil(address);
-            Object ret = method.invoke(zkUtil, methodArgs);
+            Object ret = method.invoke(zkUtil, (Object[]) methodArgs);
             if (ret != null) {
                 System.out.println("**********");
                 System.out.println(ret);

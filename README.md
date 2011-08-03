@@ -63,7 +63,7 @@ Running the Twitter Topic Count Example
 git clone https://github.com/s4/s4.git
 
 # Create image
-gradlew allImage
+./gradlew allImage
 
 # set the S4_IMAGE environmental variable
 cd build/s4-image/
@@ -88,8 +88,8 @@ $S4_IMAGE/scripts/start-s4.sh -r client-adapter &
 # start the client adapter
 $S4_IMAGE/scripts/run-client-adapter.sh -s client-adapter -g s4 -d $S4_IMAGE/s4-core/conf/default/client-stub-conf.xml &
 
-# run a client to send events into the S4 cluster. Replace <your-twitter-user> and <your-twitter-password> with your Twitter userid and password.
-$TWIT_LISTENER/bin/twitter_feed_listener <your-twitter-user> <your-twitter-password> &
+# run a client to send events into the S4 cluster. Replace *your-twitter-user* and *your-twitter-password* with your Twitter userid and password.
+$TWIT_LISTENER/bin/twitter_feed_listener *your-twitter-user* *your-twitter-password* &
 
 # Check output
 cat /tmp/top_n_hashtags
