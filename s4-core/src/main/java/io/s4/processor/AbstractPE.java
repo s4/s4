@@ -46,7 +46,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
-
 /**
  * This is the base class for processor classes.
  * <p>
@@ -103,7 +102,7 @@ public abstract class AbstractPE implements Cloneable {
     transient private boolean logPauses = false;
     private String id;
     transient protected SchemaContainer schemaContainer = new SchemaContainer();
-    
+
     transient private boolean recoveryAttempted = false;
     // true if state may have changed
     transient private boolean checkpointable = false;
@@ -121,7 +120,6 @@ public abstract class AbstractPE implements Cloneable {
 
     transient private OverloadDispatcher overloadDispatcher;
 
-
     public void setSaveKeyRecord(boolean saveKeyRecord) {
         this.saveKeyRecord = saveKeyRecord;
     }
@@ -138,8 +136,7 @@ public abstract class AbstractPE implements Cloneable {
         this.pauseTimeInMillis = pauseTimeInMillis;
     }
 
-    public void setCheckpointingPauseTimeInMillis(
-            long checkpointingPauseTimeInMillis) {
+    public void setCheckpointingPauseTimeInMillis(long checkpointingPauseTimeInMillis) {
         this.checkpointingPauseTimeInMillis = checkpointingPauseTimeInMillis;
     }
 
@@ -161,16 +158,15 @@ public abstract class AbstractPE implements Cloneable {
         }
     }
 
-  
-
-     /** This method will be called after the object is cloned from the
-     * prototype PE. The concrete PE class should override this if
-     * it has any special set-up requirements.
+    /**
+     * This method will be called after the object is cloned from the prototype
+     * PE. The concrete PE class should override this if it has any special
+     * set-up requirements.
      */
     public void initInstance() {
-       // default implementation does nothing.
+        // default implementation does nothing.
     }
-        
+
     public Clock getClock() {
         return clock;
     }
@@ -187,11 +183,10 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     /**
-     * You should not override this method.
-     * Instead, you need to implement the <code>processEvent</code> method.
+     * You should not override this method. Instead, you need to implement the
+     * <code>processEvent</code> method.
      **/
-    public void execute(String streamName, CompoundKeyInfo compoundKeyInfo,
-                        Object event) {
+    public void execute(String streamName, CompoundKeyInfo compoundKeyInfo, Object event) {
         // if this is the first time through, get the key for this PE
         if (keyValue == null || saveKeyRecord) {
             setKeyValue(event, compoundKeyInfo);
@@ -199,7 +194,7 @@ public abstract class AbstractPE implements Cloneable {
             if (compoundKeyInfo != null)
                 keyValueString = compoundKeyInfo.getCompoundValue();
         }
-      
+
         this.streamName = streamName;
 
         if (safeKeeper != null) {
@@ -217,29 +212,25 @@ public abstract class AbstractPE implements Cloneable {
             keyRecord.clear(); // the PE doesn't need it anymore
         }
 
-        if (outputFrequencyType == FrequencyType.EVENTCOUNT
-                && outputFrequency > 0 && !isCheckpointingEvent) {
+        if (outputFrequencyType == FrequencyType.EVENTCOUNT && outputFrequency > 0 && !isCheckpointingEvent) {
             eventCount++;
             if (eventCount % outputFrequency == 0) {
                 try {
                     output();
                 } catch (Exception e) {
-                    Logger.getLogger("s4")
-                          .error("Exception calling output() method in execute()",
-                                 e);
+                    Logger.getLogger("s4").error("Exception calling output() method in execute()", e);
                 }
             }
         }
-        
+
         // do not take into account checkpointing/recovery trigger messages
         if (!isCheckpointingEvent) {
             checkpointable = true; // dirty flag
-            // FIXME there may be a nicer way
-            if (checkpointingFrequencyType == FrequencyType.EVENTCOUNT
-                    && checkpointingFrequency > 0) {
+            if (checkpointingFrequencyType == FrequencyType.EVENTCOUNT && checkpointingFrequency > 0) {
                 checkpointableEventCount++;
                 if (checkpointableEventCount % checkpointingFrequency == 0) {
-                    initiateCheckpoint();
+                    // for count-based frequency, we directly checkpoint here
+                    checkpoint();
                 }
             }
 
@@ -306,8 +297,7 @@ public abstract class AbstractPE implements Cloneable {
                     }
 
                     if (value == null) {
-                        Logger.getLogger("s4").error("Value for "
-                                + keyPathElementName + " is null!");
+                        Logger.getLogger("s4").error("Value for " + keyPathElementName + " is null!");
                         return;
                     }
 
@@ -323,8 +313,7 @@ public abstract class AbstractPE implements Cloneable {
                         continue;
                     } else if (property.isList()) {
                         try {
-                            list = (List) property.getGetterMethod()
-                                                  .invoke(record);
+                            list = (List) property.getGetterMethod().invoke(record);
                         } catch (Exception e) {
                             Logger.getLogger("s4").error(e);
                             return;
@@ -361,8 +350,8 @@ public abstract class AbstractPE implements Cloneable {
      * <code>processEvent</code>).
      * 
      * @param outputFrequency
-     *            the number of application events passed to <code>processEvent</code>
-     *            before output is called.
+     *            the number of application events passed to
+     *            <code>processEvent</code> before output is called.
      **/
     public void setOutputFrequencyByEventCount(int outputFrequency) {
         this.outputFrequency = outputFrequency;
@@ -371,12 +360,13 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     /**
-     * Sets the frequency strategy to "by event count". Uses the same mechanism than 
-     * {@link #setOutputFrequencyByEventCount(int)}
+     * Sets the frequency strategy to "by event count". Uses the same mechanism
+     * than {@link #setOutputFrequencyByEventCount(int)}
      * 
-     * @param checkpointingFrequency 
-     *            the number of application events passed to <code>processEvent</code>
-     *            before output is called (ignoring checkpointing events).
+     * @param checkpointingFrequency
+     *            the number of application events passed to
+     *            <code>processEvent</code> before output is called (ignoring
+     *            checkpointing events).
      */
     public void setCheckpointingFrequencyByEventCount(int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
@@ -419,15 +409,14 @@ public abstract class AbstractPE implements Cloneable {
         initFrequency(PeriodicInvokerType.OUTPUT);
     }
 
-
     /**
-     * Sets the frequency of checkpointing. It uses the same mechanism than {@link #setOutputFrequencyByTimeBoundary(int)}
+     * Sets the frequency of checkpointing. It uses the same mechanism than
+     * {@link #setOutputFrequencyByTimeBoundary(int)}
      * 
      * @param checkpointingFrequency
      *            the time boundary in seconds
      */
-    public void setCheckpointingFrequencyByTimeBoundary(
-            int checkpointingFrequency) {
+    public void setCheckpointingFrequencyByTimeBoundary(int checkpointingFrequency) {
         this.checkpointingFrequency = checkpointingFrequency;
         this.checkpointingFrequencyType = FrequencyType.TIMEBOUNDARY;
         supplementAdviceForCheckpointingAndRecovery();
@@ -451,10 +440,12 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     /**
-     * Set the offset from the time boundary at which calls to checkpoint should be performed.
-     * It uses the same mechanism than {@link AbstractPE#setOutputFrequencyOffset(int)}
+     * Set the offset from the time boundary at which calls to checkpoint should
+     * be performed. It uses the same mechanism than
+     * {@link AbstractPE#setOutputFrequencyOffset(int)}
      * 
-     * @param checkpointingFrequencyOffset checkpointing frequency offset in seconds
+     * @param checkpointingFrequencyOffset
+     *            checkpointing frequency offset in seconds
      */
     public void setCheckpointingFrequencyOffset(int checkpointingFrequencyOffset) {
         this.checkpointingFrequencyOffset = checkpointingFrequencyOffset;
@@ -539,12 +530,12 @@ public abstract class AbstractPE implements Cloneable {
     abstract public void output();
 
     protected void checkpoint() {
-        
+
         byte[] serializedState = serializeState();
         // NOTE: assumes pe id is keyvalue from the PE...
         saveState(getSafeKeeperId(), serializedState);
         // remove dirty flag
-        checkpointable=false;
+        checkpointable = false;
     }
 
     private void saveState(SafeKeeperId key, byte[] serializedState) {
@@ -552,17 +543,12 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     protected void recover() {
-        if (recoveryAttempted) {
-            safeKeeper.invalidateStateCacheEntry(getSafeKeeperId());
-        } else {
-            byte[] serializedState = safeKeeper
-                    .fetchSerializedState(getSafeKeeperId());
-            if (serializedState == null) {
-                return;
-            }
-            AbstractPE peInOldState = deserializeState(serializedState);
-            restoreState(peInOldState);
+        byte[] serializedState = safeKeeper.fetchSerializedState(getSafeKeeperId());
+        if (serializedState == null) {
+            return;
         }
+        AbstractPE peInOldState = deserializeState(serializedState);
+        restoreState(peInOldState);
     }
 
     public SafeKeeperId getSafeKeeperId() {
@@ -624,12 +610,10 @@ public abstract class AbstractPE implements Cloneable {
                         // TODO use reflectasm
                         field.set(this, field.get(oldState));
                     } catch (IllegalArgumentException e) {
-                        Logger.getLogger("s4-ft").error("Cannot recover old state for this PE ["
-                                + this + "]", e);
+                        Logger.getLogger("s4-ft").error("Cannot recover old state for this PE [" + this + "]", e);
                         return;
                     } catch (IllegalAccessException e) {
-                        Logger.getLogger("s4-ft").error("Cannot recover old state for this PE ["
-                                + this + "]", e);
+                        Logger.getLogger("s4-ft").error("Cannot recover old state for this PE [" + this + "]", e);
                         return;
                     }
 
@@ -638,15 +622,16 @@ public abstract class AbstractPE implements Cloneable {
             restoreFieldsForClass(currentInOldStateClassHierarchy.getSuperclass(), oldState);
         }
     }
-    
+
     /**
      * Subscribes this PE to the checkpointing stream
      */
     private void supplementAdviceForCheckpointingAndRecovery() {
-        // don't do anything until both conditions are true                                                                        
-        Logger.getLogger("s4").info("Maybe adding for " + this.getId() + ": " + checkpointingFrequency + " and " + eventAdviceList.size());
+        // don't do anything until both conditions are true
+        Logger.getLogger("s4").info(
+                "Maybe adding for " + this.getId() + ": " + checkpointingFrequency + " and " + eventAdviceList.size());
         if (checkpointingFrequency > 0 && eventAdviceList.size() > 0) {
-            eventAdviceList.add(new EventAdvice(this.getId() +"_checkpointing", "key"));
+            eventAdviceList.add(new EventAdvice(this.getId() + "_checkpointing", "key"));
         }
     }
 
@@ -686,8 +671,7 @@ public abstract class AbstractPE implements Cloneable {
                 } catch (InterruptedException e) {
                 }
             }
-            if (PeriodicInvokerType.CHECKPOINTING.equals(type)
-                    && safeKeeper == null) {
+            if (PeriodicInvokerType.CHECKPOINTING.equals(type) && safeKeeper == null) {
                 try {
                     safeKeeperSetSignal.await();
                 } catch (InterruptedException e) {
@@ -700,11 +684,9 @@ public abstract class AbstractPE implements Cloneable {
 
             long currentTime = getCurrentTime();
             while (!Thread.interrupted()) {
-                long currentBoundary = (currentTime / frequencyInMillis)
-                        * frequencyInMillis;
+                long currentBoundary = (currentTime / frequencyInMillis) * frequencyInMillis;
                 long nextBoundary = currentBoundary + frequencyInMillis;
-                currentTime = clock.waitForTime(nextBoundary
-                        + (outputFrequencyOffset * 1000));
+                currentTime = clock.waitForTime(nextBoundary + (outputFrequencyOffset * 1000));
                 if (lookupTable != null) {
                     Set peKeys = lookupTable.keySet();
                     for (Iterator it = peKeys.iterator(); it.hasNext();) {
@@ -724,17 +706,14 @@ public abstract class AbstractPE implements Cloneable {
                                 pe.output();
                                 outputCount++;
                             } catch (Exception e) {
-                                Logger.getLogger("s4").error(
-                                        "Exception calling output() method", e);
+                                Logger.getLogger("s4").error("Exception calling output() method", e);
                             }
 
                             if (outputCount == outputsBeforePause) {
                                 if (logPauses) {
                                     Logger.getLogger("s4").info(
-                                            "Pausing " + getId() + " at count "
-                                                    + outputCount + " for "
-                                                    + pauseTimeInMillis
-                                                    + " milliseconds");
+                                            "Pausing " + getId() + " at count " + outputCount + " for "
+                                                    + pauseTimeInMillis + " milliseconds");
                                 }
                                 outputCount = 0;
                                 try {
@@ -743,8 +722,7 @@ public abstract class AbstractPE implements Cloneable {
                                     Thread.currentThread().interrupt();
                                 }
                             }
-                        } else if (PeriodicInvokerType.CHECKPOINTING
-                                .equals(type)) {
+                        } else if (PeriodicInvokerType.CHECKPOINTING.equals(type)) {
                             try {
                                 if (pe.isCheckpointable()) {
                                     pe.initiateCheckpoint();
@@ -752,19 +730,14 @@ public abstract class AbstractPE implements Cloneable {
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                Logger.getLogger("s4")
-                                        .error("Exception calling checkpoint() method",
-                                                e);
+                                Logger.getLogger("s4").error("Exception calling checkpoint() method", e);
                             }
 
                             if (checkpointCount == checkpointsBeforePause) {
                                 if (logPauses) {
                                     Logger.getLogger("s4").info(
-                                            "Pausing " + getId()
-                                            + " at checkpoint count "
-                                            + checkpointCount + " for "
-                                            + checkpointingPauseTimeInMillis
-                                            + " milliseconds");
+                                            "Pausing " + getId() + " at checkpoint count " + checkpointCount + " for "
+                                                    + checkpointingPauseTimeInMillis + " milliseconds");
                                 }
                                 checkpointCount = 0;
                                 try {

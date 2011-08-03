@@ -7,13 +7,16 @@
 		to S4 PEs.</p>
 	<p>The current approach is based on checkpointing.</p>
 	<p>Checkpoints are taken periodically (configurable by time or
-		frequency of application events), and when restarting an S4 platform,
+		frequency of application events), and when restarting an S4 node,
 		saved checkpoints are automatically and lazily restored.</p>
 	<p>Lazy restoration is triggered by an application event to a PE
 		that has not yet been restored.</p>
+	<p>Checkpoints are stored in storage backends. Storage backends may
+		implement eager techniques to prefetch checkpoint data to be
+		recovered.
 	<p>
-		The application programmer must take care of marking as <i>transient</i>
-		the fields that do not have to be persisted.
+		The application programmer must take care of marking as <b>transient</b>
+		the fields that do not have to be persisted (or cannot be persisted).
 	<p>Storage backends are pluggable and we provide some default
 		implementations in this package</p>
 </body>

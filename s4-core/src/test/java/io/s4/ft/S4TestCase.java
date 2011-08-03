@@ -16,9 +16,7 @@ public class S4TestCase {
     long seedTime = 0;
     ApplicationContext appContext = null;
     ApplicationContext adapterContext = null;
-    private String configBase;
     boolean configPathsInitialized = false;
-    private String[] coreConfigFileUrls;
     public static File DEFAULT_TEST_OUTPUT_DIR = new File(
             System.getProperty("user.dir") + File.separator + "tmp");
     public static File DEFAULT_STORAGE_DIR = new File(
@@ -43,50 +41,12 @@ public class S4TestCase {
         System.setProperty("lock_dir", S4App.lockDirPath);
         File lockDir = new File(S4App.lockDirPath);
         if (!lockDir.exists()) {
-            lockDir.mkdirs();
+            if (!lockDir.mkdirs()) {
+                throw new RuntimeException("Cannot create directory: ["+lockDir.getAbsolutePath()+"]");
+            }
         } else {
             TestUtils.deleteDirectoryContents(lockDir);
         }
     }
-
-    
-    
-//    public void initializeAdapter() throws IOException {
-//        initConfigPaths(getClass(), null);
-//        // load adapter config xml
-//
-//        // load adapter config xml
-//        ApplicationContext coreContext;
-//        coreContext = new FileSystemXmlApplicationContext("file:" + configBase
-//                + "adapter_conf.xml");
-//        ApplicationContext context = coreContext;
-//
-//        adapterContext = new FileSystemXmlApplicationContext(
-//                new String[] { "file:" + configBase + "app_adapter_conf.xml" },
-//                context);
-//
-//        Adapter adapter = (Adapter) adapterContext.getBean("adapter");
-//
-//        Map listenerBeanMap = adapterContext
-//                .getBeansOfType(EventProducer.class);
-//        if (listenerBeanMap.size() == 0) {
-//            System.err.println("No user-defined listener beans");
-//            Thread.dumpStack();
-//            System.exit(14);
-//        }
-//        EventProducer[] eventListeners = new EventProducer[listenerBeanMap
-//                .size()];
-//
-//        int index = 0;
-//        for (Iterator it = listenerBeanMap.keySet().iterator(); it.hasNext(); index++) {
-//            String beanName = (String) it.next();
-//            System.out.println("Adding producer " + beanName);
-//            eventListeners[index] = (EventProducer) listenerBeanMap
-//                    .get(beanName);
-//        }
-//
-//        adapter.setEventListeners(eventListeners);
-//
-//    }
 
 }

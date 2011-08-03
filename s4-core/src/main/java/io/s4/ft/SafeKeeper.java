@@ -32,11 +32,7 @@ public class SafeKeeper {
         SUCCESS, FAILURE
     }
 
-    private static Logger logger = Logger.getLogger(SafeKeeper.class);
-    private ConcurrentMap<SafeKeeperId, byte[]> serializedStateCache = new ConcurrentHashMap<SafeKeeperId, byte[]>(16,
-            0.75f, 2);
-    private Set<SafeKeeperId> keysToRecover = Collections.newSetFromMap(new ConcurrentHashMap<SafeKeeperId, Boolean>(
-            16, 0.75f, 2));
+    static Logger logger = Logger.getLogger(SafeKeeper.class);
     private StateStorage stateStorage;
     private Dispatcher loopbackDispatcher;
     private SerializerDeserializer serializer;
@@ -44,6 +40,7 @@ public class SafeKeeper {
     // monitor field injection through a latch
     private CountDownLatch signalReady = new CountDownLatch(2);
     private CountDownLatch signalNodesAvailable = new CountDownLatch(1);
+    private StorageCallbackFactory storageCallbackFactory = new LoggingStorageCallbackFactory();
 
     public SafeKeeper() {
     }
@@ -51,54 +48,28 @@ public class SafeKeeper {
     /**
      * <p>
      * This init() method <b>must</b> be called by the dependency injection
-     * framework. It triggers a separate thread for fetching existing keys from
-     * the storage. This external thread waits until all required dependencies
+     * framework. It waits until all required dependencies
      * are injected in SafeKeeper, and until the node count is accessible from
      * the communication layer.
      * </p>
      */
     public void init() {
-
-        Thread keysLoaderThread = new Thread(new KeysLoader(this));
-        keysLoaderThread.start();
-
-    }
-
-    /**
-     * 
-     * This class defines the activity required for fetching SafeKeeperIds from
-     * storage. In particular, it blocks until all required dependencies are
-     * injected in SafeKeeper
-     * 
-     */
-    private static class KeysLoader implements Runnable {
-        SafeKeeper safeKeeper;
-
-        public KeysLoader(SafeKeeper safeKeeper) {
-            this.safeKeeper = safeKeeper;
+        try {
+            getReadySignal().await();
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
         }
-
-        public void run() {
+        int nodeCount = getLoopbackDispatcher().getEventEmitter().getNodeCount();
+        // required wait until nodes are available
+        while (nodeCount == 0) {
             try {
-                safeKeeper.getReadySignal().await();
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
+                Thread.sleep(500);
+            } catch (InterruptedException ignored) {
             }
-            int nodeCount = safeKeeper.getLoopbackDispatcher().getEventEmitter().getNodeCount();
-            // required wait until nodes are available
-            while (nodeCount == 0) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                nodeCount = safeKeeper.getLoopbackDispatcher().getEventEmitter().getNodeCount();
-            }
-
-            safeKeeper.signalNodesAvailable.countDown();
-
+            nodeCount = getLoopbackDispatcher().getEventEmitter().getNodeCount();
         }
+
+        signalNodesAvailable.countDown();
     }
 
     /**
@@ -110,7 +81,7 @@ public class SafeKeeper {
      *            checkpoint data
      */
     public void saveState(SafeKeeperId key, byte[] state) {
-        stateStorage.saveState(key, state, new StorageCallBackLogger());
+        stateStorage.saveState(key, state, storageCallbackFactory.createStorageCallback());
     }
 
     /**
@@ -127,33 +98,8 @@ public class SafeKeeper {
         } catch (InterruptedException ignored) {
         }
         byte[] result = null;
-        if (serializedStateCache.containsKey(key)) {
-            // TODO remove opti for now
-            result = serializedStateCache.remove(key);
-        } else {
-            result = stateStorage.fetchState(key);
-        }
+        result = stateStorage.fetchState(key);
         return result;
-    }
-
-    // TODO externalize
-    private static class StorageCallBackLogger implements StorageCallback {
-        @Override
-        public void storageOperationResult(StorageResultCode code, Object message) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Callback from storage: " + message);
-            }
-        }
-    }
-
-    /**
-     * Removes an entry from the cache of safeKeeper Ids to recover
-     * 
-     * @param safeKeeperId
-     *            a safeKeeperId
-     */
-    public void invalidateStateCacheEntry(SafeKeeperId safeKeeperId) {
-        serializedStateCache.remove(safeKeeperId);
     }
 
     /**
@@ -190,27 +136,6 @@ public class SafeKeeper {
     public void initiateRecovery(SafeKeeperId safeKeeperId) {
         RecoveryEvent recoveryEvent = new RecoveryEvent(safeKeeperId);
         loopbackDispatcher.dispatchEvent(safeKeeperId.getPrototypeId() + "_recovery", recoveryEvent);
-    }
-
-    /**
-     * Keeps checkpoint data recovered from storage in a checkpoint data cache<br/>
-     * This can be used for an eager recovery mechanism.
-     * 
-     * @param safeKeeperId
-     *            safeKeeperId
-     * @param state
-     *            checkpoint data
-     */
-    public void cacheSerializedState(SafeKeeperId safeKeeperId, byte[] state) {
-        serializedStateCache.putIfAbsent(safeKeeperId, state);
-    }
-
-    public boolean isCached(SafeKeeperId safeKeeperId) {
-        return serializedStateCache.containsKey(safeKeeperId);
-    }
-
-    public Set<SafeKeeperId> getKeysToRecover() {
-        return keysToRecover;
     }
 
     public void setSerializer(SerializerDeserializer serializer) {
@@ -254,5 +179,14 @@ public class SafeKeeper {
     public CountDownLatch getReadySignal() {
         return signalReady;
     }
+
+    public StorageCallbackFactory getStorageCallbackFactory() {
+        return storageCallbackFactory;
+    }
+
+    public void setStorageCallbackFactory(StorageCallbackFactory storageCallbackFactory) {
+        this.storageCallbackFactory = storageCallbackFactory;
+    }
+    
 
 }

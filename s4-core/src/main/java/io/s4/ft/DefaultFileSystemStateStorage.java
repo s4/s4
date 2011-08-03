@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
  * <p>
  * Checkpoints are stored in individual files (1 file = 1 safeKeeperId) in
  * directories according to the following structure:
- * <code>(storageRootpath)/peId/safeKeeperIdxx</code>
+ * <code>(storageRootpath)/prototypeId/safeKeeperId</code>
  * </p>
  * 
  */
@@ -147,7 +147,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         return keys;
     }
 
-    // files kept as : root/<partitionId>/<prototypeId>/encodedKeyWithFullInfo
+    // files kept as : root/<prototypeId>/encodedKeyWithFullInfo
     private static File safeKeeperID2File(SafeKeeperId key, String storageRootPath) {
 
         return new File(storageRootPath + File.separator + key.getPrototypeId() + File.separator
