@@ -2,6 +2,8 @@ package io.s4.ft;
 
 import static org.junit.Assert.assertEquals;
 
+import io.s4.ft.SafeKeeper.StorageResultCode;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +12,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
@@ -87,7 +91,7 @@ public class TestRedisStateStorage {
         RedisStateStorage storage = new RedisStateStorage();
         storage.setRedisHost("localhost");
         storage.setRedisPort(6379);
-        storage.connect();
+        storage.init();
         storage.clear();
         return storage;
     }
@@ -95,20 +99,36 @@ public class TestRedisStateStorage {
     @Test
     public void testFetchState() throws IOException, InterruptedException {
         SafeKeeperId key = new SafeKeeperId("prototype", "key");
-        storage.saveState(key, PAYLOAD.getBytes(), null);
+        final CountDownLatch signalAllSaved = new CountDownLatch(1);        
+        storage.saveState(key, PAYLOAD.getBytes(), new StorageCallback() {
+            @Override
+            public void storageOperationResult(StorageResultCode resultCode, Object message) {
+                signalAllSaved.countDown();
+            }
+        });
+        signalAllSaved.await(5, TimeUnit.SECONDS);
         byte[] result = storage.fetchState(key);
         String recovered = new String(result);
         assertEquals(PAYLOAD, recovered);
     }
 
     @Test
-    public void testFetchStoredKeys() {
+    public void testFetchStoredKeys() throws InterruptedException {
         Set<SafeKeeperId> fixture = new HashSet<SafeKeeperId>();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++) {
             fixture.add(new SafeKeeperId("prototype", "key" + i));
-        for (SafeKeeperId skid : fixture)
-            storage.saveState(skid, PAYLOAD.getBytes(), null);
-
+        }
+        final CountDownLatch signalAllSaved = new CountDownLatch(10);        
+        for (SafeKeeperId skid : fixture) {
+            storage.saveState(skid, PAYLOAD.getBytes(), new StorageCallback() {
+                @Override
+                public void storageOperationResult(StorageResultCode resultCode, Object message) {
+                    signalAllSaved.countDown();
+                }
+            });
+        }
+        
+        signalAllSaved.await(5, TimeUnit.SECONDS);
         // retrieve the keys
         Set<SafeKeeperId> result = storage.fetchStoredKeys();
         assertEquals(fixture.size(), result.size());
