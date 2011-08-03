@@ -153,6 +153,7 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     public void setClock(Clock clock) {
+        this.clock = clock;
         if (this.clock != null) {
             this.s4ClockSetSignal.countDown();
         }
