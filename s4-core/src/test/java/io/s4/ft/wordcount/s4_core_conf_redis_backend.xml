@@ -182,7 +182,11 @@
         <property name="loopbackDispatcher" ref="loopbackDispatcher" />
         <property name="serializer" ref="serDeser"/>
         <property name="hasher" ref="hasher"/>
+        <property name="storageCallbackFactory" ref="loggingStorageCallbackFactory"/>
     </bean>
+    
+    <bean id="loggingStorageCallbackFactory" class="io.s4.ft.LoggingStorageCallbackFactory"/>
+
     
     <bean id="redisStateStorage" class="io.s4.ft.RedisStateStorage" init-method="init">
         <property name="redisHost" value="localhost"/>

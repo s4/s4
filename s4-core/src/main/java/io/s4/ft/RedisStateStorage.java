@@ -136,9 +136,9 @@ public class RedisStateStorage implements StateStorage {
                 jedisPool.returnResource(jedis);
             }
             if ("OK".equals(statusCode)) {
-                callback.storageOperationResult(StorageResultCode.SUCCESS, "Redis result code is [" + statusCode + "]");
+                callback.storageOperationResult(StorageResultCode.SUCCESS, "Redis result code is [" + statusCode + "] for key [" + key.toString() +"]");
             } else {
-                callback.storageOperationResult(StorageResultCode.FAILURE, "Unexpected redis result code : [" + statusCode + "]");
+                callback.storageOperationResult(StorageResultCode.FAILURE, "Unexpected redis result code : [" + statusCode + "] for key [" + key.toString() +"]");
             }
         }
 

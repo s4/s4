@@ -22,8 +22,12 @@ public class LoggingStorageCallbackFactory implements StorageCallbackFactory {
 
         @Override
         public void storageOperationResult(StorageResultCode code, Object message) {
-            if (SafeKeeper.logger.isInfoEnabled()) {
-                SafeKeeper.logger.info("Callback from storage: " + message);
+            if (StorageResultCode.SUCCESS == code) {
+                if (SafeKeeper.logger.isDebugEnabled()) {
+                    SafeKeeper.logger.debug("Callback from storage: " + message);
+                }
+            } else {
+                SafeKeeper.logger.warn("Callback from storage: " + message);
             }
         }
     }

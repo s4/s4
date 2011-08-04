@@ -182,8 +182,11 @@
         <property name="loopbackDispatcher" ref="loopbackDispatcher" />
         <property name="serializer" ref="serDeser"/>
         <property name="hasher" ref="hasher"/>
+        <property name="storageCallbackFactory" ref="loggingStorageCallbackFactory"/>
     </bean>
     
+    <bean id="loggingStorageCallbackFactory" class="io.s4.ft.LoggingStorageCallbackFactory"/>
+
     <bean id="bkStateStorage" class="io.s4.ft.BookKeeperStateStorage" init-method="init">
         <!-- if not specified, default is <current_dir>/tmp/storage 
         <property name="storageRootPath" value="${storage_root_path}" /> -->

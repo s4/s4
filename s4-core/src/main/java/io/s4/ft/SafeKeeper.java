@@ -7,11 +7,7 @@ import io.s4.processor.AbstractPE;
 import io.s4.serialize.SerializerDeserializer;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
@@ -32,7 +28,7 @@ public class SafeKeeper {
         SUCCESS, FAILURE
     }
 
-    static Logger logger = Logger.getLogger(SafeKeeper.class);
+    static Logger logger = Logger.getLogger("s4-ft");
     private StateStorage stateStorage;
     private Dispatcher loopbackDispatcher;
     private SerializerDeserializer serializer;

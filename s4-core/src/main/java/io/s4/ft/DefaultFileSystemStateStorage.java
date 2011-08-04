@@ -1,5 +1,7 @@
 package io.s4.ft;
 
+import io.s4.ft.SafeKeeper.StorageResultCode;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -60,7 +62,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
         try {
             threadPool.submit(new SaveTask(key, state, callback, storageRootPath));
         } catch (RejectedExecutionException e) {
-            logger.error("Could not submit task to persist checkpoint. Remaining capacity for task queue is ["
+            callback.storageOperationResult(StorageResultCode.FAILURE, "Could not submit task to persist checkpoint. Remaining capacity for task queue is ["
                     + threadPool.getQueue().remainingCapacity() + "] ; number of elements is ["
                     + threadPool.getQueue().size() + "] ; maximum capacity is [" + maxOutstandingWriteRequests + "]");
         }
@@ -246,7 +248,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                     // parent file has prototype id
                     if (!f.getParentFile().mkdir()) {
                         callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE,
-                                "Cannot create directory for storing PE for prototype: "
+                                "Cannot create directory for storing PE ["+key.toString() + "] for prototype: "
                                         + f.getParentFile().getAbsolutePath());
                         return;
                     }
@@ -255,7 +257,7 @@ public class DefaultFileSystemStateStorage implements StateStorage {
                 try {
                     f.createNewFile();
                 } catch (IOException e) {
-                    callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                    callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, key.toString() + " : " + e.getMessage());
                     return;
                 }
             } else {
@@ -270,10 +272,11 @@ public class DefaultFileSystemStateStorage implements StateStorage {
             try {
                 fos = new FileOutputStream(f);
                 fos.write(state);
+	            callback.storageOperationResult(SafeKeeper.StorageResultCode.SUCCESS, key.toString());
             } catch (FileNotFoundException e) {
-                callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, key.toString() + " : " + e.getMessage());
             } catch (IOException e) {
-                callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, e.getMessage());
+                callback.storageOperationResult(SafeKeeper.StorageResultCode.FAILURE, key.toString() + " : " + e.getMessage());
             } finally {
                 try {
                     if (fos != null) {
