@@ -544,12 +544,21 @@ public abstract class AbstractPE implements Cloneable {
     }
 
     protected void recover() {
-        byte[] serializedState = safeKeeper.fetchSerializedState(getSafeKeeperId());
+        byte[] serializedState = null;
+        try {
+            serializedState = safeKeeper.fetchSerializedState(getSafeKeeperId());
+        } catch (RuntimeException e) {
+            Logger.getLogger("s4-ft").error("Cannot fetch serialized stated for key [" + getSafeKeeperId().toString()+"]: "+e.getMessage(), e);
+        }
         if (serializedState == null) {
             return;
         }
-        AbstractPE peInOldState = deserializeState(serializedState);
-        restoreState(peInOldState);
+        try {
+            AbstractPE peInOldState = deserializeState(serializedState);
+            restoreState(peInOldState);
+        } catch (RuntimeException e) {
+            Logger.getLogger("s4-ft").error("Cannot restore state for key [" + getSafeKeeperId().toString()+"]: "+e.getMessage(), e);
+        }
     }
 
     public SafeKeeperId getSafeKeeperId() {
