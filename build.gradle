@@ -107,7 +107,9 @@ subprojects {
 
     /* Common dependencies applied to all subprojects. */
     dependencies { 
-        compile( libraries.log4j )
+        compile( libraries.log4j ) {
+			exclude group:'com.sun.jmx', module:'jmxri'
+		}
         compile( libraries.commons_logging )
         compile( libraries.spring )
         testCompile( libraries.junit )
