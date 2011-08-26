@@ -2,15 +2,12 @@ package io.s4.ft;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -19,13 +16,10 @@ import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Assert;
 
-import org.apache.bookkeeper.proto.BookieServer;
-import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.Watcher.Event.EventType;
-import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.server.NIOServerCnxn;
 import org.apache.zookeeper.server.ZooKeeperServer;
@@ -41,8 +35,6 @@ import org.apache.zookeeper.server.ZooKeeperServer;
 public class TestUtils {
 
     public static final int ZK_PORT = 21810;
-    public static final int INITIAL_BOOKIE_PORT = 5000;
-    static List<BookieServer> bs = new ArrayList<BookieServer>();
     public static Process forkS4App(String testClassName, String s4CoreConfFileName) throws IOException,
             InterruptedException {
         List<String> cmdList = new ArrayList<String>();
@@ -402,58 +394,6 @@ public class TestUtils {
         }
         S4TestCase.DEFAULT_STORAGE_DIR.mkdirs();
     
-    }
-
-    public static void initializeBKBookiesAndLedgers(final ZooKeeper zk)
-            throws KeeperException, InterruptedException, IOException {
-        try {
-            zk.delete("/ledgers/available", -1);
-        } catch (Exception ignored) {
-        }
-    
-        try {
-            zk.delete("/ledgers", -1);
-        } catch (Exception ignored) {
-        }
-        
-        try {
-            zk.delete("/s4/checkpoints", -1);
-        } catch (Exception ignored) {
-        }
-    
-        try {
-            zk.delete("/s4", -1);
-        } catch (Exception ignored) {
-        }
-        
-        zk.create("/ledgers", new byte[0], Ids.OPEN_ACL_UNSAFE,
-                CreateMode.PERSISTENT);
-        zk.create("/ledgers/available", new byte[0],
-                Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-        zk.create("/s4", new byte[0], Ids.OPEN_ACL_UNSAFE,
-                CreateMode.PERSISTENT);
-        zk.create("/s4/checkpoints", new byte[0], Ids.OPEN_ACL_UNSAFE,
-                CreateMode.PERSISTENT);
-     // Create Bookie Servers (B1, B2, B3)
-        for (int i = 0; i < 3; i++) {
-            File f = new File(S4TestCase.DEFAULT_STORAGE_DIR+"/bookie_test_" +i);
-            f.delete();
-            f.mkdir();
-
-            BookieServer server = new BookieServer(INITIAL_BOOKIE_PORT + i, "localhost:"+ZK_PORT, f, new File[] { f });
-            server.start();
-            bs.add(server);
-        }
-//        this.bkstore = new BookKeeperStateStorage("localhost:"+ZK_PORT);
-
-    }
-    
-    public static void stopBKBookies() throws Exception {
-        if (bs!=null) {
-            for (BookieServer bookie : bs) {
-                bookie.shutdown();
-            }
-        }
     }
 
 }

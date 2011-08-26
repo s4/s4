@@ -37,6 +37,7 @@ public class RedisStateStorage implements StateStorage {
     private String redisHost;
     private int redisPort;
     private ThreadPoolExecutor threadPool;
+    // TODO: should probably define a lower default value...
     int maxWriteThreads = Runtime.getRuntime().availableProcessors() == 1 ? 1 : (Runtime.getRuntime()
             .availableProcessors() - 1);
     int writeThreadKeepAliveSeconds = 120;

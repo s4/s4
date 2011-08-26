@@ -44,7 +44,6 @@ public class FTWordCountTest extends S4TestCase {
 
     private static Factory zookeeperServerConnectionFactory;
     private static final String FILESYSTEM_BACKEND_CONF = "s4_core_conf_fs_backend.xml";
-    private static final String BOOKKEEPER_BACKEND_CONF = "s4_core_conf_bk_backend.xml";
     private static final String REDIS_BACKEND_CONF = "s4_core_conf_redis_backend.xml";
     private Process forkedS4App = null;
 
@@ -53,14 +52,6 @@ public class FTWordCountTest extends S4TestCase {
         doTestCheckpointingAndRecovery(FILESYSTEM_BACKEND_CONF);
     }
 
-    @Test
-    public void bookKeeperBackend() throws Exception {
-        final ZooKeeper zk = TestUtils.createZkClient();
-        TestUtils.initializeBKBookiesAndLedgers(zk);
-        Thread.sleep(6000);
-        doTestCheckpointingAndRecovery(BOOKKEEPER_BACKEND_CONF);
-    }
-    
     @Test
     public void testRedisBackend() throws Exception {
         TestRedisStateStorage.runRedis();
@@ -94,11 +85,6 @@ public class FTWordCountTest extends S4TestCase {
 
         forkedS4App = TestUtils.forkS4App(getClass().getName(), backendConf);
 
-        if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
-            // bookkeeper backend requires longer initialization
-            // NOTE: we should rather find a way to use synchros...
-            Thread.sleep(4000);
-        }
         CountDownLatch signalTextProcessed = new CountDownLatch(1);
         TestUtils.watchAndSignalCreation("/textProcessed", signalTextProcessed,
                 zk);
@@ -118,10 +104,6 @@ public class FTWordCountTest extends S4TestCase {
                 "Sentences", 0);
         signalSentence1Processed.await();
         Thread.sleep(1000);
-        if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
-            // NOTE: we should rather add synchros...
-            Thread.sleep(2000);
-        }
         
         
         // crash the app
@@ -129,10 +111,6 @@ public class FTWordCountTest extends S4TestCase {
 
         // recovering and making sure checkpointing still works
         forkedS4App = TestUtils.forkS4App(getClass().getName(), backendConf);
-        if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
-            // NOTE: we should rather add synchros...
-            Thread.sleep(2000);
-        }
 
         // add authorizations for continuing processing. Without these, the
         // WordClassifier processed keeps waiting
@@ -160,10 +138,6 @@ public class FTWordCountTest extends S4TestCase {
         forkedS4App.destroy();
         forkedS4App = TestUtils.forkS4App(getClass().getName(), backendConf);
 
-        if (BOOKKEEPER_BACKEND_CONF.equals(backendConf)) {
-            // NOTE: we should rather add synchros...
-            Thread.sleep(2000);
-        }
         // add authorizations for continuing processing. Without these, the
         // WordClassifier processed keeps waiting
         for (int i = WordCountTest.SENTENCE_1_TOTAL_WORDS

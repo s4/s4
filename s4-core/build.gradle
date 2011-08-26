@@ -26,9 +26,7 @@ dependencies {
     compile( libraries.commons_cli )
     compile( libraries.commons_jexl )
     compile( libraries.commons_codec )
-    compile( libraries.bookkeeper )
     compile( libraries.jedis )
-    compile( libraries.netty )
     compile project(':s4-comm')
 }
 

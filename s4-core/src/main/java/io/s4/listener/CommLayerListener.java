@@ -185,14 +185,6 @@ public class CommLayerListener implements EventListener, Runnable {
                 partitionId = Integer.parseInt(partition);
                 monitor.setDefaultValue("tid", partitionId);
                 logger.info("tid is set to " + partitionId);
-                for (EventHandler eventHandler : handlers) {
-                    // we need the partition id for remembering PEs identities
-                    // across an s4 cluster
-                    if (eventHandler instanceof io.s4.collector.EventListener) {
-                        ((io.s4.collector.EventListener) eventHandler)
-                                .setPartitionId(partitionId);
-                    }
-                }
             }
             this.notify();
         }

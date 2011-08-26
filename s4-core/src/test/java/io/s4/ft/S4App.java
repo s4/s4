@@ -127,6 +127,7 @@ public class S4App {
                                 coreContext.getBean("clock"));
                     }
                 }
+                ((AbstractPE)bean).setSafeKeeper((SafeKeeper) context.getBean("safeKeeper"));
             } catch (NoSuchMethodException mnfe) {
                 // acceptable
             }

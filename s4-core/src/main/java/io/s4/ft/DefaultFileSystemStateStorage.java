@@ -71,11 +71,10 @@ public class DefaultFileSystemStateStorage implements StateStorage {
     @Override
     public byte[] fetchState(SafeKeeperId key) {
         File file = safeKeeperID2File(key, storageRootPath);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Fetching " + file.getAbsolutePath() + "for : " + key);
-        }
         if (file != null && file.exists()) {
-
+            if (logger.isDebugEnabled()) {
+                logger.debug("Fetching " + file.getAbsolutePath() + "for : " + key);
+            }
             // TODO use commons-io or guava
             FileInputStream in = null;
             try {

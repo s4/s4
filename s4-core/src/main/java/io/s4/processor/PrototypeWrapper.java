@@ -76,12 +76,7 @@ public class PrototypeWrapper {
             pe = (AbstractPE) lookupTable.get(keyValue);
             if (pe == null) {
                 pe = (AbstractPE) prototype.clone();
-                if (pe instanceof AbstractPE) {
-                    // Logger.getLogger("s4").info("injecting safekeeper");
-					((AbstractPE) pe).setSafeKeeper(safeKeeper);
-				}
                 pe.initInstance();
-
             }
             // update the last update time on the entry
             lookupTable.set(keyValue, pe, prototype.getTtl());
