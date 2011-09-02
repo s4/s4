@@ -12,8 +12,12 @@ import java.util.Set;
 public interface StateStorage {
 
     /**
-     * <i>Asynchronous</i> call for storing the checkpoint data
+     * Stores a checkpoint.
      * 
+     * <p>
+     * NOTE: we don't handle any failure/success return value, because all
+     * failure/success notifications go through the StorageCallback reference
+     * </p>
      * @param key
      *            safeKeeperId
      * @param state
@@ -25,9 +29,7 @@ public interface StateStorage {
     public void saveState(SafeKeeperId key, byte[] state, StorageCallback callback);
 
     /**
-     * <p>
-     * <i>Synchronous</i> call to fetch stored checkpoint data.
-     * </p>
+     * Fetches data for a stored checkpoint.
      * <p>
      * Must return null if storage does not contain this key.
      * </p>
@@ -41,7 +43,7 @@ public interface StateStorage {
     public byte[] fetchState(SafeKeeperId key);
 
     /**
-     * <i>Synchronous</i> call to fetch all stored safeKeeper Ids.
+     * Fetches all stored safeKeeper Ids.
      * 
      * @return all stored safeKeeper Ids.
      */

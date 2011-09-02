@@ -1,6 +1,7 @@
 package io.s4.ft;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
@@ -71,9 +72,6 @@ public class RecoveryTest extends S4TestCase {
         final CountDownLatch signalCheckpointed = new CountDownLatch(1);
         TestUtils.watchAndSignalCreation("/checkpointed", signalCheckpointed,
                 zk);
-        final CountDownLatch signalCheckpointAddedByBK = new CountDownLatch(1);
-        // TestUtils.watchAndSignalChangedChildren("/s4/checkpoints",
-        // signalCheckpointAddedByBK, zk);
         // trigger checkpoint
         gen.injectValueEvent(new KeyValue("initiateCheckpoint", "blah"),
                 "Stream1", 0);
@@ -103,9 +101,8 @@ public class RecoveryTest extends S4TestCase {
         TestUtils.watchAndSignalCreation("/value2Set", signalValue2Set, zk);
 
         gen.injectValueEvent(new KeyValue("value2", "message2"), "Stream1", 0);
-        signalValue2Set.await();
+        signalValue2Set.await(10, TimeUnit.SECONDS);
 
-        System.out.println("#2");
         // we should get "message1" (checkpointed) instead of "message1b"
         // (latest)
         Assert.assertEquals("value1=message1 ; value2=message2",

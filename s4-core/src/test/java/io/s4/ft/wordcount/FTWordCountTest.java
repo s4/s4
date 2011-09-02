@@ -102,7 +102,7 @@ public class FTWordCountTest extends S4TestCase {
         gen.injectValueEvent(
                 new KeyValue("sentence", WordCountTest.SENTENCE_1),
                 "Sentences", 0);
-        signalSentence1Processed.await();
+        signalSentence1Processed.await(10, TimeUnit.SECONDS);
         Thread.sleep(1000);
         
         
@@ -131,7 +131,7 @@ public class FTWordCountTest extends S4TestCase {
                 new KeyValue("sentence", WordCountTest.SENTENCE_2),
                 "Sentences", 0);
 
-        sentence2Processed.await();
+        sentence2Processed.await(10, TimeUnit.SECONDS);
         Thread.sleep(1000);
 
         // crash the app
@@ -148,7 +148,7 @@ public class FTWordCountTest extends S4TestCase {
         gen.injectValueEvent(
                 new KeyValue("sentence", WordCountTest.SENTENCE_3),
                 "Sentences", 0);
-        signalTextProcessed.await();
+        signalTextProcessed.await(10, TimeUnit.SECONDS);
         File results = new File(S4TestCase.DEFAULT_TEST_OUTPUT_DIR
                 + File.separator + "wordcount");
         String s = TestUtils.readFile(results);

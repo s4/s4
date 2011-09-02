@@ -8,7 +8,11 @@ import io.s4.serialize.SerializerDeserializer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -16,7 +20,8 @@ import org.apache.log4j.Logger;
  * 
  * <p>
  * This class is responsible for coordinating interactions between the S4 event
- * processor and the checkpoint storage backend.
+ * processor and the checkpoint storage backend. In particular, it schedules
+ * asynchronous save tasks to be executed on the backend.
  * </p>
  * 
  * 
@@ -28,7 +33,7 @@ public class SafeKeeper {
         SUCCESS, FAILURE
     }
 
-    static Logger logger = Logger.getLogger("s4-ft");
+    private static Logger logger = Logger.getLogger("s4-ft");
     private StateStorage stateStorage;
     private Dispatcher loopbackDispatcher;
     private SerializerDeserializer serializer;
@@ -38,15 +43,21 @@ public class SafeKeeper {
     private CountDownLatch signalNodesAvailable = new CountDownLatch(1);
     private StorageCallbackFactory storageCallbackFactory = new LoggingStorageCallbackFactory();
 
+    ThreadPoolExecutor threadPool;
+
+    int maxWriteThreads = 1;
+    int writeThreadKeepAliveSeconds = 120;
+    int maxOutstandingWriteRequests = 1000;
+
     public SafeKeeper() {
     }
 
     /**
      * <p>
      * This init() method <b>must</b> be called by the dependency injection
-     * framework. It waits until all required dependencies
-     * are injected in SafeKeeper, and until the node count is accessible from
-     * the communication layer.
+     * framework. It waits until all required dependencies are injected in
+     * SafeKeeper, and until the node count is accessible from the communication
+     * layer.
      * </p>
      */
     public void init() {
@@ -55,6 +66,12 @@ public class SafeKeeper {
         } catch (InterruptedException e1) {
             e1.printStackTrace();
         }
+        threadPool = new ThreadPoolExecutor(1, maxWriteThreads, writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<Runnable>(maxOutstandingWriteRequests));
+        logger.debug("Started thread pool with maxWriteThreads=[" + maxWriteThreads
+                + "], writeThreadKeepAliveSeconds=[" + writeThreadKeepAliveSeconds + "], maxOutsandingWriteRequests=["
+                + maxOutstandingWriteRequests + "]");
+
         int nodeCount = getLoopbackDispatcher().getEventEmitter().getNodeCount();
         // required wait until nodes are available
         while (nodeCount == 0) {
@@ -76,8 +93,22 @@ public class SafeKeeper {
      * @param state
      *            checkpoint data
      */
-    public void saveState(SafeKeeperId key, byte[] state) {
-        stateStorage.saveState(key, state, storageCallbackFactory.createStorageCallback());
+    public void saveState(SafeKeeperId safeKeeperId, byte[] serializedState) {
+        StorageCallback storageCallback = storageCallbackFactory.createStorageCallback();
+        try {
+            threadPool.submit(createSaveStateTask(safeKeeperId, serializedState));
+        } catch (RejectedExecutionException e) {
+            storageCallback.storageOperationResult(StorageResultCode.FAILURE,
+                    "Could not submit task to persist checkpoint. Remaining capacity for task queue is ["
+                            + threadPool.getQueue().remainingCapacity() + "] ; number of elements is ["
+                            + threadPool.getQueue().size() + "] ; maximum capacity is [" + maxOutstandingWriteRequests
+                            + "]");
+        }
+    }
+
+    private SaveStateTask createSaveStateTask(SafeKeeperId safeKeeperId, byte[] serializedState) {
+        return new SaveStateTask(safeKeeperId, serializedState, storageCallbackFactory.createStorageCallback(),
+                stateStorage);
     }
 
     /**
@@ -183,6 +214,29 @@ public class SafeKeeper {
     public void setStorageCallbackFactory(StorageCallbackFactory storageCallbackFactory) {
         this.storageCallbackFactory = storageCallbackFactory;
     }
-    
+
+    public int getMaxWriteThreads() {
+        return maxWriteThreads;
+    }
+
+    public void setMaxWriteThreads(int maxWriteThreads) {
+        this.maxWriteThreads = maxWriteThreads;
+    }
+
+    public int getWriteThreadKeepAliveSeconds() {
+        return writeThreadKeepAliveSeconds;
+    }
+
+    public void setWriteThreadKeepAliveSeconds(int writeThreadKeepAliveSeconds) {
+        this.writeThreadKeepAliveSeconds = writeThreadKeepAliveSeconds;
+    }
+
+    public int getMaxOutstandingWriteRequests() {
+        return maxOutstandingWriteRequests;
+    }
+
+    public void setMaxOutstandingWriteRequests(int maxOutstandingWriteRequests) {
+        this.maxOutstandingWriteRequests = maxOutstandingWriteRequests;
+    }
 
 }

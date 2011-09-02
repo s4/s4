@@ -36,28 +36,6 @@ public class RedisStateStorage implements StateStorage {
     private JedisPool jedisPool;
     private String redisHost;
     private int redisPort;
-    private ThreadPoolExecutor threadPool;
-    // TODO: should probably define a lower default value...
-    int maxWriteThreads = Runtime.getRuntime().availableProcessors() == 1 ? 1 : (Runtime.getRuntime()
-            .availableProcessors() - 1);
-    int writeThreadKeepAliveSeconds = 120;
-    int maxOutstandingWriteRequests = 1000;
-
-    public String getRedisHost() {
-        return redisHost;
-    }
-
-    public void setRedisHost(String redisHost) {
-        this.redisHost = redisHost;
-    }
-
-    public int getRedisPort() {
-        return redisPort;
-    }
-
-    public void setRedisPort(int redisPort) {
-        this.redisPort = redisPort;
-    }
 
     public void clear() {
         Jedis jedis = jedisPool.getResource();
@@ -72,20 +50,21 @@ public class RedisStateStorage implements StateStorage {
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         // TODO optional parameterization
         jedisPool = new JedisPool(jedisPoolConfig, redisHost, redisPort);
-        threadPool = new ThreadPoolExecutor(0, maxWriteThreads, writeThreadKeepAliveSeconds, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<Runnable>(maxOutstandingWriteRequests));
     }
 
     @Override
     public void saveState(SafeKeeperId key, byte[] state, StorageCallback callback) {
+        Jedis jedis = jedisPool.getResource();
+        String statusCode = "UNKNOWN";
         try {
-            threadPool.submit(new SaveTask(key, state, callback, jedisPool));
-        } catch (RejectedExecutionException e) {
-            callback.storageOperationResult(StorageResultCode.FAILURE,
-                    "Could not submit task to persist checkpoint. Remaining capacity for task queue is ["
-                            + threadPool.getQueue().remainingCapacity() + "] ; number of elements is ["
-                            + threadPool.getQueue().size() + "] ; maximum capacity is [" + maxOutstandingWriteRequests
-                            + "]");
+            statusCode = jedis.set(key.getStringRepresentation().getBytes(), state);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+        if ("OK".equals(statusCode)) {
+            callback.storageOperationResult(StorageResultCode.SUCCESS, "Redis result code is [" + statusCode + "] for key [" + key.toString() +"]");
+        } else {
+            callback.storageOperationResult(StorageResultCode.FAILURE, "Unexpected redis result code : [" + statusCode + "] for key [" + key.toString() +"]");
         }
     }
 
@@ -113,35 +92,21 @@ public class RedisStateStorage implements StateStorage {
         }
 
     }
-
-    private static class SaveTask implements Runnable {
-        SafeKeeperId key;
-        byte[] state;
-        StorageCallback callback;
-        JedisPool jedisPool;
-
-        public SaveTask(SafeKeeperId key, byte[] state, StorageCallback callback, JedisPool jedisPool) {
-            super();
-            this.key = key;
-            this.state = state;
-            this.callback = callback;
-            this.jedisPool = jedisPool;
-        }
-
-        public void run() {
-            Jedis jedis = jedisPool.getResource();
-            String statusCode = "UNKNOWN";
-            try {
-                statusCode = jedis.set(key.getStringRepresentation().getBytes(), state);
-            } finally {
-                jedisPool.returnResource(jedis);
-            }
-            if ("OK".equals(statusCode)) {
-                callback.storageOperationResult(StorageResultCode.SUCCESS, "Redis result code is [" + statusCode + "] for key [" + key.toString() +"]");
-            } else {
-                callback.storageOperationResult(StorageResultCode.FAILURE, "Unexpected redis result code : [" + statusCode + "] for key [" + key.toString() +"]");
-            }
-        }
-
+    
+    public String getRedisHost() {
+        return redisHost;
     }
+
+    public void setRedisHost(String redisHost) {
+        this.redisHost = redisHost;
+    }
+
+    public int getRedisPort() {
+        return redisPort;
+    }
+
+    public void setRedisPort(int redisPort) {
+        this.redisPort = redisPort;
+    }
+    
 }
