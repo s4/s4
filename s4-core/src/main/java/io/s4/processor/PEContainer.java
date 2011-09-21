@@ -84,14 +84,11 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
     public void addProcessor(AbstractPE processor) {
         System.out.println("adding pe: " + processor);
         PrototypeWrapper pw = new PrototypeWrapper(processor, clock);
-//        pw.setSafeKeeper(safeKeeper);
         prototypeWrappers.add(pw);
         adviceLists.add(pw.advise());
     }
 
     public void setProcessors(AbstractPE[] processors) {
-        // prototypeWrappers = new ArrayList<PrototypeWrapper>();
-
         for (int i = 0; i < processors.length; i++) {
             addProcessor(processors[i]);
         }
@@ -111,7 +108,6 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
         workQueue = new LinkedBlockingQueue<EventWrapper>(maxQueueSize);
         for (PrototypeWrapper pw : prototypeWrappers) {
             adviceLists.add(pw.advise());
-			pw.setSafeKeeper(safeKeeper);
         }
         Thread t = new Thread(this, "PEContainer");
         t.start();
