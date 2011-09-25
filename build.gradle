@@ -51,13 +51,15 @@ allprojects {
     archivesBaseName = 's4'
     
     repositories {
-        mavenCentral()
-        mavenLocal()
-        mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
-
+        
         /* Add lib dir as a repo. Some jar files that are not available 
         in a public repo are distributed in the lib dir. */
-        flatDir name: 'libDir', dirs: "$rootDir/lib"
+        flatDir name: 'libDir', dirs: ["$projectDir/../lib", "$projectDir/lib", "$projectDir/../../lib"]
+
+        mavenLocal()
+        mavenRepo name: "gson", urls: "http://google-gson.googlecode.com/svn/mavenrepo"
+        mavenRepo name: "repository.jboss.org", urls: "https://repository.jboss.org/nexus/content/repositories/releases/"
+		mavenCentral()
     }
 }
 
@@ -68,7 +70,6 @@ lift_json:          'net.liftweb:lift-json_2.8.1:2.2',
 gson:               'com.google.code.gson:gson:1.6',
 zk:                 'org.apache.zookeeper:zookeeper:3.3.1',
 log4j:              'log4j:log4j:1.2.15',
-junit:              'junit:junit:3.8.1',
 flexjson:           'net.sf.flexjson:flexjson:2.1',
 bcel:               'org.apache.bcel:bcel:5.2',
 jakarta_regexp:     'jakarta-regexp:jakarta-regexp:1.4',
@@ -84,7 +85,9 @@ commons_httpclient: 'commons-httpclient:commons-httpclient:3.1',
 spring:             'org.springframework:spring:2.5.6',
 junit:              'junit:junit:4.4',
 scala_compiler:     'org.scala-lang:scala-compiler:2.8.1',
-scala_library:      'org.scala-lang:scala-library:2.8.1'
+scala_library:      'org.scala-lang:scala-library:2.8.1',
+jedis:              'redis.clients:jedis:2.0.0',
+commons_pool:       'commons-pool:commons-pool:1.5.6',
 ]
 
 
@@ -158,84 +161,78 @@ binDistImage = copySpec {
     }
 }
 
-//println project(':s4-core').configurations.runtime.asPath
-//println project(':s4-core').configurations.archives.asPath
-//println project(':s4-core').configurations.default.asPath
-
-
 allDistImage = copySpec {
     with binDistImage
-	subprojects.findAll {proj -> 
-		into('src') {
+    subprojects.findAll {proj -> 
+        into('src') {
             from proj.sourceSets.main.allJava
         }
-		switch(proj.name) {
-			case "s4-core":
-		   	   break
-				
-			case "s4-driver":
-			        into ("${proj.name}/lib/python") {
-				   from ("${proj.name}/python/")
-				}
-			        into ("${proj.name}/lib/perl") {
-				   from ("${proj.name}/perl/")
-				}
-				break				
-			case "s4-example-driver":
-				into("s4-driver") {
-					from proj.sourceSets.main.resources
-				}
-				into ("s4-driver/lib") {
-					from proj.configurations.runtime
-					from proj.configurations.archives.allArtifactFiles
-				}
-				break
-			
-			case "s4-tools-loadgenerator":
-				into("s4-tools-loadgenerator") {
-					from proj.sourceSets.main.resources
-				}
-				into ("s4-tools-loadgenerator/lib") {
-					from proj.configurations.runtime
-					from proj.configurations.archives.allArtifactFiles
-				}
-				break
-			
-			case "s4-example-testinput":
-			        print "Got here"
-				into("s4-example-testinput") {
-					from proj.sourceSets.main.resources
-				}
-				break
-			
-			case ~/(s4\-example).*/:
-				into ("s4-example-apps/" + proj.name + "/lib") {
-					from(
-						proj.configurations.runtime
-							- project("s4-core").configurations.runtime
-					)
-					from proj.configurations.archives.allArtifactFiles
-				}
-				into ("s4-example-apps/" + proj.name) {
-					from proj.sourceSets.main.resources
-				}
-				break
-			
-			default :
-				println("default")
-			
-		}
-		//if(project.name != 's4-core') {
-		//	into(project.name) {
-		//		from project.sourceSets.main.resources 
-		//	}
-		//}
-	}
+        switch(proj.name) {
+            case "s4-core":
+               break
+                
+            case "s4-driver":
+                    into ("${proj.name}/lib/python") {
+                   from ("${proj.name}/python/")
+                }
+                    into ("${proj.name}/lib/perl") {
+                   from ("${proj.name}/perl/")
+                }
+                break               
+            case "s4-example-driver":
+                into("s4-driver") {
+                    from proj.sourceSets.main.resources
+                }
+                into ("s4-driver/lib") {
+                    from proj.configurations.runtime
+                    from proj.configurations.archives.allArtifactFiles
+                }
+                break
+            
+            case "s4-tools-loadgenerator":
+                into("s4-tools-loadgenerator") {
+                    from proj.sourceSets.main.resources
+                }
+                into ("s4-tools-loadgenerator/lib") {
+                    from proj.configurations.runtime
+                    from proj.configurations.archives.allArtifactFiles
+                }
+                break
+            
+            case "s4-example-testinput":
+                    print "Got here"
+                into("s4-example-testinput") {
+                    from proj.sourceSets.main.resources
+                }
+                break
+            
+            case ~/(s4\-example).*/:
+                into ("s4-example-apps/" + proj.name + "/lib") {
+                    from(
+                        proj.configurations.runtime
+                            - project("s4-core").configurations.runtime
+                    )
+                    from proj.configurations.archives.allArtifactFiles
+                }
+                into ("s4-example-apps/" + proj.name) {
+                    from proj.sourceSets.main.resources
+                }
+                break
+            
+            default :
+                println("default")
+            
+        }
+        //if(project.name != 's4-core') {
+        //  into(project.name) {
+        //      from project.sourceSets.main.resources 
+        //  }
+        //}
+    }
     into('javadoc') {
         from "$buildDir/javadoc"
     }
 }
-
 task binImage(type: Copy) {
 	description = "Create binary image"
 	destinationDir = file("$buildDir/s4-image")
@@ -247,7 +244,6 @@ task allImage(type: Copy, dependsOn: s4Javadoc) {
 	destinationDir = file("$buildDir/s4-image")
     with allDistImage
 }
-
 
 allImage << {
       // we need this because copyTask's fileMode property is not honored

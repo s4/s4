@@ -15,6 +15,7 @@
  */
 package io.s4.processor;
 
+import io.s4.ft.SafeKeeper;
 import io.s4.persist.ConMapPersister;
 import io.s4.persist.Persister;
 import io.s4.util.clock.Clock;
@@ -29,6 +30,7 @@ public class PrototypeWrapper {
     private static Logger logger = Logger.getLogger(PrototypeWrapper.class);
     private AbstractPE prototype;
     Persister lookupTable;
+	SafeKeeper safeKeeper;
 
     public String getId() {
         return prototype.getId();
@@ -37,6 +39,7 @@ public class PrototypeWrapper {
     public PrototypeWrapper(AbstractPE prototype, Clock s4Clock) {
         this.prototype = prototype;
         lookupTable = new ConMapPersister(s4Clock);
+        // TODO lookup table with PEIds
         System.out.println("Using ConMapPersister ..");
         // this bit of reflection is not a performance issue because it is only
         // invoked at configuration time
@@ -55,6 +58,7 @@ public class PrototypeWrapper {
                   .error("Exception invoking setLookupTable on prototype", e);
         }
     }
+
 
     /**
      * Find PE corresponding to keyValue. If no such PE exists, then a new one
@@ -113,4 +117,8 @@ public class PrototypeWrapper {
     public List<EventAdvice> advise() {
         return prototype.advise();
     }
+
+	public void setSafeKeeper(SafeKeeper safeKeeper) {
+		this.safeKeeper = safeKeeper;
+	}
 }

@@ -123,7 +123,7 @@ echo `${JAVA_LOC}java -version`
 
 CLASSPATH=`find ${CORE_HOME} -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 CLASSPATH=$CLASSPATH$CP_SEP`find $APPS_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
-JAVA_OPTS="$JAVA_OPTS -Dzk_session_timeout=5000"
+JAVA_OPTS="$JAVA_OPTS -Dzk.session.timeout=5000"
 
 CLASSPATH=${CLASSPATH}${CP_SEP}${CONF_LOC}
 if [ $REDBUTTON_MODE == "true" ] ; then

@@ -17,7 +17,8 @@ public class TestPrototypeWrapper
    public void testCloneAndInitialize() {
        MockPE prototype = new MockPE();
        
-       PrototypeWrapper prototypeWrapper = new PrototypeWrapper(prototype, new WallClock());
+        PrototypeWrapper prototypeWrapper = new PrototypeWrapper(prototype,
+                new WallClock());
 
        assertEquals(0, prototype.getInitializeCount());
        MockPE instance = (MockPE)prototypeWrapper.getPE("asd");

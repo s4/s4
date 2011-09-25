@@ -37,6 +37,10 @@
         <level value="info"/>
         <appender-ref ref="S"/>
   </logger>
+  <logger name="s4-ft" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="R"/>
+  </logger>
   <root> 
     <priority value ="info" /> 
     <appender-ref ref="R" /> 

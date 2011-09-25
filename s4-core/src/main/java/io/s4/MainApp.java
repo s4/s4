@@ -15,6 +15,7 @@
  */
 package io.s4;
 
+import io.s4.ft.SafeKeeper;
 import io.s4.processor.AbstractPE;
 import io.s4.processor.PEContainer;
 import io.s4.util.S4Util;
@@ -35,6 +36,8 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
@@ -240,7 +243,11 @@ public class MainApp {
             for (String processingElementBeanName : processingElementBeanNames) {
                 AbstractPE bean = (AbstractPE) context.getBean(processingElementBeanName);
                 bean.setClock(clock);
-                
+                try {
+                    bean.setSafeKeeper((SafeKeeper) context.getBean("safeKeeper"));
+                } catch (NoSuchBeanDefinitionException ignored) {
+                    // no safe keeper = no checkpointing / recovery
+                }
                 // if the application did not specify an id, use the Spring bean name
                 if (bean.getId() == null) {
                     bean.setId(processingElementBeanName);

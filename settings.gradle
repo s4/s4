@@ -20,6 +20,7 @@ include 's4-driver'
 include 's4-example-driver'
 
 include 's4-example-twittertopiccount-scala'
+include 's4-example-twittertopiccount-ft'
 include 's4-example-speech01'
 include 's4-example-speech01-scala'
 include 's4-example-speech02'
@@ -30,6 +31,7 @@ include 's4-tools-loadgenerator'
 /* TODO: Write code to map proj name to dir. */
 project(':s4-driver').projectDir = new File(settingsDir, 's4-driver/java')
 project(':s4-example-driver').projectDir = new File(settingsDir, 's4-driver/examples')
+project(':s4-example-twittertopiccount-ft').projectDir = new File(settingsDir, 's4-examples/twittertopiccount-ft')
 project(':s4-example-twittertopiccount-scala').projectDir = new File(settingsDir, 's4-examples/twittertopiccount-scala')
 project(':s4-example-speech01').projectDir = new File(settingsDir, 's4-examples/speech01')
 project(':s4-example-speech01-scala').projectDir = new File(settingsDir, 's4-examples/speech01-scala')

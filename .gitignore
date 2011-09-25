@@ -18,6 +18,10 @@ bin/
 *~
 
 # Misc hidden files
+.DS_Store
+
+# class files
+*.class 
 .DS_Store 
 
 # create an empty .gitignore file when you want to track an empty

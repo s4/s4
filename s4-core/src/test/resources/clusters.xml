@@ -1,0 +1,16 @@
+<config version="-1">
+  <cluster name="s4" type="s4" mode="unicast">
+    <node>
+      <partition>0</partition>
+      <machine>localhost</machine> <!-- used only in red button mode -->
+      <port>50770</port>
+      <taskId>s4node-0</taskId>
+    </node>
+  </cluster>
+  <cluster name="s4" type="adapter" mode="unicast">
+    <node>
+      <machine>localhost</machine> <!-- used only in red button mode -->
+      <taskId>adapter-0</taskId>
+    </node>
+  </cluster>
+</config>

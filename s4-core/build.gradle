@@ -13,6 +13,7 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
+apply plugin: 'eclipse'
 dependencies {
     compile( libraries.gson )
     compile( libraries.flexjson )
@@ -24,5 +25,13 @@ dependencies {
     compile( libraries.asm )
     compile( libraries.commons_cli )
     compile( libraries.commons_jexl )
+    compile( libraries.commons_codec )
+    compile( libraries.jedis )
     compile project(':s4-comm')
 }
+
+test { 
+	jvmArgs '-Dlog4j.configuration=/Users/matthieu/dev/s4/s4-core/src/test/resources/log4j.xml'
+	forkEvery=1
+} 
+
