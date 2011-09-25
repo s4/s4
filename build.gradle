@@ -46,7 +46,7 @@ platformProjects = [project(':s4-core'), project(':s4-comm'), project(':s4-drive
 
 allprojects {
 
-    version = new Version(major: 0, minor: 3, bugfix: 0)
+    version = new Version(major: 0, minor: 4, bugfix: 0, releaseType: 'SNAPSHOT')
 
     archivesBaseName = 's4'
     
