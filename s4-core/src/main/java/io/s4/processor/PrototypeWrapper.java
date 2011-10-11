@@ -20,7 +20,6 @@ import io.s4.persist.ConMapPersister;
 import io.s4.persist.Persister;
 import io.s4.util.clock.Clock;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -47,11 +46,8 @@ public class PrototypeWrapper {
             ((ConMapPersister) lookupTable).setSelfClean(true);
             ((ConMapPersister) lookupTable).init();
             // set the persister in prototype
-            Method method = prototype.getClass().getMethod("setLookupTable",
-                                                           Persister.class);
-            method.invoke(prototype, lookupTable);
-        } catch (NoSuchMethodException e) {
-            // this is expected
+            prototype.setLookupTable(lookupTable);
+            prototype.setPrototypeWrapper(this);
         } catch (Exception e) {
             // this is not expected
             Logger.getLogger("s4")
@@ -108,6 +104,15 @@ public class PrototypeWrapper {
         }
 
         return pe;
+    }
+    
+    public void expire(String keyValue) {
+        try {
+           lookupTable.set(keyValue, null, 0);
+        } catch (Exception e) {
+            logger.error("exception when removing pe for key:" + keyValue, e);
+        }
+   
     }
 
     public int getPECount() {

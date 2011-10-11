@@ -108,6 +108,11 @@ public class HashMapPersister implements Persister {
     }
 
     public void set(String key, Object value, int period) {
+        if (value == null) {
+            cache.remove(key);
+            return;
+        }
+        
         synchronized (this) {
             persistCount++;
         }

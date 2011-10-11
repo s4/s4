@@ -102,6 +102,7 @@ public abstract class AbstractPE implements Cloneable {
     transient private boolean logPauses = false;
     private String id;
     transient protected SchemaContainer schemaContainer = new SchemaContainer();
+    transient private PrototypeWrapper prototypeWrapper;
 
     transient private boolean recoveryAttempted = false;
     // true if state may have changed
@@ -170,6 +171,10 @@ public abstract class AbstractPE implements Cloneable {
 
     public Clock getClock() {
         return clock;
+    }
+
+    public void setPrototypeWrapper(PrototypeWrapper prototypeWrapper) {
+        this.prototypeWrapper = prototypeWrapper;
     }
 
     public AbstractPE() {
@@ -648,6 +653,13 @@ public abstract class AbstractPE implements Cloneable {
     public void processEvent(RecoveryEvent recoveryEvent) {
         isCheckpointingEvent = true;
         recover();
+    }
+    
+    /**
+     * This method expires the current PE.
+     **/
+    protected void expire() {
+        this.prototypeWrapper.expire(this.keyValueString);
     }
 
     class PeriodicInvoker implements Runnable {

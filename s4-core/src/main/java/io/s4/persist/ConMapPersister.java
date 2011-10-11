@@ -110,6 +110,10 @@ public class ConMapPersister implements Persister {
     }
 
     public void set(String key, Object value, int period) {
+        if (value == null) {
+            cache.remove(key);
+            return;
+        }
         persistCount.getAndIncrement();
         CacheEntry ce = new CacheEntry();
         ce.value = value;
