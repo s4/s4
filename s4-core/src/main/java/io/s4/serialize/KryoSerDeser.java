@@ -36,7 +36,11 @@ public class KryoSerDeser implements SerializerDeserializer {
         this.maxBufferSize = maxBufferSize;
     }
 
-    public KryoSerDeser() {
+    public Kryo getKryo() {
+		return kryo;
+	}
+
+	public KryoSerDeser() {
         kryo.setRegistrationOptional(true);
 
         // UUIDs don't have a no-arg constructor.
