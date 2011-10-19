@@ -94,7 +94,7 @@ public abstract class AbstractPE implements Cloneable {
     transient private List<EventAdvice> eventAdviceList = new ArrayList<EventAdvice>();
     transient private List<Object> keyValue;
     transient private List<Object> keyRecord;
-    transient private String keyValueString;
+    private String keyValueString;
     transient private String streamName;
     transient private boolean saveKeyRecord = false;
     transient private int outputsBeforePause = -1;
