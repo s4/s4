@@ -352,7 +352,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
                                   (int) (endTime - startTime),
                                   S4_APP_METRICS.toString(),
                                   "at",
-                                  pe.getId());
+                                  eventWrapper.getStreamName());
             }
         } catch (Exception e) {
             if (monitor != null) {
