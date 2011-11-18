@@ -115,8 +115,7 @@ public class CommLayerEmitter implements EventEmitter, Runnable {
         }
 
         try {
-            byte[] rawMessage = serDeser.serialize(eventWrapper);
-            MessageHolder mh = new MessageHolder(partitionId, rawMessage);
+        	MessageHolder mh = new MessageHolder(partitionId, eventWrapper);            
             queueMessage(mh);
         } catch (RuntimeException rte) {
             if (monitor != null) {
@@ -197,7 +196,7 @@ public class CommLayerEmitter implements EventEmitter, Runnable {
             isSent = false;
             try {
                 MessageHolder mh = messageQueue.take();
-                byte[] rawMessage = mh.getRawMessage();
+                byte[] rawMessage = serDeser.serialize(mh.getEventWrapper());
                 if (listener == null) {
                     isSent = sender.send(rawMessage);
                 } else {
@@ -244,19 +243,19 @@ public class CommLayerEmitter implements EventEmitter, Runnable {
 
     class MessageHolder {
         private int partitionId;
-        private byte[] rawMessage;
-
-        MessageHolder(int partitionId, byte[] rawMessage) {
+        private EventWrapper eventWrapper;
+        
+        MessageHolder(int partitionId, EventWrapper eventWrapper) {
             this.partitionId = partitionId;
-            this.rawMessage = rawMessage;
+            this.eventWrapper = eventWrapper;
         }
 
         int getPartitionId() {
             return partitionId;
         }
 
-        byte[] getRawMessage() {
-            return rawMessage;
+        EventWrapper getEventWrapper() {
+            return eventWrapper;
         }
     }
 }
