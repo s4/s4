@@ -294,7 +294,7 @@ public abstract class ClientStub implements OutputStub, InputStub {
                 if (c != null && c.good() && c.clientReadMode.takePrivate()) {
                     try {
                         byte[] b = bytesFromEventWrapper(event);
-                        c.io.send(b);
+                        if (b != null) c.io.send(b);
 
                     } catch (IOException e) {
                         logger.error("error sending response to client "
