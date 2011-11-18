@@ -124,6 +124,11 @@ public class Watcher implements Runnable {
                             S4_CORE_METRICS.toString());
             }
 
+            // before exiting the process, make an attempt to free memory
+            if (actualFree < minimumMemory) {
+                System.gc();
+            }
+            
             if (actualFree < minimumMemory) {
                 Logger.getLogger("s4").error("Too little memory remaining: "
                         + actualFree + ". Exiting so process can be restarted");

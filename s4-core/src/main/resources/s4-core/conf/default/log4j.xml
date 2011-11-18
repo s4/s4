@@ -46,7 +46,3 @@
     <appender-ref ref="R" /> 
   </root>
 </log4j:configuration>
-
-
-
-
