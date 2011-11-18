@@ -97,6 +97,11 @@ public class GenericJsonClientStub extends ClientStub {
             logger.error("exception while converting event wrapper to bytes.",
                          e);
             return null;
+        } catch (IllegalArgumentException iae) {
+        	logger.error("exception while converting event wrapper to bytes.",
+                    iae);
+        	logger.error(obj);
+        	return null;
         }
     }
 }
