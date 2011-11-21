@@ -84,12 +84,12 @@ public class DefaultPartitioner implements Partitioner, VariableKeyPartitioner {
         // Some event types that need special handling
         if (event instanceof org.apache.s4.message.Request) {
             // construct key from request's target
-            org.apache.s4.message.Request r = (io.s4.message.Request) event;
+            org.apache.s4.message.Request r = (org.apache.s4.message.Request) event;
             return r.partition(hasher, delimiter, partitionCount);
 
         } else if (event instanceof org.apache.s4.message.Response) {
             // partition id is encoded in Response, so use it directly.
-            org.apache.s4.message.Response r = (io.s4.message.Response) event;
+            org.apache.s4.message.Response r = (org.apache.s4.message.Response) event;
             return r.partition(partitionCount);
 
         } else if (compoundKeyNames == null) {

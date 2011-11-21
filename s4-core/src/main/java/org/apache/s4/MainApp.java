@@ -13,7 +13,7 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4;
+package org.apache.s4;
 
 import org.apache.s4.ft.SafeKeeper;
 import org.apache.s4.processor.AbstractPE;

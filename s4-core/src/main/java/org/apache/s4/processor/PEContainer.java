@@ -119,7 +119,7 @@ public class PEContainer implements Runnable, AsynchronousEventProcessor {
      * (non-Javadoc)
      * 
      * @see
-     * org.apache.s4.processor.AsynchronousEventProcessor#queueWork(io.s4.collector.
+     * org.apache.s4.processor.AsynchronousEventProcessor#queueWork(org.apache.s4.collector.
      * EventWrapper)
      */
     @Override

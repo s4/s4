@@ -123,7 +123,7 @@ public class ObjectBuilder {
         String[] query = { "name", "count", "freq" };
         String target[] = { "ACDW", "11" };
 
-        org.apache.s4.message.Request.ClientRInfo rinfo = new io.s4.message.Request.ClientRInfo();
+        org.apache.s4.message.Request.ClientRInfo rinfo = new org.apache.s4.message.Request.ClientRInfo();
         rinfo.setRequesterUUID(UUID.randomUUID());
         Request req = new org.apache.s4.message.SinglePERequest(Arrays.asList(target),
                                                         Arrays.asList(query),
@@ -131,7 +131,7 @@ public class ObjectBuilder {
 
         System.out.println(req.toString());
 
-        InstanceCreator<org.apache.s4.message.Request.RInfo> infoCreator = new InstanceCreator<io.s4.message.Request.RInfo>() {
+        InstanceCreator<org.apache.s4.message.Request.RInfo> infoCreator = new InstanceCreator<org.apache.s4.message.Request.RInfo>() {
             public org.apache.s4.message.Request.RInfo createInstance(Type type) {
                 return new org.apache.s4.message.Request.ClientRInfo();
             }
