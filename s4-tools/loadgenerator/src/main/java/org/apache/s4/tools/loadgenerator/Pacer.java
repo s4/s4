@@ -13,7 +13,7 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.tools.loadgenerator;;
+package org.apache.s4.tools.loadgenerator;;
 
 public class Pacer {
     private long sleepOverheadMicros = -1;

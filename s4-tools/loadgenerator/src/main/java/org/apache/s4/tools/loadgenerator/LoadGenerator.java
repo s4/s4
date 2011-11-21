@@ -13,10 +13,10 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.tools.loadgenerator;
+package org.apache.s4.tools.loadgenerator;
 
-import io.s4.client.Driver;
-import io.s4.client.Message;
+import org.apache.s4.client.Driver;
+import org.apache.s4.client.Message;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
