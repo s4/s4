@@ -1,4 +1,4 @@
-{"io.s4.example.speech01.Speech":{"classIndex":0,"streamName":"RawSpeech"},"io.s4.example.speech01.Sentence":{"classIndex":1,"streamName":"RawSentence"},"io.s4.example.speech01.Highlight":{"classIndex":2,"streamName":"RawHighlight"}}
+{"org.apache.s4.example.speech01.Speech":{"classIndex":0,"streamName":"RawSpeech"},"org.apache.s4.example.speech01.Sentence":{"classIndex":1,"streamName":"RawSentence"},"org.apache.s4.example.speech01.Highlight":{"classIndex":2,"streamName":"RawHighlight"}}
 {"_index":0,"id":12000000,"location":"gettysburg, pa, us","speaker":"abraham lincoln","time":1242799200000}
 {"_index":1,"id":12000001,"speechId":12000000,"text":"Four score and seven years ago our fathers brought forth on this continent a new nation, conceived in liberty and dedicated to the proposition that all men are created equal.","time":1242799205000}
 {"_index":2,"sentenceId":12000001,"time":1242799215000}

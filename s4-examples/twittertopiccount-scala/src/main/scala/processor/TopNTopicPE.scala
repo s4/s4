@@ -13,7 +13,7 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.example.twittertopiccount.processor
+package org.apache.s4.example.twittertopiccount.processor
 
 import scala.math._
 import scala.reflect.BeanProperty
@@ -26,10 +26,10 @@ import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.JsonAST._
 
-import io.s4.persist.Persister
-import io.s4.processor.AbstractPE
+import org.apache.s4.persist.Persister
+import org.apache.s4.processor.AbstractPE
 
-import io.s4.example.twittertopiccount.event._
+import org.apache.s4.example.twittertopiccount.event._
 
 class TopNTopicPE extends AbstractPE {
   @BeanProperty var persistKey = "myapp:topNTopics"

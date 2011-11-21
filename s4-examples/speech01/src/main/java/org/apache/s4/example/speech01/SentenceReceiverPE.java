@@ -1,6 +1,6 @@
-package io.s4.example.speech01;
+package org.apache.s4.example.speech01;
 
-import io.s4.processor.AbstractPE;
+import org.apache.s4.processor.AbstractPE;
 
 public class SentenceReceiverPE extends AbstractPE {
 

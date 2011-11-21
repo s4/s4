@@ -14,7 +14,7 @@
  * License. See accompanying LICENSE file. 
  */
 
-package io.s4.example.twittertopiccount.event
+package org.apache.s4.example.twittertopiccount.event
 
 import scala.reflect.BeanProperty
 

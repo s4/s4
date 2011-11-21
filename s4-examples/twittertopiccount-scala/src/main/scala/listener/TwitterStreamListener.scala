@@ -14,7 +14,7 @@
  * License. See accompanying LICENSE file. 
  */
 
-package io.s4.example.twittertopiccount.listener
+package org.apache.s4.example.twittertopiccount.listener
 
 import scala.reflect.BeanProperty
 import scala.concurrent.ops._
@@ -25,14 +25,14 @@ import java.util.concurrent._
 import java.util.HashSet
 import java.util.concurrent.LinkedBlockingQueue
 
-import io.s4.collector.EventWrapper
-import io.s4.listener.EventHandler
-import io.s4.listener.EventProducer
+import org.apache.s4.collector.EventWrapper
+import org.apache.s4.listener.EventHandler
+import org.apache.s4.listener.EventProducer
 
 import net.liftweb.json._
 import net.liftweb.json.Extraction._
 
-import io.s4.example.twittertopiccount.event._
+import org.apache.s4.example.twittertopiccount.event._
 
 class TwitterStreamListener extends EventProducer {
 

@@ -1,4 +1,4 @@
-package io.s4.example.speech01;
+package org.apache.s4.example.speech01;
 
 public class Highlight {
     private long sentenceId;

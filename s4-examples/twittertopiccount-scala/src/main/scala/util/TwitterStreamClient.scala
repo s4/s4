@@ -14,7 +14,7 @@
  * License. See accompanying LICENSE file. 
  */
 
-package io.s4.example.twittertopiccount.util
+package org.apache.s4.example.twittertopiccount.util
 
 import java.io.InputStream
 import java.io.InputStreamReader

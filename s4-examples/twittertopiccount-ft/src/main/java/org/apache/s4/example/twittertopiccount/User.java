@@ -13,7 +13,7 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.example.twittertopiccount;
+package org.apache.s4.example.twittertopiccount;
 
 public class User {
     private long id;

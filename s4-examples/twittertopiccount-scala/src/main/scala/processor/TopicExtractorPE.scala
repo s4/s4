@@ -13,15 +13,15 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.example.twittertopiccount.processor
+package org.apache.s4.example.twittertopiccount.processor
 
 import org.apache.log4j.Logger
 import scala.reflect.BeanProperty
 
-import io.s4.dispatcher.EventDispatcher
-import io.s4.processor.AbstractPE
+import org.apache.s4.dispatcher.EventDispatcher
+import org.apache.s4.processor.AbstractPE
 
-import io.s4.example.twittertopiccount.event._
+import org.apache.s4.example.twittertopiccount.event._
 
 class TopicExtractorPE extends AbstractPE {
   @BeanProperty var dispatcher: EventDispatcher = _ 

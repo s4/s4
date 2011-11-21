@@ -13,10 +13,10 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.example.twittertopiccount;
+package org.apache.s4.example.twittertopiccount;
 
-import io.s4.dispatcher.EventDispatcher;
-import io.s4.processor.AbstractPE;
+import org.apache.s4.dispatcher.EventDispatcher;
+import org.apache.s4.processor.AbstractPE;
 
 public class TopicCountAndReportPE extends AbstractPE {
     private String id;

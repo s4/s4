@@ -14,9 +14,9 @@
  * License. See accompanying LICENSE file. 
  */
 
-package io.s4.example.speech01
+package org.apache.s4.example.speech01
 
-import io.s4.processor.AbstractPE
+import org.apache.s4.processor.AbstractPE
 
 class SentenceReceiverPE extends AbstractPE {
 

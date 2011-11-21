@@ -13,7 +13,7 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.example.twittertopiccount;
+package org.apache.s4.example.twittertopiccount;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -29,9 +29,9 @@ import org.json.JSONObject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.util.EncodingUtil;
 
-import io.s4.collector.EventWrapper;
-import io.s4.listener.EventHandler;
-import io.s4.listener.EventProducer;
+import org.apache.s4.collector.EventWrapper;
+import org.apache.s4.listener.EventHandler;
+import org.apache.s4.listener.EventProducer;
 
 public class TwitterFeedListener implements EventProducer, Runnable {
     private String userid;
@@ -43,7 +43,7 @@ public class TwitterFeedListener implements EventProducer, Runnable {
     private String streamName;
 
     protected LinkedBlockingQueue<String> messageQueue = new LinkedBlockingQueue<String>();
-    private Set<io.s4.listener.EventHandler> handlers = new HashSet<io.s4.listener.EventHandler>();
+    private Set<org.apache.s4.listener.EventHandler> handlers = new HashSet<org.apache.s4.listener.EventHandler>();
 
     public void setUserid(String userid) {
         this.userid = userid;
@@ -139,7 +139,7 @@ public class TwitterFeedListener implements EventProducer, Runnable {
                     Status status = getStatus(jsonObject);
 
                     EventWrapper ew = new EventWrapper(streamName, status, null);
-                    for (io.s4.listener.EventHandler handler : handlers) {
+                    for (org.apache.s4.listener.EventHandler handler : handlers) {
                         try {
                             handler.processEvent(ew);
                         } catch (Exception e) {

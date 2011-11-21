@@ -7,13 +7,13 @@
 
   <bean id="tweetQueue" class="java.util.concurrent.LinkedBlockingQueue" />
 
-  <bean id="twitterStreamListener" class="io.s4.example.twittertopiccount.listener.TwitterStreamListener"
+  <bean id="twitterStreamListener" class="org.apache.s4.example.twittertopiccount.listener.TwitterStreamListener"
         init-method="init">
     <property name="queue" ref="tweetQueue"/>
     <property name="streamName" value="RawStatus"/>
   </bean>
 
-  <bean id="twitterStreamClient" class="io.s4.example.twittertopiccount.util.TwitterStreamClient"
+  <bean id="twitterStreamClient" class="org.apache.s4.example.twittertopiccount.util.TwitterStreamClient"
         init-method="init">
     <property name="user" value="<USER ID GOES HERE>"/>
     <property name="pass" value="<PASSWORD GOES HERE>"/>

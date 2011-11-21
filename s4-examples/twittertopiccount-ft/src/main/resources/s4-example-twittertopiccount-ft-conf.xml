@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-  <!-- <bean id="printEventPE" class="io.s4.processor.PrintEventPE">
+  <!-- <bean id="printEventPE" class="org.apache.s4.processor.PrintEventPE">
     <property name="id" value="printEventPE"/>
     <property name="keys">
       <list>
@@ -10,7 +10,7 @@
     </property>
   </bean> -->
 
-  <bean id="topicExtractorPE" class="io.s4.example.twittertopiccount.TopicExtractorPE">
+  <bean id="topicExtractorPE" class="org.apache.s4.example.twittertopiccount.TopicExtractorPE">
     <property name="id" value="topicSeenPE"/>
     <property name="keys">
       <list>
@@ -21,7 +21,7 @@
     <property name="outputStreamName" value="TopicSeen"/>
   </bean>
 
-  <bean id="topicCountAndReportPE" class="io.s4.example.twittertopiccount.TopicCountAndReportPE">
+  <bean id="topicCountAndReportPE" class="org.apache.s4.example.twittertopiccount.TopicCountAndReportPE">
     <property name="id" value="topicCountAndReportPE"/>
     <property name="keys">
       <list>
@@ -35,11 +35,11 @@
     <property name="ttl" value="36000"/>
   </bean>
 
-  <bean id="dtfPersister" class="io.s4.example.twittertopiccount.DirectToFilePersister">
+  <bean id="dtfPersister" class="org.apache.s4.example.twittertopiccount.DirectToFilePersister">
     <property name="outputFilename" value="/tmp/top_n_hashtags"/>
   </bean>
 
-  <bean id="top10TopicPE" class="io.s4.example.twittertopiccount.TopNTopicPE">
+  <bean id="top10TopicPE" class="org.apache.s4.example.twittertopiccount.TopNTopicPE">
     <property name="id" value="top10TopicPE"/>
     <property name="keys">
       <list>
@@ -54,7 +54,7 @@
     <property name="ttl" value="36000"/>
   </bean>
 
-  <bean id="topicSeenPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+  <bean id="topicSeenPartitioner" class="org.apache.s4.dispatcher.partitioner.DefaultPartitioner">
     <property name="streamNames">
       <list>
         <value>TopicSeen</value>
@@ -69,7 +69,7 @@
     <property name="debug" value="false"/>
   </bean>
 
-  <bean id="aggregatedTopicSeenPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+  <bean id="aggregatedTopicSeenPartitioner" class="org.apache.s4.dispatcher.partitioner.DefaultPartitioner">
     <property name="streamNames">
       <list>
         <value>AggregatedTopicSeen</value>
@@ -84,7 +84,7 @@
     <property name="debug" value="false"/>
   </bean>
 
-  <bean id="twitDispatcher" class="io.s4.dispatcher.Dispatcher" init-method="init">
+  <bean id="twitDispatcher" class="org.apache.s4.dispatcher.Dispatcher" init-method="init">
     <property name="partitioners">
       <list>
         <ref bean="topicSeenPartitioner"/>
@@ -96,7 +96,7 @@
   </bean>
 
   <!-- dispatcher to S4 and client adapter -->
-  <bean id="forkdispatcher" class="io.s4.dispatcher.MultiDispatcher">
+  <bean id="forkdispatcher" class="org.apache.s4.dispatcher.MultiDispatcher">
     <property name="dispatchers">
       <list>
 
@@ -105,7 +105,7 @@
 
 
         <!-- send some streams to client adapters -->
-        <bean id="selectiveDispatchToAdapter" class="io.s4.dispatcher.StreamSelectingDispatcher">
+        <bean id="selectiveDispatchToAdapter" class="org.apache.s4.dispatcher.StreamSelectingDispatcher">
           <property name="dispatcher" ref="dispatcherToClientAdapters"/>
           <property name="streams">
             <list>

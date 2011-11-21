@@ -1,4 +1,4 @@
-package io.s4.example.twittertopiccount;
+package org.apache.s4.example.twittertopiccount;
 
 import java.io.BufferedReader;
 import java.io.File;

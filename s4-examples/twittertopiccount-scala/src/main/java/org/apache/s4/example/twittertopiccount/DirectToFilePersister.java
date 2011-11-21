@@ -13,7 +13,7 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.example.twittertopiccount;
+package org.apache.s4.example.twittertopiccount;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import io.s4.persist.Persister;
+import org.apache.s4.persist.Persister;
 
 public class DirectToFilePersister implements Persister {
     private String outputFilename;

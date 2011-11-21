@@ -13,10 +13,10 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.example.twittertopiccount;
+package org.apache.s4.example.twittertopiccount;
 
-import io.s4.persist.Persister;
-import io.s4.processor.AbstractPE;
+import org.apache.s4.persist.Persister;
+import org.apache.s4.processor.AbstractPE;
 
 import java.util.ArrayList;
 import java.util.Collections;

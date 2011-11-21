@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-  <bean id="eventCatcher" class="io.s4.example.speech01.SentenceReceiverPE">
+  <bean id="eventCatcher" class="org.apache.s4.example.speech01.SentenceReceiverPE">
     <property name="keys">
       <list>
         <value>SentenceJoined *</value>
@@ -9,7 +9,7 @@
     </property>
   </bean>
 
-  <bean id="rerouteSentencePE" class="io.s4.processor.ReroutePE">
+  <bean id="rerouteSentencePE" class="org.apache.s4.processor.ReroutePE">
     <property name="id" value="rerouteSentencePE"/>
     <property name="dispatcher" ref="forkdispatcher"/>
     <property name="keys">
@@ -20,7 +20,7 @@
     <property name="outputStreamName" value="Sentence"/>
   </bean>
 
-  <bean id="rerouteSpeechPE" class="io.s4.processor.ReroutePE">
+  <bean id="rerouteSpeechPE" class="org.apache.s4.processor.ReroutePE">
     <property name="id" value="rerouteSpeechPE"/>
     <property name="dispatcher" ref="forkdispatcher"/>
     <property name="keys">
@@ -31,7 +31,7 @@
     <property name="outputStreamName" value="Speech"/>
   </bean>
 
-  <bean id="sentenceJoinPE" class="io.s4.processor.JoinPE">
+  <bean id="sentenceJoinPE" class="org.apache.s4.processor.JoinPE">
     <property name="id" value="sentenceJoinPE"/>
     <property name="keys">
       <list>
@@ -46,12 +46,12 @@
       </list>
     </property>
     <property name="outputStreamName" value="SentenceJoined"/>
-    <property name="outputClassName" value="io.s4.example.speech01.Sentence"/>
+    <property name="outputClassName" value="org.apache.s4.example.speech01.Sentence"/>
     <property name="dispatcher" ref="forkdispatcher"/>
     <property name="ttl" value="600"/> <!-- join related events that arrive no more than 10 minutes apart -->
   </bean>
 
-  <bean id="sentenceSpeechIdPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+  <bean id="sentenceSpeechIdPartitioner" class="org.apache.s4.dispatcher.partitioner.DefaultPartitioner">
     <property name="streamNames">
       <list>
         <value>Sentence</value>
@@ -67,7 +67,7 @@
     <property name="debug" value="false"/>
   </bean>
 
-  <bean id="speechIdPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+  <bean id="speechIdPartitioner" class="org.apache.s4.dispatcher.partitioner.DefaultPartitioner">
     <property name="streamNames">
       <list>
         <value>Speech</value>
@@ -82,7 +82,7 @@
     <property name="debug" value="false"/>
   </bean>
 
-  <bean id="dispatcher" class="io.s4.dispatcher.Dispatcher" init-method="init">
+  <bean id="dispatcher" class="org.apache.s4.dispatcher.Dispatcher" init-method="init">
     <property name="partitioners">
       <list>
         <ref bean="sentenceSpeechIdPartitioner"/>
@@ -94,7 +94,7 @@
   </bean>
 
   <!-- dispatcher to S4 and client adapter -->
-  <bean id="forkdispatcher" class="io.s4.dispatcher.MultiDispatcher">
+  <bean id="forkdispatcher" class="org.apache.s4.dispatcher.MultiDispatcher">
     <property name="dispatchers">
       <list>
 
@@ -103,7 +103,7 @@
 
 
         <!-- send some streams to client adapters -->
-        <bean id="selectiveDispatchToAdapter" class="io.s4.dispatcher.StreamSelectingDispatcher">
+        <bean id="selectiveDispatchToAdapter" class="org.apache.s4.dispatcher.StreamSelectingDispatcher">
           <property name="dispatcher" ref="dispatcherToClientAdapters"/>
           <property name="streams">
             <list>
