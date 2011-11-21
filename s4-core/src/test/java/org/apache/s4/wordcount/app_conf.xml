@@ -3,11 +3,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-	<!-- <bean id="printEventPE" class="io.s4.processor.PrintEventPE"> <property 
+	<!-- <bean id="printEventPE" class="org.apache.s4.processor.PrintEventPE"> <property 
 		name="id" value="printEventPE"/> <property name="keys"> <list> <value>TopicSeen 
 		topic</value> </list> </property> </bean> -->
 
-	<bean id="wordSplitter" class="io.s4.wordcount.WordSplitter">
+	<bean id="wordSplitter" class="org.apache.s4.wordcount.WordSplitter">
 		<property name="id" value="wordSplitter" />
 		<property name="keys">
 			<list>
@@ -18,7 +18,7 @@
 		<property name="dispatcher" ref="wordDispatcher" />
 	</bean>
 
-	<bean id="wordCounter" class="io.s4.wordcount.WordCounter">
+	<bean id="wordCounter" class="org.apache.s4.wordcount.WordCounter">
 		<property name="id" value="wordCounter" />
 		<property name="keys">
 			<list>
@@ -30,7 +30,7 @@
 		<property name="dispatcher" ref="wordsCountDispatcher" />
 	</bean>
 
-	<bean id="wordClassifier" class="io.s4.wordcount.WordClassifier">
+	<bean id="wordClassifier" class="org.apache.s4.wordcount.WordClassifier">
 		<property name="id" value="wordClassifier" />
 		<property name="keys">
 			<list>
@@ -40,7 +40,7 @@
 		</property>
 	</bean>
 
-	<bean id="wordDispatcher" class="io.s4.dispatcher.Dispatcher"
+	<bean id="wordDispatcher" class="org.apache.s4.dispatcher.Dispatcher"
 		init-method="init">
 		<property name="partitioners">
 			<list>
@@ -51,7 +51,7 @@
 		<property name="loggerName" value="s4" />
 	</bean>
 
-	<bean id="wordPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+	<bean id="wordPartitioner" class="org.apache.s4.dispatcher.partitioner.DefaultPartitioner">
 		<property name="streamNames">
 			<list>
 				<value>Words</value>
@@ -66,7 +66,7 @@
 		<property name="debug" value="false" />
 	</bean>
 	
-	<bean id="wordsCountDispatcher" class="io.s4.dispatcher.Dispatcher"
+	<bean id="wordsCountDispatcher" class="org.apache.s4.dispatcher.Dispatcher"
         init-method="init">
         <property name="partitioners">
             <list>
@@ -77,7 +77,7 @@
         <property name="loggerName" value="s4" />
     </bean>
     
-	<bean id="wordsCountPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+	<bean id="wordsCountPartitioner" class="org.apache.s4.dispatcher.partitioner.DefaultPartitioner">
         <property name="streamNames">
             <list>
                 <value>WordsCount</value>

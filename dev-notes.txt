@@ -34,10 +34,10 @@ $S4_IMAGE/scripts/run-client-adapter.sh -s client-adapter -g s4 \
 
 # Inject events.
 perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSpeech \
-io.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
+org.apache.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
 
 perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSentence \
-io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
+org.apache.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 
 
 ## Injecting Events with a Java Client
@@ -46,10 +46,10 @@ io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 
 # Inject events.
 $S4_IMAGE/s4-driver/scripts/inject.sh localhost 2334 RawSpeech \
-io.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
+org.apache.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
 
 $S4_IMAGE/s4-driver/scripts/inject.sh localhost 2334 RawSentence \
-io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
+org.apache.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 
 
 ## Receiving Events
@@ -73,10 +73,10 @@ export PERLLIB=${S4_IMAGE}/s4-driver/lib/perl
 
 # Inject events.
 perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSpeech \
-io.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
+org.apache.s4.example.speech01.Speech < $S4_IMAGE/testinput/speech.in 
 
 perl  $S4_IMAGE/s4-driver/scripts/inject.pl RawSentence \
-io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
+org.apache.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 
 
 ## Request-Response
@@ -84,11 +84,11 @@ io.s4.example.speech01.Sentence < $S4_IMAGE/testinput/sentence.in
 # Example 1: query the prototype of the joiner (SentenceJoinPE) 
 # in the speech02 application.
 python $S4_IMAGE/s4-driver/scripts/request.py '#sentenceJoinPE' \
-'io.s4.message.PrototypeRequest' < $S4_IMAGE/testinput/proto-query 
+'org.apache.s4.message.PrototypeRequest' < $S4_IMAGE/testinput/proto-query 
 
 # Example 2: request to a single PE from 
  python $S4_IMAGE/s4-driver/scripts/request.py '#sentenceJoinPE' \
-'io.s4.message.SinglePERequest' < $S4_IMAGE/testinput/pe-query 
+'org.apache.s4.message.SinglePERequest' < $S4_IMAGE/testinput/pe-query 
 
 -------
 

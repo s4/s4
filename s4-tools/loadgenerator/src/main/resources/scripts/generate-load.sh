@@ -88,6 +88,6 @@ fi
 CLASSPATH=`find $CORE_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 CLASSPATH=$CLASSPATH$CP_SEP`find $LOAD_GENERATOR_HOME -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 
-CMD="${JAVA_LOC}java $JAVA_OPTS -classpath $CLASSPATH io.s4.tools.loadgenerator.LoadGenerator -a ${ADAPTER_ADDRESS} -r${RATE} -d ${DISPLAY_INTERVAL} $INPUT_FILE"
+CMD="${JAVA_LOC}java $JAVA_OPTS -classpath $CLASSPATH org.apache.s4.tools.loadgenerator.LoadGenerator -a ${ADAPTER_ADDRESS} -r${RATE} -d ${DISPLAY_INTERVAL} $INPUT_FILE"
 #echo "Running ${CMD}"
 $CMD

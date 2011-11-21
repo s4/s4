@@ -124,6 +124,6 @@ if [ "x$USER_CLASS_PATH" != "x" ] ; then
 fi
 
 
-CMD="${JAVA_LOC}java $JAVA_OPTS -classpath $CLASSPATH io.s4.util.LoadGenerator -a ${SENDER_CLUSTER_NAME} -g ${LISTENER_CLUSTER_NAME} -z ${CLUSTER_MANAGER} -r${RATE} -d ${DISPLAY_INTERVAL} $INPUT_FILE"
+CMD="${JAVA_LOC}java $JAVA_OPTS -classpath $CLASSPATH org.apache.s4.util.LoadGenerator -a ${SENDER_CLUSTER_NAME} -g ${LISTENER_CLUSTER_NAME} -z ${CLUSTER_MANAGER} -r${RATE} -d ${DISPLAY_INTERVAL} $INPUT_FILE"
 echo "Running ${CMD}"
 $CMD

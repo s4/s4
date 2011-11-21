@@ -13,22 +13,22 @@
     <property name="ignoreUnresolvablePlaceholders" value="true"/>
   </bean> 
   
-  <bean id="hasher" class="io.s4.dispatcher.partitioner.DefaultHasher"/>
+  <bean id="hasher" class="org.apache.s4.dispatcher.partitioner.DefaultHasher"/>
   
-  <bean id="commLayerEmitterToAdapter" class="io.s4.emitter.CommLayerEmitter" init-method="init">
+  <bean id="commLayerEmitterToAdapter" class="org.apache.s4.emitter.CommLayerEmitter" init-method="init">
     <property name="serDeser" ref="serDeser"/>
     <property name="listener" ref="rawListener"/>
     <property name="listenerAppName" value="${adapter_app_name}"/>
     <property name="monitor" ref="monitor"/>
   </bean>
 
-  <bean id="commLayerEmitter" class="io.s4.emitter.CommLayerEmitter" init-method="init">
+  <bean id="commLayerEmitter" class="org.apache.s4.emitter.CommLayerEmitter" init-method="init">
     <property name="serDeser" ref="serDeser"/>
     <property name="listener" ref="rawListener"/>
     <property name="monitor" ref="monitor"/>
   </bean>
 
-  <bean id="serDeser" class="io.s4.serialize.KryoSerDeser">
+  <bean id="serDeser" class="org.apache.s4.serialize.KryoSerDeser">
     <property name="initialBufferSize" value="${kryoSerDeser.initialBufferSize}"/>
     <property name="maxBufferSize" value="${kryoSerDeser.maxBufferSize}"/>
   </bean>
@@ -39,7 +39,7 @@
        then the event is sent to the adapter
        (via ctrlDispatcherAdapter). Else it is sent to the
        S4 cluster itself (via ctrlDispatcherS4) -->
-  <bean id="ctrlDispatcher" class="io.s4.dispatcher.MultiDispatcher">
+  <bean id="ctrlDispatcher" class="org.apache.s4.dispatcher.MultiDispatcher">
     <property name="dispatchers">
       <list>
         <ref bean="ctrlDispatcherFilteredS4"/>
@@ -48,7 +48,7 @@
     </property>
   </bean>
 
-  <bean id="ctrlDispatcherFilteredAdapter" class="io.s4.dispatcher.StreamSelectingDispatcher">
+  <bean id="ctrlDispatcherFilteredAdapter" class="org.apache.s4.dispatcher.StreamSelectingDispatcher">
     <property name="dispatcher" ref="ctrlDispatcherAdapter"/>
     <property name="streams">
       <list>
@@ -57,7 +57,7 @@
     </property>
   </bean>
 
-  <bean id="ctrlDispatcherFilteredS4" class="io.s4.dispatcher.StreamExcludingDispatcher">
+  <bean id="ctrlDispatcherFilteredS4" class="org.apache.s4.dispatcher.StreamExcludingDispatcher">
     <property name="dispatcher" ref="ctrlDispatcherS4"/>
     <property name="streams">
       <list>
@@ -66,12 +66,12 @@
     </property>
   </bean>
 
-  <bean id="genericPartitioner" class="io.s4.dispatcher.partitioner.DefaultPartitioner">
+  <bean id="genericPartitioner" class="org.apache.s4.dispatcher.partitioner.DefaultPartitioner">
     <property name="hasher" ref="hasher"/>
     <property name="debug" value="false"/>
   </bean>
 
-  <bean id="ctrlDispatcherS4" class="io.s4.dispatcher.Dispatcher" init-method="init">
+  <bean id="ctrlDispatcherS4" class="org.apache.s4.dispatcher.Dispatcher" init-method="init">
     <property name="partitioners">
       <list>
         <ref bean="genericPartitioner"/>
@@ -81,7 +81,7 @@
     <property name="loggerName" value="s4"/>
   </bean>
 
-  <bean id="ctrlDispatcherAdapter" class="io.s4.dispatcher.Dispatcher" init-method="init">
+  <bean id="ctrlDispatcherAdapter" class="org.apache.s4.dispatcher.Dispatcher" init-method="init">
     <property name="partitioners">
       <list>
         <ref bean="genericPartitioner"/>
@@ -93,11 +93,11 @@
   <!-- END: Dispatchers for control events -->
 
   <!-- Control Events handler -->
-  <bean id="ctrlHandler" class="io.s4.processor.ControlEventProcessor">
+  <bean id="ctrlHandler" class="org.apache.s4.processor.ControlEventProcessor">
     <property name="dispatcher" ref="ctrlDispatcher"/>
   </bean>
 
-  <bean id="peContainer" class="io.s4.processor.PEContainer" init-method="init" lazy-init="true">
+  <bean id="peContainer" class="org.apache.s4.processor.PEContainer" init-method="init" lazy-init="true">
     <property name="maxQueueSize" value="${pe_container_max_queue_size}"/>
     <property name="monitor" ref="monitor"/>
     <property name="trackByKey" value="true"/>
@@ -105,7 +105,7 @@
     <property name="controlEventProcessor" ref="ctrlHandler"/>
   </bean>
 
-  <bean id="rawListener" class="io.s4.listener.CommLayerListener" init-method="init">
+  <bean id="rawListener" class="org.apache.s4.listener.CommLayerListener" init-method="init">
     <property name="serDeser" ref="serDeser"/>
     <property name="clusterManagerAddress" value="${zk_address}"/>
     <property name="appName" value="${s4_app_name}"/>
@@ -113,18 +113,18 @@
     <property name="monitor" ref="monitor"/>
   </bean>
 
-  <bean id="eventListener" class="io.s4.collector.EventListener" init-method="init">
+  <bean id="eventListener" class="org.apache.s4.collector.EventListener" init-method="init">
     <property name="rawListener" ref="rawListener"/>
     <property name="peContainer" ref="peContainer"/>
     <property name="monitor" ref="monitor"/>
   </bean>
 
-  <bean id="monitor" class="io.s4.logger.Log4jMonitor" lazy-init="true" init-method="init">
+  <bean id="monitor" class="org.apache.s4.logger.Log4jMonitor" lazy-init="true" init-method="init">
     <property name="flushInterval" value="30"/>
     <property name="loggerName" value="monitor"/>
   </bean>
 
-  <bean id="watcher" class="io.s4.util.Watcher" init-method="init" lazy-init="true">
+  <bean id="watcher" class="org.apache.s4.util.Watcher" init-method="init" lazy-init="true">
     <property name="monitor" ref="monitor"/>
     <property name="peContainer" ref="peContainer"/>
     <property name="minimumMemory" value="52428800"/>
@@ -136,7 +136,7 @@
   <!-- Some useful beans related to client-adapter for apps -->
 
   <!-- Dispatcher to send to all adapter nodes. -->
-  <bean id="dispatcherToClientAdapters" class="io.s4.dispatcher.Dispatcher" init-method="init">
+  <bean id="dispatcherToClientAdapters" class="org.apache.s4.dispatcher.Dispatcher" init-method="init">
     <property name="partitioners">
       <list>
         <ref bean="broadcastPartitioner"/>
@@ -147,6 +147,6 @@
   </bean>
 
   <!-- Partitioner to achieve broadcast -->
-  <bean id="broadcastPartitioner" class="io.s4.dispatcher.partitioner.BroadcastPartitioner"/>
+  <bean id="broadcastPartitioner" class="org.apache.s4.dispatcher.partitioner.BroadcastPartitioner"/>
   
 </beans>

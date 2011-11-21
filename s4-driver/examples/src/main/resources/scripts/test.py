@@ -1,4 +1,4 @@
-import io.s4.client.driver
+import org.apache.s4.client.driver
 import sys;
 
 if (len(sys.argv) > 1):
@@ -6,7 +6,7 @@ if (len(sys.argv) > 1):
 else:
   mode = {'readMode': 'all', 'writeMode': 'disabled'};
 
-d = io.s4.client.driver.Driver('localhost', 2334)
+d = org.apache.s4.client.driver.Driver('localhost', 2334)
 d.setDebug(True);
 
 d.initialize();

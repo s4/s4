@@ -7,7 +7,7 @@
     <property name="ignoreUnresolvablePlaceholders" value="true"/>
   </bean> 
   
-  <bean id="genericStub" class="io.s4.client.GenericJsonClientStub" init-method="init">
+  <bean id="genericStub" class="org.apache.s4.client.GenericJsonClientStub" init-method="init">
     <property name="connectionPort" value="2334"/>
   </bean>
 </beans>

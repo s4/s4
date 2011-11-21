@@ -6,7 +6,7 @@
             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
 
-  <bean id="twitterFeedListener" class="io.s4.example.twittertopiccount.TwitterFeedListener"
+  <bean id="twitterFeedListener" class="org.apache.s4.example.twittertopiccount.TwitterFeedListener"
         init-method="init">
     <property name="userid" value=""/>
     <property name="password" value=""/>
@@ -16,7 +16,7 @@
   
   <!--
   // uncomment this for reading from twitter dumps rather than live stream 
-  <bean id="twitterFeedReader" class="io.s4.example.twittertopiccount.TwitterFeedReader"
+  <bean id="twitterFeedReader" class="org.apache.s4.example.twittertopiccount.TwitterFeedReader"
         init-method="init">
     <property name="streamName" value="RawStatus"/>
     // twitter dumps are assumed to reside in a directory

@@ -37,6 +37,6 @@ fi
 
 CP=`find ${CORE_HOME}/lib -name "*.jar" | awk '{p=$0"'$CP_SEP'"p;} END {print p}'`
 
-cmd="${JAVA_LOC}java -classpath $CP io.s4.comm.tools.TaskSetupApp $*"
+cmd="${JAVA_LOC}java -classpath $CP org.apache.s4.comm.tools.TaskSetupApp $*"
 echo "RUNNING $cmd"
 $cmd

@@ -6,7 +6,7 @@ if [ "x$JAVA_HOME" != "x" ] ; then
   JAVA_LOC=${JAVA_HOME}"/bin/"
 fi
 
-CMD="${JAVA_LOC}java -classpath $CLASSPATH io.s4.client.example.Read $1 $2 $3 $4 $5 $6"
+CMD="${JAVA_LOC}java -classpath $CLASSPATH org.apache.s4.client.example.Read $1 $2 $3 $4 $5 $6"
 echo $CMD
 $CMD
 

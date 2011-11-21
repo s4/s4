@@ -195,7 +195,7 @@ CLASSPATH=$CLASSPATH$CP_SEP$TMP1$CP_SEP$CONF_LOC
 #STARTING S4 
 #---------------------------------------------
 
-CMD="${JAVA_LOC}java $GC_OPTS $DEBUG_OPTS $MEM_OPTS $JAVA_OPTS -classpath $CORE_HOME$CP_SEP$CLASSPATH -DDequeuerCount=6 -Dlog4j.configuration=file:${CONF_LOC}/log4j.xml io.s4.MainApp -c ${CORE_HOME} -a ${APPS_HOME} -e ${EXTS_HOME} -t ${CONF_TYPE} -d ${S4_CLOCK} $S4_OPTS"
+CMD="${JAVA_LOC}java $GC_OPTS $DEBUG_OPTS $MEM_OPTS $JAVA_OPTS -classpath $CORE_HOME$CP_SEP$CLASSPATH -DDequeuerCount=6 -Dlog4j.configuration=file:${CONF_LOC}/log4j.xml org.apache.s4.MainApp -c ${CORE_HOME} -a ${APPS_HOME} -e ${EXTS_HOME} -t ${CONF_TYPE} -d ${S4_CLOCK} $S4_OPTS"
 echo "RUNNING $CMD"
 
 exec ${CMD}

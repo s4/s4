@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-  <!-- <bean id="printEventPE" class="io.s4.processor.PrintEventPE">
+  <!-- <bean id="printEventPE" class="org.apache.s4.processor.PrintEventPE">
     <property name="id" value="printEventPE"/>
     <property name="keys">
       <list>
@@ -10,7 +10,7 @@
     </property>
   </bean> -->
 
-  <bean id="statefulPE" class="io.s4.ft.StatefulTestPE">
+  <bean id="statefulPE" class="org.apache.s4.ft.StatefulTestPE">
     <property name="id" value="statefulPE"/>
     <property name="keys">
       <list>

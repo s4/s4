@@ -152,6 +152,6 @@ cat $TMP1/client-adapter.properties
 
 CLASSPATH=${CLASSPATH}${CP_SEP}${TMP1}
 
-CMD="${JAVA_LOC}java $JAVA_OPTS -Dlog4j.configuration=file:${CONF_LOC}/log4j.xml -classpath $CLASSPATH io.s4.client.Adapter -t ${CONF_TYPE} -c ${CORE_HOME} -d ${DATA_ADAPTER_CONF}"
+CMD="${JAVA_LOC}java $JAVA_OPTS -Dlog4j.configuration=file:${CONF_LOC}/log4j.xml -classpath $CLASSPATH org.apache.s4.client.Adapter -t ${CONF_TYPE} -c ${CORE_HOME} -d ${DATA_ADAPTER_CONF}"
 echo "Running ${CMD}"
 $CMD
