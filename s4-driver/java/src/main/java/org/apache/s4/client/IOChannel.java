@@ -13,8 +13,14 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.client;
+package org.apache.s4.client;
 
-public enum WriteMode {
-    Enabled, Disabled;
+import java.io.IOException;
+
+public interface IOChannel {
+    byte[] recv() throws IOException;
+
+    byte[] recv(int timeout) throws IOException;
+
+    void send(byte[] v) throws IOException;
 }

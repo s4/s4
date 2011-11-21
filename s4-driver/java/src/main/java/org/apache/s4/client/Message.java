@@ -1,4 +1,4 @@
-package io.s4.client;
+package org.apache.s4.client;
 
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -13,12 +13,12 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.client.example;
+package org.apache.s4.client.example;
 
-import io.s4.client.Driver;
-import io.s4.client.Message;
-import io.s4.client.ReadMode;
-import io.s4.client.WriteMode;
+import org.apache.s4.client.Driver;
+import org.apache.s4.client.Message;
+import org.apache.s4.client.ReadMode;
+import org.apache.s4.client.WriteMode;
 
 import java.io.BufferedReader;
 import java.io.IOException;

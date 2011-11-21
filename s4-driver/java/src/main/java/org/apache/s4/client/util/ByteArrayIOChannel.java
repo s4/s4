@@ -13,9 +13,9 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.client.util;
+package org.apache.s4.client.util;
 
-import io.s4.client.IOChannel;
+import org.apache.s4.client.IOChannel;
 
 import java.io.IOException;
 import java.io.InputStream;

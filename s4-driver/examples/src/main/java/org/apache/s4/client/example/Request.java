@@ -13,17 +13,18 @@
  * language governing permissions and limitations under the
  * License. See accompanying LICENSE file. 
  */
-package io.s4.client.example;
+package org.apache.s4.client.example;
 
-import io.s4.client.Driver;
-import io.s4.client.Message;
+import org.apache.s4.client.Driver;
+import org.apache.s4.client.Message;
+import org.apache.s4.client.ReadMode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-public class Inject {
+public class Request {
     public static void main(String[] args) {
         if (args.length < 1) {
             System.err.println("No host name specified");
@@ -54,7 +55,14 @@ public class Inject {
             System.err.println("No class name specified");
             System.exit(1);
         }
-        String clazz = args[3];       
+        String clazz = args[3];   
+        
+        String outputStreamsString = "";
+        if (args.length == 5) {
+            outputStreamsString = args[4];
+        }
+
+        String[] outputStreams = outputStreamsString.split(" ");
         
         Driver d = new Driver(hostName, port);
         Reader inputReader = null;
@@ -65,6 +73,15 @@ public class Inject {
                 System.exit(1);
             }
             
+            d.setReadMode(ReadMode.All);
+            if (outputStreams.length > 0) {
+                d.setReadMode(ReadMode.Select);
+                for (String outputStream : outputStreams) {
+                    System.out.printf("Registering output stream name '%s'\n", outputStream);
+                    d.readInclude(outputStream);
+                }
+            }
+            
             if (!d.connect()) {
                 System.err.println("Driver initialization failed");
                 System.exit(1);           
@@ -73,10 +90,21 @@ public class Inject {
             inputReader = new InputStreamReader(System.in);
             br = new BufferedReader(inputReader);
 
+            // send all messages
             for  (String inputLine = null; (inputLine = br.readLine()) != null;) {
                 Message m = new Message(streamName, clazz, inputLine);
                 d.send(m);
             }
+            
+            // read all responses
+            while (true) {
+                Message response = d.recv();
+                System.out.println(response);
+            }
+            /*List<Message> responses = d.recvAll(999999999);
+            for (Message message : responses) {
+                System.out.println(message);
+            }*/
         } catch (IOException e) {
             e.printStackTrace();
         }
