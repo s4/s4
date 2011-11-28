@@ -13,10 +13,6 @@
       <param name="ConversionPattern" value="%d %c %p (%F:%L) %m%n"/>
     </layout>
   </appender>
-  <logger name="com.yahoo" additivity="false">
-        <level value="info"/>
-        <appender-ref ref="R"/>
-  </logger>
   <logger name="s4" additivity="false">
         <level value="info"/>
         <appender-ref ref="R"/>
