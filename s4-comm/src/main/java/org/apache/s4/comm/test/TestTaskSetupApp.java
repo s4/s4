@@ -41,7 +41,7 @@ public class TestTaskSetupApp {
 
     // test the case
     public void testTaskSetup1() throws Exception {
-        String address = "effortfell.greatamerica.corp.yahoo.com:2181";
+        String address = "localhost:2181";
         Watcher watcher = new Watcher() {
 
             @Override

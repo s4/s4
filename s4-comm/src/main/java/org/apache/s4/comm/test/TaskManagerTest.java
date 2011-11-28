@@ -49,7 +49,6 @@ public class TaskManagerTest {
 
     private static void testZkTaskManager(String[] args) {
         System.out.println("Here");
-        // "effortfell.greatamerica.corp.yahoo.com:2181"
         String address = args[0];
         address = "localhost:2181";
         String processName = args[1];
