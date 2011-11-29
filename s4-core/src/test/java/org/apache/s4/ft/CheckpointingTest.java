@@ -1,5 +1,6 @@
 package org.apache.s4.ft;
 
+import org.apache.s4.processor.AbstractPE;
 import org.apache.s4.serialize.KryoSerDeser;
 
 import java.io.File;
@@ -93,6 +94,12 @@ public class CheckpointingTest extends S4TestCase {
 
             StatefulTestPE refPE = new StatefulTestPE();
             refPE.setValue1("message1");
+            
+            // NOTE since commit cf685ab080870764d5aee4037587ebe918ce890b keyValueString is also checkpointed, 
+            // therefore we must set it so that it is included in checkpointed data
+            Field keyValueStringField = AbstractPE.class.getDeclaredField("keyValueString");    
+            keyValueStringField.setAccessible(true);    
+            keyValueStringField.set(refPE, "value");
             refPE.setId("statefulPE");
             refPE.setKeys(new String[] {});
             KryoSerDeser kryoSerDeser = new KryoSerDeser();
