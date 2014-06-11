@@ -1,7 +1,7 @@
 S4 - Stream Computing Platform
 ==============================
 
-For more information, see [s4.io](http://s4.io)
+For more information, see [http://incubator.apache.org/s4/](http://incubator.apache.org/s4/)
 
 Requirements
 ------------
